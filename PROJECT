@@ -32,7 +32,7 @@ resources:
   version: v1alpha1
 - api:
     crdVersion: v1
-    namespaced: true
+    namespaced: false
   domain: antware.xyz
   group: access
   kind: ClusterJITAccessPolicy
@@ -40,10 +40,14 @@ resources:
   version: v1alpha1
 - api:
     crdVersion: v1
-    namespaced: true
+    namespaced: false
   domain: antware.xyz
   group: access
   kind: ClusterJITAccessRequest
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"

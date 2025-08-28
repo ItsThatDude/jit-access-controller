@@ -112,6 +112,9 @@ var _ = BeforeSuite(func() {
 	err = SetupJITAccessRequestWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
+	err = SetupClusterJITAccessRequestWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
 	// +kubebuilder:scaffold:webhook
 
 	go func() {

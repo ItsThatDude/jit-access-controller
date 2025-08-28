@@ -10,6 +10,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+  failurePolicy: Fail
+  name: mclusterjitaccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusterjitaccessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-access-antware-xyz-v1alpha1-jitaccessrequest
   failurePolicy: Fail
   name: mjitaccessrequest-v1alpha1.kb.io
@@ -30,6 +50,26 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: validating-webhook-configuration
 webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+  failurePolicy: Fail
+  name: vclusterjitaccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusterjitaccessrequests
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   clientConfig:
