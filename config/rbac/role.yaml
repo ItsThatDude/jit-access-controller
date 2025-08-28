@@ -1,0 +1,35 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - jitaccesspolicies
+  - jitaccessrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - jitaccesspolicies/finalizers
+  - jitaccessrequests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - jitaccesspolicies/status
+  - jitaccessrequests/status
+  verbs:
+  - get
+  - patch
+  - update
