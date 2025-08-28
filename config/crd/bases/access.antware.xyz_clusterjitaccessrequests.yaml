@@ -40,18 +40,18 @@ spec:
           spec:
             description: spec defines the desired state of ClusterJITAccessRequest
             properties:
+              clusterRole:
+                description: Name of the ClusterRole (must exist in same namespace)
+                type: string
               durationSeconds:
                 description: Duration in seconds (e.g. 600 for 10 min)
                 format: int64
                 type: integer
-              role:
-                description: Name of the Role (must exist in same namespace)
-                type: string
               subject:
                 type: string
             required:
+            - clusterRole
             - durationSeconds
-            - role
             - subject
             type: object
           status:

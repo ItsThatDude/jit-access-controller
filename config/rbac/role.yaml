@@ -7,6 +7,8 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
+  - clusterjitaccesspolicies
+  - clusterjitaccessrequests
   - jitaccesspolicies
   - jitaccessrequests
   verbs:
@@ -20,6 +22,8 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
+  - clusterjitaccesspolicies/finalizers
+  - clusterjitaccessrequests/finalizers
   - jitaccesspolicies/finalizers
   - jitaccessrequests/finalizers
   verbs:
@@ -27,6 +31,8 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
+  - clusterjitaccesspolicies/status
+  - clusterjitaccessrequests/status
   - jitaccesspolicies/status
   - jitaccessrequests/status
   verbs:

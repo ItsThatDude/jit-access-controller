@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/internal/policy"
+	"antware.xyz/jitaccess/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,40 +33,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/policy"
-	"antware.xyz/jitaccess/internal/utils"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// JITAccessRequestReconciler reconciles a JITAccessRequest object
-type JITAccessRequestReconciler struct {
+// ClusterJITAccessRequestReconciler reconciles a ClusterJITAccessRequest object
+type ClusterJITAccessRequestReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-const jitFinalizer = "access.antware.xyz/finalizer"
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/finalizers,verbs=update
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the JITAccessRequest object against the actual cluster state, and then
+// the ClusterJITAccessRequest object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
-func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
 
-	var jit accessv1alpha1.JITAccessRequest
+	var jit accessv1alpha1.ClusterJITAccessRequest
 	if err := r.Get(ctx, req.NamespacedName, &jit); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -80,7 +78,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		if err := r.Update(ctx, &jit); err != nil {
 			return ctrl.Result{}, err
 		}
-		log.Info("Added finalizer to JITAccessRequest", "name", jit.Name)
+		log.Info("Added finalizer to ClusterJITAccessRequest", "name", jit.Name)
 	}
 
 	// Handle deletion
@@ -105,12 +103,12 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Check if the JIT Access Request matches a defined policy
-	var policies accessv1alpha1.JITAccessPolicyList
+	var policies accessv1alpha1.ClusterJITAccessPolicyList
 	if err := r.List(ctx, &policies); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	permitted := policy.ValidateNamespaced(&jit, &policies)
+	permitted := policy.ValidateCluster(&jit, &policies)
 
 	if !permitted {
 		log.Info("Access denied: no matching policy")
@@ -135,7 +133,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return ctrl.Result{RequeueAfter: time.Until(jit.Status.ExpiresAt.Time)}, nil
 		} else {
 			// Reconcile the approved access request
-			roleBinding := &rbacv1.RoleBinding{
+			roleBinding := &rbacv1.ClusterRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
 					Namespace: req.Namespace,
@@ -149,13 +147,13 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				},
 				RoleRef: rbacv1.RoleRef{
 					APIGroup: "rbac.authorization.k8s.io",
-					Kind:     "Role",
-					Name:     jit.Spec.Role,
+					Kind:     "ClusterRole",
+					Name:     jit.Spec.ClusterRole,
 				},
 			}
 
 			if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "failed to create RoleBinding")
+				log.Error(err, "failed to create ClusterRoleBinding")
 				return ctrl.Result{}, err
 			}
 
@@ -167,7 +165,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				return ctrl.Result{}, err
 			}
 
-			log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.Role)
+			log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.ClusterRole)
 
 			return ctrl.Result{RequeueAfter: time.Duration(jit.Spec.DurationSeconds) * time.Second}, nil
 		}
@@ -177,18 +175,19 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *JITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ClusterJITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&accessv1alpha1.JITAccessRequest{}).
-		Named("jitaccessrequest").
+		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
+		// For().
+		Named("clusterjitaccessrequest").
 		Complete(r)
 }
 
-func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.JITAccessRequest) error {
+func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.ClusterJITAccessRequest) error {
 	log := log.FromContext(ctx)
 
 	rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
-	rb := &rbacv1.RoleBinding{}
+	rb := &rbacv1.ClusterRoleBinding{}
 	err := r.Get(ctx, types.NamespacedName{
 		Name:      rbName,
 		Namespace: jit.Namespace,
@@ -199,11 +198,11 @@ func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *
 	}
 
 	if err == nil {
-		// RoleBinding exists, delete it
+		// ClusterRoleBinding exists, delete it
 		if err := r.Delete(ctx, rb); err != nil {
 			return err
 		}
-		log.Info("Deleted RoleBinding for JITAccessRequest", "rolebinding", rbName)
+		log.Info("Deleted ClusterRoleBinding for ClusterJITAccessRequest", "clusterrolebinding", rbName)
 	}
 
 	return nil

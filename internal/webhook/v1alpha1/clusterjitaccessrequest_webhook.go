@@ -22,11 +22,13 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/internal/policy"
 )
 
 // nolint:unused
@@ -35,8 +37,11 @@ var clusterjitaccessrequestlog = logf.Log.WithName("clusterjitaccessrequest-reso
 
 // SetupClusterJITAccessRequestWebhookWithManager registers the webhook for ClusterJITAccessRequest in the manager.
 func SetupClusterJITAccessRequestWebhookWithManager(mgr ctrl.Manager) error {
+	validator := &ClusterJITAccessRequestCustomValidator{
+		client: mgr.GetClient(),
+	}
 	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.ClusterJITAccessRequest{}).
-		WithValidator(&ClusterJITAccessRequestCustomValidator{}).
+		WithValidator(validator).
 		WithDefaulter(&ClusterJITAccessRequestCustomDefaulter{}).
 		Complete()
 }
@@ -58,14 +63,12 @@ var _ webhook.CustomDefaulter = &ClusterJITAccessRequestCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind ClusterJITAccessRequest.
 func (d *ClusterJITAccessRequestCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	clusterjitaccessrequest, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
+	req, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
 
 	if !ok {
 		return fmt.Errorf("expected an ClusterJITAccessRequest object but got %T", obj)
 	}
-	clusterjitaccessrequestlog.Info("Defaulting for ClusterJITAccessRequest", "name", clusterjitaccessrequest.GetName())
-
-	// TODO(user): fill in your defaulting logic.
+	clusterjitaccessrequestlog.Info("Defaulting for ClusterJITAccessRequest", "name", req.GetName())
 
 	return nil
 }
@@ -81,7 +84,7 @@ func (d *ClusterJITAccessRequestCustomDefaulter) Default(_ context.Context, obj 
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type ClusterJITAccessRequestCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
+	client client.Client
 }
 
 var _ webhook.CustomValidator = &ClusterJITAccessRequestCustomValidator{}
@@ -94,7 +97,15 @@ func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Contex
 	}
 	clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon creation", "name", clusterjitaccessrequest.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	var policies accessv1alpha1.ClusterJITAccessPolicyList
+	if err := v.client.List(context.TODO(), &policies); err != nil {
+		return nil, err
+	}
+
+	permitted := policy.ValidateCluster(clusterjitaccessrequest, &policies)
+	if !permitted {
+		return nil, fmt.Errorf("cluster access request did not match a policy")
+	}
 
 	return nil, nil
 }

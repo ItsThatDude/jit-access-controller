@@ -106,7 +106,7 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 
 	permitted := policy.ValidateNamespaced(jitaccessrequest, &policies)
 	if !permitted {
-		return nil, fmt.Errorf("Access Request did not match a policy")
+		return nil, fmt.Errorf("access request did not match a policy")
 	}
 
 	return nil, nil

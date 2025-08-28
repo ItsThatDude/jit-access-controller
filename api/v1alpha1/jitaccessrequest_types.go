@@ -36,8 +36,11 @@ type JITAccessRequestSpec struct {
 
 // JITAccessRequestStatus defines the observed state of JITAccessRequest.
 type JITAccessRequestStatus struct {
-	// True if access has been granted
-	State RequestState `json:"granted,omitempty"`
+	// ID of the access request
+	RequestId string `json:"requestId"`
+
+	// State of the Access Request
+	State RequestState `json:"state,omitempty"`
 
 	// Timestamp when the access will expire
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`

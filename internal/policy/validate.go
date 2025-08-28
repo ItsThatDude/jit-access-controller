@@ -29,7 +29,7 @@ func ValidateCluster(jit *accessv1alpha1.ClusterJITAccessRequest, policies *acce
 	for _, policy := range policies.Items {
 		for _, p := range policy.Spec.Policies {
 			if p.Subject == jit.Spec.Subject {
-				if utils.Contains(p.AllowedRoles, jit.Spec.Role) &&
+				if utils.Contains(p.AllowedRoles, jit.Spec.ClusterRole) &&
 					utils.Contains(p.AllowedNamespaces, jit.Namespace) &&
 					jit.Spec.DurationSeconds <= p.MaxDurationSeconds {
 					permitted = true

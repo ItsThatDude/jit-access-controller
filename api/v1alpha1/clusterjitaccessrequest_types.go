@@ -27,8 +27,8 @@ import (
 type ClusterJITAccessRequestSpec struct {
 	Subject string `json:"subject"`
 
-	// Name of the Role (must exist in same namespace)
-	Role string `json:"role"`
+	// Name of the ClusterRole (must exist in same namespace)
+	ClusterRole string `json:"clusterRole"`
 
 	// Duration in seconds (e.g. 600 for 10 min)
 	DurationSeconds int64 `json:"durationSeconds"`
@@ -36,8 +36,11 @@ type ClusterJITAccessRequestSpec struct {
 
 // ClusterJITAccessRequestStatus defines the observed state of ClusterJITAccessRequest.
 type ClusterJITAccessRequestStatus struct {
-	// True if access has been granted
-	State RequestState `json:"granted,omitempty"`
+	// ID of the access request
+	RequestId string `json:"requestId"`
+
+	// State of the Access Request
+	State RequestState `json:"state,omitempty"`
 
 	// Timestamp when the access will expire
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
