@@ -64,7 +64,7 @@ spec:
       containers:
       - command:
         - /server
-        image: approvalserver:latest
+        image: jitaccess-approvalserver:latest
         name: approval-server
         ports:
           - containerPort: 8080
