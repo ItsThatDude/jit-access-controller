@@ -32,7 +32,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -73,7 +72,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		}
 	}
 
-	if jit.ObjectMeta.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
 		controllerutil.AddFinalizer(&jit, jitFinalizer)
 		if err := r.Update(ctx, &jit); err != nil {
 			return ctrl.Result{}, err
@@ -82,7 +81,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 	}
 
 	// Handle deletion
-	if !jit.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !jit.DeletionTimestamp.IsZero() {
 		if controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
@@ -184,7 +183,7 @@ func (r *ClusterJITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) e
 }
 
 func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.ClusterJITAccessRequest) error {
-	log := log.FromContext(ctx)
+	log := logf.FromContext(ctx)
 
 	rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
 	rb := &rbacv1.ClusterRoleBinding{}

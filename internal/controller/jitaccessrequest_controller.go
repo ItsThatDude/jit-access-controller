@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
 	"antware.xyz/jitaccess/internal/policy"
@@ -61,7 +61,7 @@ const jitFinalizer = "access.antware.xyz/finalizer"
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	log := logf.FromContext(ctx)
 
 	var jit accessv1alpha1.JITAccessRequest
 	if err := r.Get(ctx, req.NamespacedName, &jit); err != nil {
@@ -75,7 +75,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	if jit.ObjectMeta.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
 		controllerutil.AddFinalizer(&jit, jitFinalizer)
 		if err := r.Update(ctx, &jit); err != nil {
 			return ctrl.Result{}, err
@@ -84,7 +84,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Handle deletion
-	if !jit.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !jit.DeletionTimestamp.IsZero() {
 		if controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
@@ -185,7 +185,7 @@ func (r *JITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.JITAccessRequest) error {
-	log := log.FromContext(ctx)
+	log := logf.FromContext(ctx)
 
 	rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
 	rb := &rbacv1.RoleBinding{}
