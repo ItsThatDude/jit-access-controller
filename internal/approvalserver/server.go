@@ -38,12 +38,20 @@ func (s *Server) Start(addr string) error {
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
+		_, err := fmt.Fprint(w, "ok")
+
+		if err != nil {
+			log.Printf("Error: %s\n", err)
+		}
 	})
 
 	http.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ready")
+		_, err := fmt.Fprint(w, "ready")
+
+		if err != nil {
+			log.Printf("Error: %s\n", err)
+		}
 	})
 
 	log.Printf("Approval server listening on %s\n", addr)
@@ -62,9 +70,13 @@ func (s *Server) listRequests(w http.ResponseWriter, r *http.Request) {
 		state, _, _ := unstructured.NestedString(item.Object, "status", "state")
 		if state == "Pending" {
 			name := item.GetName()
-			fmt.Fprintf(w,
+			_, err := fmt.Fprintf(w,
 				`<p>%s - <a href="/approve?name=%s">Approve</a> | <a href="/deny?name=%s">Deny</a></p>`,
 				name, name, name)
+
+			if err != nil {
+				log.Printf("Error: %s\n", err)
+			}
 		}
 	}
 }
