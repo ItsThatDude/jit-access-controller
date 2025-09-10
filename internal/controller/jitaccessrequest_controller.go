@@ -110,7 +110,7 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	permitted := policy.ValidateNamespaced(&jit, &policies)
+	permitted := policy.IsNamespacedRequestValid(&jit, &policies)
 
 	if !permitted {
 		log.Info("Access denied: no matching policy")

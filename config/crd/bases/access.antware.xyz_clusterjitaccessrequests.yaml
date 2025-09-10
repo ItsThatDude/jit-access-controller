@@ -61,9 +61,14 @@ spec:
                 description: Timestamp when the access will expire
                 format: date-time
                 type: string
-              granted:
-                description: True if access has been granted
+              requestId:
+                description: ID of the access request
                 type: string
+              state:
+                description: State of the Access Request
+                type: string
+            required:
+            - requestId
             type: object
         required:
         - spec

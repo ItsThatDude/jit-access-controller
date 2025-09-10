@@ -107,7 +107,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, err
 	}
 
-	permitted := policy.ValidateCluster(&jit, &policies)
+	permitted := policy.IsClusterRequestValid(&jit, &policies)
 
 	if !permitted {
 		log.Info("Access denied: no matching policy")
@@ -176,8 +176,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterJITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		// For().
+		For(&accessv1alpha1.ClusterJITAccessRequest{}).
 		Named("clusterjitaccessrequest").
 		Complete(r)
 }

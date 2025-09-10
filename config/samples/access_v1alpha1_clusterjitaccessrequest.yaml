@@ -6,4 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: clusterjitaccessrequest-sample
 spec:
-  # TODO(user): Add fields here
+  subject: alice@example.com
+  clusterRole: view
+  durationSeconds: 300

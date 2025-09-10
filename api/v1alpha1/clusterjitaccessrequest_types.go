@@ -32,6 +32,9 @@ type ClusterJITAccessRequestSpec struct {
 
 	// Duration in seconds (e.g. 600 for 10 min)
 	DurationSeconds int64 `json:"durationSeconds"`
+
+	// User's justification for the request
+	Justification string `json:"justification"`
 }
 
 // ClusterJITAccessRequestStatus defines the observed state of ClusterJITAccessRequest.

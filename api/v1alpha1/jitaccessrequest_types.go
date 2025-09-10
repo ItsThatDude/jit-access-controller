@@ -27,12 +27,25 @@ import (
 type JITAccessRequestSpec struct {
 	Subject string `json:"subject"`
 
-	// Name of the Role (must exist in same namespace)
+	// Name of the Role
 	Role string `json:"role"`
+
+	// Type of Role - Role or ClusterRole
+	RoleKind RoleKind `json:"roleKind"`
 
 	// Duration in seconds (e.g. 600 for 10 min)
 	DurationSeconds int64 `json:"durationSeconds"`
+
+	// User's justification for the request
+	Justification string `json:"justification"`
 }
+
+type RoleKind string
+
+const (
+	RoleKindRole        RoleKind = "Role"
+	RoleKindClusterRole RoleKind = "ClusterRole"
+)
 
 // JITAccessRequestStatus defines the observed state of JITAccessRequest.
 type JITAccessRequestStatus struct {

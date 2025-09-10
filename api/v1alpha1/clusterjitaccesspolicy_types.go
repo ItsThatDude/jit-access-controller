@@ -33,11 +33,8 @@ type ClusterSubjectPolicy struct {
 	// Subject is the identity (email or K8s username) of the user.
 	Subject string `json:"subject"`
 
-	// AllowedNamespaces is a list of namespaces the subject can request access to.
-	AllowedNamespaces []string `json:"allowedNamespaces"`
-
 	// AllowedRoles is a list of roles the subject is allowed to request.
-	AllowedRoles []string `json:"allowedRoles"`
+	AllowedClusterRoles []string `json:"allowedRoles"`
 
 	// MaxDurationSeconds is the max duration for temporary access.
 	MaxDurationSeconds int64 `json:"maxDurationSeconds"`

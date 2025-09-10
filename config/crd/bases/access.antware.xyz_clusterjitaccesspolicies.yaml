@@ -45,12 +45,6 @@ spec:
                   description: ClusterSubjectPolicy defines access rules for a single
                     subject (user/serviceaccount).
                   properties:
-                    allowedNamespaces:
-                      description: AllowedNamespaces is a list of namespaces the subject
-                        can request access to.
-                      items:
-                        type: string
-                      type: array
                     allowedRoles:
                       description: AllowedRoles is a list of roles the subject is
                         allowed to request.
@@ -67,7 +61,6 @@ spec:
                         of the user.
                       type: string
                   required:
-                  - allowedNamespaces
                   - allowedRoles
                   - maxDurationSeconds
                   - subject

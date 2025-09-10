@@ -44,13 +44,17 @@ spec:
                 format: int64
                 type: integer
               role:
-                description: Name of the Role (must exist in same namespace)
+                description: Name of the Role
+                type: string
+              roleKind:
+                description: Type of Role - Role or ClusterRole
                 type: string
               subject:
                 type: string
             required:
             - durationSeconds
             - role
+            - roleKind
             - subject
             type: object
           status:
@@ -60,9 +64,14 @@ spec:
                 description: Timestamp when the access will expire
                 format: date-time
                 type: string
-              granted:
-                description: True if access has been granted
+              requestId:
+                description: ID of the access request
                 type: string
+              state:
+                description: State of the Access Request
+                type: string
+            required:
+            - requestId
             type: object
         required:
         - spec

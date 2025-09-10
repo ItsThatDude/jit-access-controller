@@ -63,14 +63,16 @@ var _ webhook.CustomDefaulter = &JITAccessRequestCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind JITAccessRequest.
 func (d *JITAccessRequestCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	jitaccessrequest, ok := obj.(*accessv1alpha1.JITAccessRequest)
+	req, ok := obj.(*accessv1alpha1.JITAccessRequest)
 
 	if !ok {
 		return fmt.Errorf("expected an JITAccessRequest object but got %T", obj)
 	}
-	jitaccessrequestlog.Info("Defaulting for JITAccessRequest", "name", jitaccessrequest.GetName())
+	jitaccessrequestlog.Info("Defaulting for JITAccessRequest", "name", req.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	if req.Spec.RoleKind != accessv1alpha1.RoleKindRole && req.Spec.RoleKind != accessv1alpha1.RoleKindClusterRole {
+		req.Spec.RoleKind = accessv1alpha1.RoleKindRole
+	}
 
 	return nil
 }
@@ -104,7 +106,7 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 		return nil, err
 	}
 
-	permitted := policy.ValidateNamespaced(jitaccessrequest, &policies)
+	permitted := policy.IsNamespacedRequestValid(jitaccessrequest, &policies)
 	if !permitted {
 		return nil, fmt.Errorf("access request did not match a policy")
 	}

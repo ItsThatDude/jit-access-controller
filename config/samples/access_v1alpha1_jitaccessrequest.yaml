@@ -6,4 +6,6 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: jitaccessrequest-sample
 spec:
-  # TODO(user): Add fields here
+  subject: alice@example.com
+  role: view
+  durationSeconds: 300

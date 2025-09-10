@@ -6,4 +6,18 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: jitaccesspolicy-sample
 spec:
-  # TODO(user): Add fields here
+  policies:
+    - subject: alice@example.com
+      allowedNamespaces:
+        - dev
+        - qa
+      allowedRoles:
+        - view
+        - dev-debug
+      maxDurationSeconds: 1800
+    - subject: bob@example.com
+      allowedNamespaces:
+        - qa
+      allowedRoles:
+        - readonly
+      maxDurationSeconds: 600

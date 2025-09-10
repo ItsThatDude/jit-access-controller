@@ -6,4 +6,13 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: clusterjitaccesspolicy-sample
 spec:
-  # TODO(user): Add fields here
+  policies:
+    - subject: alice@example.com
+      allowedClusterRoles:
+        - view
+        - dev-debug
+      maxDurationSeconds: 1800
+    - subject: bob@example.com
+      allowedClusterRoles:
+        - readonly
+      maxDurationSeconds: 600

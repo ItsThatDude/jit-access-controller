@@ -5,7 +5,7 @@ import (
 	"antware.xyz/jitaccess/internal/utils"
 )
 
-func ValidateNamespaced(jit *accessv1alpha1.JITAccessRequest, policies *accessv1alpha1.JITAccessPolicyList) bool {
+func IsNamespacedRequestValid(jit *accessv1alpha1.JITAccessRequest, policies *accessv1alpha1.JITAccessPolicyList) bool {
 	permitted := false
 
 	for _, policy := range policies.Items {
@@ -23,14 +23,13 @@ func ValidateNamespaced(jit *accessv1alpha1.JITAccessRequest, policies *accessv1
 	return permitted
 }
 
-func ValidateCluster(jit *accessv1alpha1.ClusterJITAccessRequest, policies *accessv1alpha1.ClusterJITAccessPolicyList) bool {
+func IsClusterRequestValid(jit *accessv1alpha1.ClusterJITAccessRequest, policies *accessv1alpha1.ClusterJITAccessPolicyList) bool {
 	permitted := false
 
 	for _, policy := range policies.Items {
 		for _, p := range policy.Spec.Policies {
 			if p.Subject == jit.Spec.Subject {
-				if utils.Contains(p.AllowedRoles, jit.Spec.ClusterRole) &&
-					utils.Contains(p.AllowedNamespaces, jit.Namespace) &&
+				if utils.Contains(p.AllowedClusterRoles, jit.Spec.ClusterRole) &&
 					jit.Spec.DurationSeconds <= p.MaxDurationSeconds {
 					permitted = true
 					break
