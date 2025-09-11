@@ -1,10 +1,36 @@
-# jitaccess
-// TODO(user): Add simple overview of use/purpose
+# jit-access-controller
+
+The **JIT Access Controller** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+This controller provides a mechanism for granting temporary, on-demand access to resources in Kubernetes clusters.
+
+Users submit either a:
+
+- **`JITAccessRequest`** – for namespace-scoped access  
+- **`ClusterJITAccessRequest`** – for cluster-wide access  
+
+In each request, the user specifies the **roles** or **permissions** they require.  
+
+The controller evaluates the request against configured policies:
+
+- **`JITAccessPolicy`** – defines rules for namespace-scoped requests  
+- **`ClusterJITAccessPolicy`** – defines rules for cluster-wide requests  
+
+If the request matches a policy, the controller automatically creates the required Kubernetes RBAC objects:
+
+- **Role** / **RoleBinding** (for namespace-scoped access)  
+- **ClusterRole** / **ClusterRoleBinding** (for cluster-wide access)  
+
+Each request must also define a **Duration**.  
+Once the duration expires, the controller automatically revokes access by removing any created roles and bindings.
 
 ## Getting Started
+
+TODO: this section
+
+## Development
 
 ### Prerequisites
 - go version v1.24.0+
