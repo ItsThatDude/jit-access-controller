@@ -9,3 +9,8 @@ spec:
   subject: alice@example.com
   role: view
   durationSeconds: 300
+  justification: "This is a sample request"
+  permissions: 
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]

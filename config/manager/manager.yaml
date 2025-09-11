@@ -4,6 +4,7 @@ metadata:
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/component: controller
     app.kubernetes.io/managed-by: kustomize
   name: system
 ---
@@ -15,12 +16,14 @@ metadata:
   labels:
     control-plane: controller-manager
     app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/component: controller
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:
       control-plane: controller-manager
       app.kubernetes.io/name: jitaccess
+      app.kubernetes.io/component: controller
   replicas: 1
   template:
     metadata:
@@ -29,6 +32,7 @@ spec:
       labels:
         control-plane: controller-manager
         app.kubernetes.io/name: jitaccess
+        app.kubernetes.io/component: controller
     spec:
       # TODO(user): Uncomment the following code to configure the nodeAffinity expression
       # according to the platforms which are supported by your solution.

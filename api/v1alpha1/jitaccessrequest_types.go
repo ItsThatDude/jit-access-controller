@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,10 +29,16 @@ type JITAccessRequestSpec struct {
 	Subject string `json:"subject"`
 
 	// Name of the Role
-	Role string `json:"role"`
+	// +optional
+	Role string `json:"role,omitempty"`
 
 	// Type of Role - Role or ClusterRole
-	RoleKind RoleKind `json:"roleKind"`
+	// +optional
+	RoleKind RoleKind `json:"roleKind,omitempty"`
+
+	// A list of adhoc permissions to request
+	// +optional
+	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
 
 	// Duration in seconds (e.g. 600 for 10 min)
 	DurationSeconds int64 `json:"durationSeconds"`
@@ -57,6 +64,15 @@ type JITAccessRequestStatus struct {
 
 	// Timestamp when the access will expire
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
+
+	// True/False if the RoleBinding has been created
+	RoleBindingCreated bool `json:"roleBindingCreated"`
+
+	// True/False if the Adhoc Role has been created
+	AdhocRoleCreated bool `json:"adhocRoleCreated"`
+
+	// True/False if the Adhoc Role has been created
+	AdhocRoleBindingCreated bool `json:"adhocRoleBindingCreated"`
 }
 
 type RequestState string

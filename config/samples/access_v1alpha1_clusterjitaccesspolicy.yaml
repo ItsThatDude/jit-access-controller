@@ -7,12 +7,14 @@ metadata:
   name: clusterjitaccesspolicy-sample
 spec:
   policies:
-    - subject: alice@example.com
+    - subjects:
+        - alice@example.com
       allowedClusterRoles:
         - view
         - dev-debug
       maxDurationSeconds: 1800
-    - subject: bob@example.com
+    - subjects:
+        - bob@example.com
       allowedClusterRoles:
         - readonly
       maxDurationSeconds: 600

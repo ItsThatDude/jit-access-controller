@@ -50,6 +50,9 @@ const jitFinalizer = "access.antware.xyz/finalizer"
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -68,18 +71,24 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// If the requestId is not set, the request is new
 	if jit.Status.RequestId == "" {
 		jit.Status.RequestId = utils.GenerateRandomId()
+		jit.Status.State = accessv1alpha1.RequestStatePending
 		if err := r.Status().Update(ctx, &jit); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
 
 	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+		patch := client.MergeFrom(jit.DeepCopy())
+
 		controllerutil.AddFinalizer(&jit, jitFinalizer)
-		if err := r.Update(ctx, &jit); err != nil {
+
+		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
 		}
+
 		log.Info("Added finalizer to JITAccessRequest", "name", jit.Name)
 	}
 
@@ -135,39 +144,109 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return ctrl.Result{RequeueAfter: time.Until(jit.Status.ExpiresAt.Time)}, nil
 		} else {
 			// Reconcile the approved access request
-			roleBinding := &rbacv1.RoleBinding{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
-					Namespace: req.Namespace,
-				},
-				Subjects: []rbacv1.Subject{
-					{
-						Kind:     "User",
-						Name:     jit.Spec.Subject,
-						APIGroup: "rbac.authorization.k8s.io",
-					},
-				},
-				RoleRef: rbacv1.RoleRef{
-					APIGroup: "rbac.authorization.k8s.io",
-					Kind:     "Role",
-					Name:     jit.Spec.Role,
-				},
-			}
 
-			if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "failed to create RoleBinding")
-				return ctrl.Result{}, err
-			}
-
-			// Update status
+			// Update Expire Time
 			expireTime := metav1.NewTime(time.Now().Add(time.Duration(jit.Spec.DurationSeconds) * time.Second))
 			jit.Status.ExpiresAt = &expireTime
+
 			if err := r.Status().Update(ctx, &jit); err != nil {
 				log.Error(err, "failed to update status")
 				return ctrl.Result{}, err
 			}
 
-			log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.Role)
+			if jit.Spec.Role != "" {
+				roleBinding := &rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
+						Namespace: req.Namespace,
+					},
+					Subjects: []rbacv1.Subject{
+						{
+							Kind:     "User",
+							Name:     jit.Spec.Subject,
+							APIGroup: "rbac.authorization.k8s.io",
+						},
+					},
+					RoleRef: rbacv1.RoleRef{
+						APIGroup: "rbac.authorization.k8s.io",
+						Kind:     string(jit.Spec.RoleKind),
+						Name:     jit.Spec.Role,
+					},
+				}
+
+				if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create RoleBinding")
+					return ctrl.Result{}, err
+				}
+
+				jit.Status.RoleBindingCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.Role)
+			}
+
+			if len(jit.Spec.Permissions) > 0 {
+				name := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+
+				role := &rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      name,
+						Namespace: req.Namespace,
+					},
+					Rules: jit.Spec.Permissions,
+				}
+
+				if err := r.Create(ctx, role); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create Role")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("Role Created", "namespace", req.Namespace, "role", name)
+
+				jit.Status.AdhocRoleCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+
+				roleBinding := &rbacv1.RoleBinding{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      name,
+						Namespace: req.Namespace,
+					},
+					Subjects: []rbacv1.Subject{
+						{
+							Kind:     "User",
+							Name:     jit.Spec.Subject,
+							APIGroup: "rbac.authorization.k8s.io",
+						},
+					},
+					RoleRef: rbacv1.RoleRef{
+						APIGroup: "rbac.authorization.k8s.io",
+						Kind:     "Role",
+						Name:     name,
+					},
+				}
+
+				if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create RoleBinding")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("RoleBinding Created", "namespace", req.Namespace, "role", name)
+
+				jit.Status.AdhocRoleBindingCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+			}
 
 			return ctrl.Result{RequeueAfter: time.Duration(jit.Spec.DurationSeconds) * time.Second}, nil
 		}
@@ -187,23 +266,67 @@ func (r *JITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.JITAccessRequest) error {
 	log := logf.FromContext(ctx)
 
-	rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
-	rb := &rbacv1.RoleBinding{}
-	err := r.Get(ctx, types.NamespacedName{
-		Name:      rbName,
-		Namespace: jit.Namespace,
-	}, rb)
+	if jit.Status.RoleBindingCreated {
+		rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
+		rb := &rbacv1.RoleBinding{}
+		err := r.Get(ctx, types.NamespacedName{
+			Name:      rbName,
+			Namespace: jit.Namespace,
+		}, rb)
 
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	}
-
-	if err == nil {
-		// RoleBinding exists, delete it
-		if err := r.Delete(ctx, rb); err != nil {
+		if err != nil && !errors.IsNotFound(err) {
 			return err
 		}
-		log.Info("Deleted RoleBinding for JITAccessRequest", "rolebinding", rbName)
+
+		if err == nil {
+			// RoleBinding exists, delete it
+			if err := r.Delete(ctx, rb); err != nil {
+				return err
+			}
+			log.Info("Deleted RoleBinding for JITAccessRequest", "rolebinding", rbName)
+		}
+	}
+
+	if jit.Status.AdhocRoleBindingCreated {
+		rbName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+		rb := &rbacv1.RoleBinding{}
+		err := r.Get(ctx, types.NamespacedName{
+			Name:      rbName,
+			Namespace: jit.Namespace,
+		}, rb)
+
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		if err == nil {
+			// RoleBinding exists, delete it
+			if err := r.Delete(ctx, rb); err != nil {
+				return err
+			}
+			log.Info("Deleted Adhoc RoleBinding for JITAccessRequest", "rolebinding", rbName)
+		}
+	}
+
+	if jit.Status.AdhocRoleCreated {
+		roleName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+		role := &rbacv1.Role{}
+		err := r.Get(ctx, types.NamespacedName{
+			Name:      roleName,
+			Namespace: jit.Namespace,
+		}, role)
+
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		if err == nil {
+			// Role exists, delete it
+			if err := r.Delete(ctx, role); err != nil {
+				return err
+			}
+			log.Info("Deleted Adhoc Role for JITAccessRequest", "rolebinding", roleName)
+		}
 	}
 
 	return nil

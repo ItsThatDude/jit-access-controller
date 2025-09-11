@@ -7,17 +7,18 @@ metadata:
   name: jitaccesspolicy-sample
 spec:
   policies:
-    - subject: alice@example.com
-      allowedNamespaces:
-        - dev
-        - qa
+    - subjects:
+        - alice@example.com
       allowedRoles:
         - view
         - dev-debug
+      allowedPermissions:
+        - apiGroups: [""]
+          resources: ["pods"]
+          verbs: ["get", "list", "watch"]
       maxDurationSeconds: 1800
-    - subject: bob@example.com
-      allowedNamespaces:
-        - qa
+    - subjects:
+        - bob@example.com
       allowedRoles:
         - readonly
       maxDurationSeconds: 600

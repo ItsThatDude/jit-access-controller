@@ -89,5 +89,5 @@ spec:
             memory: 64Mi
         volumeMounts: []
       volumes: []
-      serviceAccountName: controller-manager
+      serviceAccountName: approval-server
       terminationGracePeriodSeconds: 10

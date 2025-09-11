@@ -9,3 +9,4 @@ spec:
   subject: alice@example.com
   clusterRole: view
   durationSeconds: 300
+  justification: "This is a sample request"

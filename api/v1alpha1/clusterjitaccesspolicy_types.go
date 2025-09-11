@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -31,10 +32,13 @@ type ClusterJITAccessPolicySpec struct {
 // ClusterSubjectPolicy defines access rules for a single subject (user/serviceaccount).
 type ClusterSubjectPolicy struct {
 	// Subject is the identity (email or K8s username) of the user.
-	Subject string `json:"subject"`
+	Subjects []string `json:"subjects"`
 
 	// AllowedRoles is a list of roles the subject is allowed to request.
-	AllowedClusterRoles []string `json:"allowedRoles"`
+	AllowedClusterRoles []string `json:"allowedClusterRoles,omitempty"`
+
+	// AllowedPermissions is a list of adhoc permissions the subject is allowed to request.
+	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`
 
 	// MaxDurationSeconds is the max duration for temporary access.
 	MaxDurationSeconds int64 `json:"maxDurationSeconds"`

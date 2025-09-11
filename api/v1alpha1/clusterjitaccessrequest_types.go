@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,8 +28,11 @@ import (
 type ClusterJITAccessRequestSpec struct {
 	Subject string `json:"subject"`
 
-	// Name of the ClusterRole (must exist in same namespace)
-	ClusterRole string `json:"clusterRole"`
+	// Name of the ClusterRole
+	ClusterRole string `json:"clusterRole,omitempty"`
+
+	// A list of adhoc permissions to request
+	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
 
 	// Duration in seconds (e.g. 600 for 10 min)
 	DurationSeconds int64 `json:"durationSeconds"`
@@ -47,6 +51,15 @@ type ClusterJITAccessRequestStatus struct {
 
 	// Timestamp when the access will expire
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
+
+	// True/False if the RoleBinding has been created
+	ClusterRoleBindingCreated bool `json:"clusterRoleBindingCreated"`
+
+	// True/False if the Adhoc Role has been created
+	AdhocClusterRoleCreated bool `json:"adhocClusterRoleCreated"`
+
+	// True/False if the Adhoc Role has been created
+	AdhocClusterRoleBindingCreated bool `json:"adhocClusterRoleBindingCreated"`
 }
 
 // +kubebuilder:object:root=true

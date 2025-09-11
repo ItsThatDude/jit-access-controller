@@ -47,6 +47,9 @@ type ClusterJITAccessRequestReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -65,19 +68,25 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	// If the requestId is not set, the request is new
 	if jit.Status.RequestId == "" {
 		jit.Status.RequestId = utils.GenerateRandomId()
+		jit.Status.State = accessv1alpha1.RequestStatePending
 		if err := r.Status().Update(ctx, &jit); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
 
 	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+		patch := client.MergeFrom(jit.DeepCopy())
+
 		controllerutil.AddFinalizer(&jit, jitFinalizer)
-		if err := r.Update(ctx, &jit); err != nil {
+
+		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
 		}
-		log.Info("Added finalizer to ClusterJITAccessRequest", "name", jit.Name)
+
+		log.Info("Added finalizer to JITAccessRequest", "name", jit.Name)
 	}
 
 	// Handle deletion
@@ -132,39 +141,108 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 			return ctrl.Result{RequeueAfter: time.Until(jit.Status.ExpiresAt.Time)}, nil
 		} else {
 			// Reconcile the approved access request
-			roleBinding := &rbacv1.ClusterRoleBinding{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
-					Namespace: req.Namespace,
-				},
-				Subjects: []rbacv1.Subject{
-					{
-						Kind:     "User",
-						Name:     jit.Spec.Subject,
-						APIGroup: "rbac.authorization.k8s.io",
-					},
-				},
-				RoleRef: rbacv1.RoleRef{
-					APIGroup: "rbac.authorization.k8s.io",
-					Kind:     "ClusterRole",
-					Name:     jit.Spec.ClusterRole,
-				},
-			}
-
-			if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "failed to create ClusterRoleBinding")
-				return ctrl.Result{}, err
-			}
 
 			// Update status
 			expireTime := metav1.NewTime(time.Now().Add(time.Duration(jit.Spec.DurationSeconds) * time.Second))
 			jit.Status.ExpiresAt = &expireTime
+
 			if err := r.Status().Update(ctx, &jit); err != nil {
 				log.Error(err, "failed to update status")
 				return ctrl.Result{}, err
 			}
 
-			log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.ClusterRole)
+			if jit.Spec.ClusterRole != "" {
+				roleBinding := &rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
+						Namespace: req.Namespace,
+					},
+					Subjects: []rbacv1.Subject{
+						{
+							Kind:     "User",
+							Name:     jit.Spec.Subject,
+							APIGroup: "rbac.authorization.k8s.io",
+						},
+					},
+					RoleRef: rbacv1.RoleRef{
+						APIGroup: "rbac.authorization.k8s.io",
+						Kind:     "ClusterRole",
+						Name:     jit.Spec.ClusterRole,
+					},
+				}
+
+				if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create ClusterRoleBinding")
+					return ctrl.Result{}, err
+				}
+
+				jit.Status.ClusterRoleBindingCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.ClusterRole)
+			}
+
+			if len(jit.Spec.Permissions) > 0 {
+				name := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+
+				role := &rbacv1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      name,
+						Namespace: req.Namespace,
+					},
+					Rules: jit.Spec.Permissions,
+				}
+
+				if err := r.Create(ctx, role); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create ClusterRole")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("ClusterRole created", "namespace", req.Namespace, "role", name)
+
+				jit.Status.AdhocClusterRoleCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+
+				roleBinding := &rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: name,
+					},
+					Subjects: []rbacv1.Subject{
+						{
+							Kind:     "User",
+							Name:     jit.Spec.Subject,
+							APIGroup: "rbac.authorization.k8s.io",
+						},
+					},
+					RoleRef: rbacv1.RoleRef{
+						APIGroup: "rbac.authorization.k8s.io",
+						Kind:     "ClusterRole",
+						Name:     name,
+					},
+				}
+
+				if err := r.Create(ctx, roleBinding); err != nil && !errors.IsAlreadyExists(err) {
+					log.Error(err, "failed to create ClusterRoleBinding")
+					return ctrl.Result{}, err
+				}
+
+				log.Info("ClusterRoleBinding Created", "namespace", req.Namespace, "role", name)
+
+				jit.Status.AdhocClusterRoleBindingCreated = true
+
+				if err := r.Status().Update(ctx, &jit); err != nil {
+					log.Error(err, "failed to update status")
+					return ctrl.Result{}, err
+				}
+			}
 
 			return ctrl.Result{RequeueAfter: time.Duration(jit.Spec.DurationSeconds) * time.Second}, nil
 		}
