@@ -26,7 +26,6 @@ resources:
 # not used by the jitaccess itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
 - clusterjitaccessrequest_admin_role.yaml
-- clusterjitaccessrequest_editor_role.yaml
 - clusterjitaccessrequest_viewer_role.yaml
 - clusterjitaccesspolicy_admin_role.yaml
 - clusterjitaccesspolicy_editor_role.yaml
@@ -35,6 +34,5 @@ resources:
 - jitaccesspolicy_editor_role.yaml
 - jitaccesspolicy_viewer_role.yaml
 - jitaccessrequest_admin_role.yaml
-- jitaccessrequest_editor_role.yaml
 - jitaccessrequest_viewer_role.yaml
 
