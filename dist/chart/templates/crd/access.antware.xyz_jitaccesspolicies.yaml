@@ -1,0 +1,141 @@
+{{- if .Values.crd.enable }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.crd.keep }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: jitaccesspolicies.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: JITAccessPolicy
+    listKind: JITAccessPolicyList
+    plural: jitaccesspolicies
+    singular: jitaccesspolicy
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: JITAccessPolicy is the Schema for the jitaccesspolicies API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of JITAccessPolicy
+            properties:
+              policies:
+                items:
+                  description: SubjectPolicy defines access rules for a single subject
+                    (user/serviceaccount).
+                  properties:
+                    allowedPermissions:
+                      description: AllowedPermissions is a list of adhoc permissions
+                        the subject is allowed to request.
+                      items:
+                        description: |-
+                          PolicyRule holds information that describes a policy rule, but does not contain information
+                          about who the rule applies to or which namespace the rule applies to.
+                        properties:
+                          apiGroups:
+                            description: |-
+                              APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                              the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          nonResourceURLs:
+                            description: |-
+                              NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                              Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                              Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          resourceNames:
+                            description: ResourceNames is an optional white list of
+                              names that the rule applies to.  An empty set means
+                              that everything is allowed.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          resources:
+                            description: Resources is a list of resources this rule
+                              applies to. '*' represents all resources.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: atomic
+                          verbs:
+                            description: Verbs is a list of Verbs that apply to ALL
+                              the ResourceKinds contained in this rule. '*' represents
+                              all verbs.
+                            items:
+                              type: string
+                            type: array
+                            x-kubernetes-list-type: atomic
+                        required:
+                        - verbs
+                        type: object
+                      type: array
+                    allowedRoles:
+                      description: AllowedRoles is a list of roles the subject is
+                        allowed to request.
+                      items:
+                        type: string
+                      type: array
+                    maxDurationSeconds:
+                      description: MaxDurationSeconds is the max duration for temporary
+                        access.
+                      format: int64
+                      minimum: 1
+                      type: integer
+                    subjects:
+                      description: Subject is the identity (email or K8s username)
+                        of the user.
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - maxDurationSeconds
+                  - subjects
+                  type: object
+                type: array
+            required:
+            - policies
+            type: object
+          status:
+            description: status defines the observed state of JITAccessPolicy
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end -}}

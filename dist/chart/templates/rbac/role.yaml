@@ -1,0 +1,68 @@
+{{- if .Values.rbac.enable }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  name: jitaccess-manager-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusterjitaccesspolicies
+  - clusterjitaccessrequests
+  - jitaccesspolicies
+  - jitaccessrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusterjitaccesspolicies/finalizers
+  - clusterjitaccessrequests/finalizers
+  - jitaccesspolicies/finalizers
+  - jitaccessrequests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusterjitaccesspolicies/status
+  - clusterjitaccessrequests/status
+  - jitaccesspolicies/status
+  - jitaccessrequests/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - roles
+  verbs:
+  - bind
+  - create
+  - delete
+  - escalate
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+{{- end -}}
