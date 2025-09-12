@@ -95,7 +95,10 @@ func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Contex
 	if !ok {
 		return nil, fmt.Errorf("expected a ClusterJITAccessRequest object but got %T", obj)
 	}
-	clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon creation", "name", clusterjitaccessrequest.GetName())
+
+	if clusterjitaccessrequest.Spec.ClusterRole == "" && len(clusterjitaccessrequest.Spec.Permissions) == 0 {
+		return nil, fmt.Errorf("either ClusterRole or Permissions needs to be set")
+	}
 
 	var policies accessv1alpha1.ClusterJITAccessPolicyList
 	if err := v.client.List(context.TODO(), &policies); err != nil {

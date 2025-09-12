@@ -100,6 +100,10 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 		return nil, fmt.Errorf("expected a JITAccessRequest object but got %T", obj)
 	}
 
+	if jitaccessrequest.Spec.Role == "" && len(jitaccessrequest.Spec.Permissions) == 0 {
+		return nil, fmt.Errorf("either Role or Permissions needs to be set")
+	}
+
 	var policies accessv1alpha1.JITAccessPolicyList
 	if err := v.client.List(context.TODO(), &policies); err != nil {
 		return nil, err
