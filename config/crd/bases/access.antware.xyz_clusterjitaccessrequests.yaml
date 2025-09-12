@@ -43,13 +43,22 @@ spec:
               clusterRole:
                 description: Name of the ClusterRole
                 type: string
+                x-kubernetes-validations:
+                - message: ClusterRole cannot be changed after creation
+                  rule: self == oldSelf
               durationSeconds:
                 description: Duration in seconds (e.g. 600 for 10 min)
                 format: int64
                 type: integer
+                x-kubernetes-validations:
+                - message: DurationSeconds cannot be changed after creation
+                  rule: self == oldSelf
               justification:
                 description: User's justification for the request
                 type: string
+                x-kubernetes-validations:
+                - message: Justification cannot be changed after creation
+                  rule: self == oldSelf
               permissions:
                 description: A list of adhoc permissions to request
                 items:
@@ -100,8 +109,14 @@ spec:
                   - verbs
                   type: object
                 type: array
+                x-kubernetes-validations:
+                - message: Permissions cannot be changed after creation
+                  rule: self == oldSelf
               subject:
                 type: string
+                x-kubernetes-validations:
+                - message: Subject cannot be changed after creation
+                  rule: self == oldSelf
             required:
             - durationSeconds
             - justification

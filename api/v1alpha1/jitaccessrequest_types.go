@@ -26,24 +26,31 @@ import (
 
 // JITAccessRequestSpec defines the desired state of JITAccessRequest
 type JITAccessRequestSpec struct {
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
 	Subject string `json:"subject"`
 
 	// Name of the Role
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Role cannot be changed after creation"
 	Role string `json:"role,omitempty"`
 
 	// Type of Role - Role or ClusterRole
 	// +optional
+	// +kubebuilder:validation:Enum=ClusterRole;Role
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RoleKind cannot be changed after creation"
 	RoleKind RoleKind `json:"roleKind,omitempty"`
 
 	// A list of adhoc permissions to request
 	// +optional
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Permissions cannot be changed after creation"
 	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
 
 	// Duration in seconds (e.g. 600 for 10 min)
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="DurationSeconds cannot be changed after creation"
 	DurationSeconds int64 `json:"durationSeconds"`
 
 	// User's justification for the request
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Justification cannot be changed after creation"
 	Justification string `json:"justification"`
 }
 

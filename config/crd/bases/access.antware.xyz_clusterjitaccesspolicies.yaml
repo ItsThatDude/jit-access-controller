@@ -107,6 +107,7 @@ spec:
                       description: MaxDurationSeconds is the max duration for temporary
                         access.
                       format: int64
+                      minimum: 1
                       type: integer
                     subjects:
                       description: Subject is the identity (email or K8s username)

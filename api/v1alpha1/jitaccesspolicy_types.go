@@ -41,6 +41,7 @@ type SubjectPolicy struct {
 	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`
 
 	// MaxDurationSeconds is the max duration for temporary access.
+	// +kubebuilder:validation:Minimum=1
 	MaxDurationSeconds int64 `json:"maxDurationSeconds"`
 }
 
