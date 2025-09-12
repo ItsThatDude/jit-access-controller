@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	"github.com/coreos/go-oidc"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -29,22 +30,22 @@ var clusterjitGVR = schema.GroupVersionResource{
 
 type Server struct {
 	client dynamic.Interface
-	ns     string
 	config ServerConfig
 }
 
 type ServerConfig struct {
-	clientId string
-	issuer   string
+	enableOidc bool
+	clientId   string
+	issuer     string
 }
 
-func NewServer(client dynamic.Interface, namespace string) *Server {
+func NewServer(client dynamic.Interface) *Server {
 	return &Server{
 		client: client,
-		ns:     namespace,
 		config: ServerConfig{
-			clientId: "your-client-id",
-			issuer:   "https://accounts.google.com",
+			enableOidc: false,
+			clientId:   "your-client-id",
+			issuer:     "https://accounts.google.com",
 		},
 	}
 }
@@ -98,24 +99,26 @@ func (s *Server) Start(addr string) error {
 
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		/*token := extractBearerToken(r)
-		if token == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+		if s.config.enableOidc {
+			token := extractBearerToken(r)
+			if token == "" {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
 
-		provider, err := oidc.NewProvider(context.Background(), s.config.issuer)
-		if err != nil {
-			http.Error(w, "OIDC error", http.StatusInternalServerError)
-			return
-		}
+			provider, err := oidc.NewProvider(context.Background(), s.config.issuer)
+			if err != nil {
+				http.Error(w, "OIDC error", http.StatusInternalServerError)
+				return
+			}
 
-		verifier := provider.Verifier(&oidc.Config{ClientID: s.config.clientId})
-		_, err = verifier.Verify(context.Background(), token)
-		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}*/
+			verifier := provider.Verifier(&oidc.Config{ClientID: s.config.clientId})
+			_, err = verifier.Verify(context.Background(), token)
+			if err != nil {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
+		}
 
 		next.ServeHTTP(w, r)
 	})

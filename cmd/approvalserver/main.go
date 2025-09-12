@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("error creating dynamic client: %v", err)
 	}
 
-	srv := approvalserver.NewServer(client, "default")
+	srv := approvalserver.NewServer(client)
 	if err := srv.Start(":8080"); err != nil {
 		log.Fatalf("server exited: %v", err)
 	}
