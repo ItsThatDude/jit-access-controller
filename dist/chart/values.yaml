@@ -42,6 +42,7 @@ controllerManager:
 
 # ApprovalServer Deployment Configurations
 approvalServer:
+  enable: true
   replicas: 1
   container:
     image:

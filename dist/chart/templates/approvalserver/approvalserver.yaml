@@ -1,3 +1,4 @@
+{{- if .Values.approvalServer.enable }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,22 +6,19 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-    control-plane: controller-manager
     app.kubernetes.io/component: "approvalserver"
 spec:
   replicas:  {{ .Values.approvalServer.replicas }}
   selector:
     matchLabels:
       {{- include "chart.selectorLabels" . | nindent 6 }}
-      control-plane: controller-manager
       app.kubernetes.io/component: "approvalserver"
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: manager
+        kubectl.kubernetes.io/default-container: approval-server
       labels:
         {{- include "chart.labels" . | nindent 8 }}
-        control-plane: controller-manager
         app.kubernetes.io/component: "approvalserver"
         {{- if and .Values.approvalServer.pod .Values.approvalServer.pod.labels }}
         {{- range $key, $value := .Values.approvalServer.pod.labels }}
@@ -62,3 +60,4 @@ spec:
         {{- toYaml .Values.approvalServer.securityContext | nindent 8 }}
       serviceAccountName: {{ .Values.approvalServer.serviceAccountName }}
       terminationGracePeriodSeconds: {{ .Values.approvalServer.terminationGracePeriodSeconds }}
+{{- end }}
