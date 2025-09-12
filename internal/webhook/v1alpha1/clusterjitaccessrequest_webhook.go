@@ -115,22 +115,26 @@ func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Contex
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type ClusterJITAccessRequest.
 func (v *ClusterJITAccessRequestCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	/*clusterjitaccessrequest, ok := newObj.(*accessv1alpha1.ClusterJITAccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterJITAccessRequest object for the newObj but got %T", newObj)
-	}
-	clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon update", "name", clusterjitaccessrequest.GetName())*/
+	/*
+		clusterjitaccessrequest, ok := newObj.(*accessv1alpha1.ClusterJITAccessRequest)
+		if !ok {
+			return nil, fmt.Errorf("expected a ClusterJITAccessRequest object for the newObj but got %T", newObj)
+		}
+		clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon update", "name", clusterjitaccessrequest.GetName())
+	*/
 
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type ClusterJITAccessRequest.
 func (v *ClusterJITAccessRequestCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	/*clusterjitaccessrequest, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterJITAccessRequest object but got %T", obj)
-	}
-	clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon deletion", "name", clusterjitaccessrequest.GetName())*/
+	/*
+		clusterjitaccessrequest, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
+		if !ok {
+			return nil, fmt.Errorf("expected a ClusterJITAccessRequest object but got %T", obj)
+		}
+		clusterjitaccessrequestlog.Info("Validation for ClusterJITAccessRequest upon deletion", "name", clusterjitaccessrequest.GetName())
+	*/
 
 	return nil, nil
 }

@@ -119,22 +119,26 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type JITAccessRequest.
 func (v *JITAccessRequestCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	/*jitaccessrequest, ok := newObj.(*accessv1alpha1.JITAccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a JITAccessRequest object for the newObj but got %T", newObj)
-	}
-	jitaccessrequestlog.Info("Validation for JITAccessRequest upon update", "name", jitaccessrequest.GetName())*/
+	/*
+		jitaccessrequest, ok := newObj.(*accessv1alpha1.JITAccessRequest)
+		if !ok {
+			return nil, fmt.Errorf("expected a JITAccessRequest object for the newObj but got %T", newObj)
+		}
+		jitaccessrequestlog.Info("Validation for JITAccessRequest upon update", "name", jitaccessrequest.GetName())
+	*/
 
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type JITAccessRequest.
 func (v *JITAccessRequestCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	/*jitaccessrequest, ok := obj.(*accessv1alpha1.JITAccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a JITAccessRequest object but got %T", obj)
-	}
-	jitaccessrequestlog.Info("Validation for JITAccessRequest upon deletion", "name", jitaccessrequest.GetName())*/
+	/*
+		jitaccessrequest, ok := obj.(*accessv1alpha1.JITAccessRequest)
+		if !ok {
+			return nil, fmt.Errorf("expected a JITAccessRequest object but got %T", obj)
+		}
+		jitaccessrequestlog.Info("Validation for JITAccessRequest upon deletion", "name", jitaccessrequest.GetName())
+	*/
 
 	return nil, nil
 }
