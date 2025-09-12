@@ -3,7 +3,7 @@ controllerManager:
   replicas: 1
   container:
     image:
-      repository: controller
+      repository: itsthatdood/jitaccess-controller
       tag: latest
     args:
       - "--leader-elect"
@@ -39,6 +39,45 @@ controllerManager:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
   serviceAccountName: jitaccess-controller-manager
+
+# ApprovalServer Deployment Configurations
+approvalServer:
+  replicas: 1
+  container:
+    image:
+      repository: itsthatdood/jitaccess-approvalserver
+      tag: latest
+    args: []
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    livenessProbe:
+      initialDelaySeconds: 15
+      periodSeconds: 20
+      httpGet:
+        path: /healthz
+        port: 8081
+    readinessProbe:
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      httpGet:
+        path: /readyz
+        port: 8081
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - "ALL"
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  terminationGracePeriodSeconds: 10
+  serviceAccountName: jitaccess-approvalserver
 
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:

@@ -1,7 +1,12 @@
 apiVersion: v2
 name: jitaccess
-description: A Helm chart to distribute the project jitaccess
+description: Helm chart for the jitaccess controller
+home: https://https://github.com/ItsThatDude/jit-access-controller
+keywords:
+  - just-in-time
+  - jit
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-icon: "https://example.com/icon.png"
+sources:
+  - https://https://github.com/ItsThatDude/jit-access-controller

@@ -11,6 +11,6 @@ roleRef:
   name: approver-role
 subjects:
 - kind: ServiceAccount
-  name: approval-server
+  name: {{ .Values.controllerManager.serviceAccountName }}
   namespace: {{ .Release.Namespace }}
 {{- end -}}

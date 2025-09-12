@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jitaccess-approvalserver
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    control-plane: controller-manager
+    app.kubernetes.io/component: "approvalserver"
+spec:
+  replicas:  {{ .Values.approvalServer.replicas }}
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      control-plane: controller-manager
+      app.kubernetes.io/component: "approvalserver"
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        {{- include "chart.labels" . | nindent 8 }}
+        control-plane: controller-manager
+        app.kubernetes.io/component: "approvalserver"
+        {{- if and .Values.approvalServer.pod .Values.approvalServer.pod.labels }}
+        {{- range $key, $value := .Values.approvalServer.pod.labels }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+        {{- end }}
+    spec:
+      containers:
+        - name: approval-server
+          args:
+            {{- range .Values.approvalServer.container.args }}
+            - {{ . }}
+            {{- end }}
+          command:
+            - /server
+          image: {{ .Values.approvalServer.container.image.repository }}:{{ .Values.approvalServer.container.image.tag }}
+          {{- if .Values.approvalServer.container.env }}
+          env:
+            {{- range $key, $value := .Values.approvalServer.container.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
+          {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.approvalServer.container.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.approvalServer.container.readinessProbe | nindent 12 }}
+          {{- if .Values.webhook.enable }}
+          ports:
+            - containerPort: 8080
+              name: approval-server
+              protocol: TCP
+          {{- end }}
+          resources:
+            {{- toYaml .Values.approvalServer.container.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.approvalServer.container.securityContext | nindent 12 }}
+      securityContext:
+        {{- toYaml .Values.approvalServer.securityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.approvalServer.serviceAccountName }}
+      terminationGracePeriodSeconds: {{ .Values.approvalServer.terminationGracePeriodSeconds }}
