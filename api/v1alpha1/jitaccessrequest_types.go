@@ -54,13 +54,6 @@ type JITAccessRequestSpec struct {
 	Justification string `json:"justification"`
 }
 
-type RoleKind string
-
-const (
-	RoleKindRole        RoleKind = "Role"
-	RoleKindClusterRole RoleKind = "ClusterRole"
-)
-
 // JITAccessRequestStatus defines the observed state of JITAccessRequest.
 type JITAccessRequestStatus struct {
 	// ID of the access request
@@ -72,23 +65,21 @@ type JITAccessRequestStatus struct {
 	// Timestamp when the access will expire
 	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
 
-	// True/False if the RoleBinding has been created
+	// True/False if a RoleBinding has been created
 	RoleBindingCreated bool `json:"roleBindingCreated"`
 
-	// True/False if the Adhoc Role has been created
+	// True/False if an Adhoc Role has been created
 	AdhocRoleCreated bool `json:"adhocRoleCreated"`
 
-	// True/False if the Adhoc Role has been created
+	// True/False if an Adhoc RoleBinding has been created
 	AdhocRoleBindingCreated bool `json:"adhocRoleBindingCreated"`
+
+	// The number of approvals required for this request
+	ApprovalsRequired int `json:"approvalsRequired"`
+
+	// The number of approvals received
+	ApprovalsReceived int `json:"approvalsReceived"`
 }
-
-type RequestState string
-
-const (
-	RequestStatePending  RequestState = "Pending"
-	RequestStateApproved RequestState = "Approved"
-	RequestStateDenied   RequestState = "Denied"
-)
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

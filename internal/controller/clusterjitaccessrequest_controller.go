@@ -29,10 +29,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	set "k8s.io/apimachinery/pkg/util/sets"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // ClusterJITAccessRequestReconciler reconciles a ClusterJITAccessRequest object
@@ -47,6 +50,9 @@ type ClusterJITAccessRequestReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses/finalizers,verbs=update
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
@@ -77,10 +83,10 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		}
 	}
 
-	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
 		patch := client.MergeFrom(jit.DeepCopy())
 
-		controllerutil.AddFinalizer(&jit, jitFinalizer)
+		controllerutil.AddFinalizer(&jit, JITFinalizer)
 
 		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
@@ -91,14 +97,14 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 	// Handle deletion
 	if !jit.DeletionTimestamp.IsZero() {
-		if controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+		if controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
 
 			// Remove finalizer to allow deletion to complete
-			controllerutil.RemoveFinalizer(&jit, jitFinalizer)
+			controllerutil.RemoveFinalizer(&jit, JITFinalizer)
 			if err := r.Update(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -116,15 +122,24 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		return ctrl.Result{}, err
 	}
 
-	permitted := policy.IsClusterRequestValid(&jit, &policies)
+	isRequestValid, matched_policy := policy.IsClusterRequestValid(&jit, &policies)
 
-	if !permitted {
+	if !isRequestValid {
 		log.Info("Access denied: no matching policy")
 		// Optionally set a condition or delete the request
 		return ctrl.Result{}, nil
 	}
 
-	if jit.Status.State == accessv1alpha1.RequestStateApproved {
+	if matched_policy.RequiredApprovals != jit.Status.ApprovalsRequired {
+		jit.Status.ApprovalsRequired = matched_policy.RequiredApprovals
+		if err := r.Status().Update(ctx, &jit); err != nil {
+			log.Error(err, "failed to update status")
+			return ctrl.Result{Requeue: true}, err
+		}
+	}
+
+	switch jit.Status.State {
+	case accessv1alpha1.RequestStateApproved:
 		if jit.Status.ExpiresAt != nil {
 			// If already granted and expired, clean up
 			if time.Now().After(jit.Status.ExpiresAt.Time) {
@@ -246,6 +261,45 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 			return ctrl.Result{RequeueAfter: time.Duration(jit.Spec.DurationSeconds) * time.Second}, nil
 		}
+	case accessv1alpha1.RequestStatePending:
+		responses := &accessv1alpha1.ClusterJITAccessResponseList{}
+		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": jit.Name}); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		approved := set.New[string]()
+		denied := set.New[string]()
+
+		for _, r := range responses.Items {
+			if r.Spec.Response == accessv1alpha1.ResponseStateApproved {
+				approved.Insert(r.Spec.Approver)
+			}
+			if r.Spec.Response == accessv1alpha1.ResponseStateDenied {
+				denied.Insert(r.Spec.Approver)
+			}
+		}
+
+		updateStatus := false
+
+		if approved.Len() != jit.Status.ApprovalsReceived {
+			jit.Status.ApprovalsReceived = approved.Len()
+			updateStatus = true
+		}
+
+		if denied.Len() > 0 {
+			jit.Status.State = accessv1alpha1.RequestStateDenied
+			updateStatus = true
+		} else if approved.Len() >= matched_policy.RequiredApprovals {
+			jit.Status.State = accessv1alpha1.RequestStateApproved
+			updateStatus = true
+		}
+
+		if updateStatus {
+			if err := r.Status().Update(ctx, &jit); err != nil {
+				log.Error(err, "failed to update status")
+				return ctrl.Result{Requeue: true}, err
+			}
+		}
 	}
 
 	return ctrl.Result{}, nil
@@ -253,8 +307,42 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterJITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
+
+	if err := indexer.IndexField(ctx, &accessv1alpha1.ClusterJITAccessRequest{}, "status.requestId",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest); ok {
+				return []string{myObj.Status.RequestId}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestId: %w", err)
+	}
+
+	if err := indexer.IndexField(ctx, &accessv1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*accessv1alpha1.ClusterJITAccessResponse); ok {
+				return []string{myObj.Spec.RequestRef}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestRef: %w", err)
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.ClusterJITAccessRequest{}).
+		Watches(
+			&accessv1alpha1.ClusterJITAccessResponse{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				resp := obj.(*accessv1alpha1.ClusterJITAccessResponse)
+				return []reconcile.Request{{
+					NamespacedName: types.NamespacedName{
+						Name: resp.Spec.RequestRef,
+					},
+				}}
+			}),
+		).
 		Named("clusterjitaccessrequest").
 		Complete(r)
 }
@@ -262,23 +350,75 @@ func (r *ClusterJITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) e
 func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.ClusterJITAccessRequest) error {
 	log := logf.FromContext(ctx)
 
-	rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
-	rb := &rbacv1.ClusterRoleBinding{}
-	err := r.Get(ctx, types.NamespacedName{
-		Name:      rbName,
-		Namespace: jit.Namespace,
-	}, rb)
+	// If a regular Role Binding was created, delete it
+	if jit.Status.ClusterRoleBindingCreated {
+		rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
+		rb := &rbacv1.ClusterRoleBinding{}
+		err := r.Get(ctx, client.ObjectKey{Name: rbName}, rb)
 
-	if err != nil && !errors.IsNotFound(err) {
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		if err == nil {
+			// RoleBinding exists, delete it
+			if err := r.Delete(ctx, rb); err != nil {
+				return err
+			}
+			log.Info("Deleted RoleBinding for JITAccessRequest", "clusterrolebinding", rbName)
+		}
+	}
+
+	// If an Adhoc Role Binding was created, delete it
+	if jit.Status.AdhocClusterRoleBindingCreated {
+		rbName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+		rb := &rbacv1.ClusterRoleBinding{}
+		err := r.Get(ctx, client.ObjectKey{Name: rbName}, rb)
+
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		if err == nil {
+			// RoleBinding exists, delete it
+			if err := r.Delete(ctx, rb); err != nil {
+				return err
+			}
+			log.Info("Deleted Adhoc RoleBinding for JITAccessRequest", "clusterrolebinding", rbName)
+		}
+	}
+
+	// If an Adhoc Role was created, delete it
+	if jit.Status.AdhocClusterRoleCreated {
+		roleName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
+		role := &rbacv1.ClusterRole{}
+		err := r.Get(ctx, client.ObjectKey{Name: roleName}, role)
+
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+
+		if err == nil {
+			// Role exists, delete it
+			if err := r.Delete(ctx, role); err != nil {
+				return err
+			}
+			log.Info("Deleted Adhoc Role for ClusterJITAccessRequest", "clusterrole", roleName)
+		}
+	}
+
+	// Delete all of the responses for this request
+	responses := &accessv1alpha1.ClusterJITAccessResponseList{}
+	if err := r.List(ctx, responses,
+		client.MatchingFields{"spec.requestRef": jit.Name}); err != nil {
 		return err
 	}
 
-	if err == nil {
-		// ClusterRoleBinding exists, delete it
-		if err := r.Delete(ctx, rb); err != nil {
+	for _, resp := range responses.Items {
+		log.Info("Deleting ClusterJITAccessResponse", "ClusterJITAccessResponse", resp.Name)
+		if err := r.Delete(ctx, &resp); err != nil {
 			return err
 		}
-		log.Info("Deleted ClusterRoleBinding for ClusterJITAccessRequest", "clusterrolebinding", rbName)
 	}
 
 	return nil

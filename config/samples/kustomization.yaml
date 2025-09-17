@@ -4,4 +4,6 @@ resources:
 - access_v1alpha1_jitaccesspolicy.yaml
 - access_v1alpha1_clusterjitaccesspolicy.yaml
 - access_v1alpha1_clusterjitaccessrequest.yaml
+- access_v1alpha1_jitaccessresponse.yaml
+- access_v1alpha1_clusterjitaccessresponse.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

@@ -131,6 +131,12 @@ spec:
               adhocClusterRoleCreated:
                 description: True/False if the Adhoc Role has been created
                 type: boolean
+              approvalsReceived:
+                description: The number of approvals received
+                type: integer
+              approvalsRequired:
+                description: The number of approvals required for this request
+                type: integer
               clusterRoleBindingCreated:
                 description: True/False if the RoleBinding has been created
                 type: boolean
@@ -147,6 +153,8 @@ spec:
             required:
             - adhocClusterRoleBindingCreated
             - adhocClusterRoleCreated
+            - approvalsReceived
+            - approvalsRequired
             - clusterRoleBindingCreated
             - requestId
             type: object

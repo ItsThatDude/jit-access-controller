@@ -228,6 +228,9 @@ func main() {
 			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterJITAccessRequest")
 			os.Exit(1)
 		}
+
+		webhookv1alpha1.SetupClusterJITAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupJITAccessResponseWebhookWithManager(mgr)
 	}
 	// +kubebuilder:scaffold:builder
 

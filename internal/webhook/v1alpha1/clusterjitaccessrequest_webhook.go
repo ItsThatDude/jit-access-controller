@@ -105,7 +105,7 @@ func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Contex
 		return nil, err
 	}
 
-	permitted := policy.IsClusterRequestValid(clusterjitaccessrequest, &policies)
+	permitted, _ := policy.IsClusterRequestValid(clusterjitaccessrequest, &policies)
 	if !permitted {
 		return nil, fmt.Errorf("cluster access request did not match a policy")
 	}

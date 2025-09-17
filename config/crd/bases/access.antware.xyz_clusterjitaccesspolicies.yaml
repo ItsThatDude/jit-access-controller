@@ -103,10 +103,25 @@ spec:
                         - verbs
                         type: object
                       type: array
+                    approverGroups:
+                      description: Approver Groups
+                      items:
+                        type: string
+                      type: array
+                    approvers:
+                      description: Approvers
+                      items:
+                        type: string
+                      type: array
                     maxDurationSeconds:
                       description: MaxDurationSeconds is the max duration for temporary
                         access.
                       format: int64
+                      minimum: 1
+                      type: integer
+                    requiredApprovals:
+                      description: The minimum number of approvals required to grant
+                        the request
                       minimum: 1
                       type: integer
                     subjects:
@@ -117,6 +132,7 @@ spec:
                       type: array
                   required:
                   - maxDurationSeconds
+                  - requiredApprovals
                   - subjects
                   type: object
                 type: array

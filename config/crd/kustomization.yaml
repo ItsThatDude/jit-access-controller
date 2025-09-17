@@ -6,6 +6,8 @@ resources:
 - bases/access.antware.xyz_jitaccesspolicies.yaml
 - bases/access.antware.xyz_clusterjitaccesspolicies.yaml
 - bases/access.antware.xyz_clusterjitaccessrequests.yaml
+- bases/access.antware.xyz_jitaccessresponses.yaml
+- bases/access.antware.xyz_clusterjitaccessresponses.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

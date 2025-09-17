@@ -134,11 +134,17 @@ spec:
             description: status defines the observed state of JITAccessRequest
             properties:
               adhocRoleBindingCreated:
-                description: True/False if the Adhoc Role has been created
+                description: True/False if an Adhoc RoleBinding has been created
                 type: boolean
               adhocRoleCreated:
-                description: True/False if the Adhoc Role has been created
+                description: True/False if an Adhoc Role has been created
                 type: boolean
+              approvalsReceived:
+                description: The number of approvals received
+                type: integer
+              approvalsRequired:
+                description: The number of approvals required for this request
+                type: integer
               expiresAt:
                 description: Timestamp when the access will expire
                 format: date-time
@@ -147,7 +153,7 @@ spec:
                 description: ID of the access request
                 type: string
               roleBindingCreated:
-                description: True/False if the RoleBinding has been created
+                description: True/False if a RoleBinding has been created
                 type: boolean
               state:
                 description: State of the Access Request
@@ -155,6 +161,8 @@ spec:
             required:
             - adhocRoleBindingCreated
             - adhocRoleCreated
+            - approvalsReceived
+            - approvalsRequired
             - requestId
             - roleBindingCreated
             type: object

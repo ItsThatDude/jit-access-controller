@@ -13,8 +13,15 @@ spec:
         - view
         - dev-debug
       maxDurationSeconds: 1800
+      requiredApprovals: 1
+      approvers:
+        - admin
     - subjects:
         - bob@example.com
       allowedClusterRoles:
         - readonly
       maxDurationSeconds: 600
+      requiredApprovals: 2
+      approvers:
+        - admin
+        - alice@example.com

@@ -17,8 +17,15 @@ spec:
           resources: ["pods"]
           verbs: ["get", "list", "watch"]
       maxDurationSeconds: 1800
+      requiredApprovals: 1
+      approvers:
+        - admin
     - subjects:
         - bob@example.com
       allowedRoles:
         - readonly
       maxDurationSeconds: 600
+      requiredApprovals: 2
+      approvers:
+        - admin
+        - alice@example.com

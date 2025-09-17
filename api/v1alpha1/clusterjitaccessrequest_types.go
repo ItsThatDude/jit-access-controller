@@ -65,6 +65,12 @@ type ClusterJITAccessRequestStatus struct {
 
 	// True/False if the Adhoc Role has been created
 	AdhocClusterRoleBindingCreated bool `json:"adhocClusterRoleBindingCreated"`
+
+	// The number of approvals required for this request
+	ApprovalsRequired int `json:"approvalsRequired"`
+
+	// The number of approvals received
+	ApprovalsReceived int `json:"approvalsReceived"`
 }
 
 // +kubebuilder:object:root=true

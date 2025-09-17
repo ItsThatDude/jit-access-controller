@@ -1,8 +1,9 @@
 package policy
 
 import (
+	"slices"
+
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -50,11 +51,11 @@ func AllRequestedPolicyRulesAllowed(requestedRules, allowedRules []rbacv1.Policy
 func IsNamespacedRequestValid(
 	jit *accessv1alpha1.JITAccessRequest,
 	policies *accessv1alpha1.JITAccessPolicyList,
-) bool {
+) (bool, *accessv1alpha1.SubjectPolicy) {
 	for _, item := range policies.Items {
 		for _, policy := range item.Spec.Policies {
 			// Subject must match
-			if !utils.Contains(policy.Subjects, jit.Spec.Subject) {
+			if !slices.Contains(policy.Subjects, jit.Spec.Subject) {
 				continue
 			}
 
@@ -64,25 +65,25 @@ func IsNamespacedRequestValid(
 
 			// Role check (empty role means "no role requested", so skip check)
 			roleAllowed := jit.Spec.Role == "" ||
-				(utils.Contains(policy.AllowedRoles, jit.Spec.Role) &&
+				(slices.Contains(policy.AllowedRoles, jit.Spec.Role) &&
 					jit.Spec.DurationSeconds <= policy.MaxDurationSeconds)
 
 			if permissionsAllowed && roleAllowed {
-				return true
+				return true, &policy
 			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 func IsClusterRequestValid(
 	jit *accessv1alpha1.ClusterJITAccessRequest,
 	policies *accessv1alpha1.ClusterJITAccessPolicyList,
-) bool {
+) (bool, *accessv1alpha1.ClusterSubjectPolicy) {
 	for _, item := range policies.Items {
 		for _, policy := range item.Spec.Policies {
 			// Subject must match
-			if !utils.Contains(policy.Subjects, jit.Spec.Subject) {
+			if !slices.Contains(policy.Subjects, jit.Spec.Subject) {
 				continue
 			}
 
@@ -92,13 +93,13 @@ func IsClusterRequestValid(
 
 			// Role check (empty role means "no role requested", so skip check)
 			roleAllowed := jit.Spec.ClusterRole == "" ||
-				(utils.Contains(policy.AllowedClusterRoles, jit.Spec.ClusterRole) &&
+				(slices.Contains(policy.AllowedClusterRoles, jit.Spec.ClusterRole) &&
 					jit.Spec.DurationSeconds <= policy.MaxDurationSeconds)
 
 			if permissionsAllowed && roleAllowed {
-				return true
+				return true, &policy
 			}
 		}
 	}
-	return false
+	return false, nil
 }

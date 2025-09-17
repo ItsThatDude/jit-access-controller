@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	set "k8s.io/apimachinery/pkg/util/sets"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +31,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
 	"antware.xyz/jitaccess/internal/policy"
@@ -42,14 +46,15 @@ type JITAccessRequestReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-const jitFinalizer = "access.antware.xyz/finalizer"
-
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/finalizers,verbs=update
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses/finalizers,verbs=update
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
@@ -80,10 +85,11 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+	// Add the finalizer to cleanup resources on deletion
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
 		patch := client.MergeFrom(jit.DeepCopy())
 
-		controllerutil.AddFinalizer(&jit, jitFinalizer)
+		controllerutil.AddFinalizer(&jit, JITFinalizer)
 
 		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
@@ -94,14 +100,14 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deletion
 	if !jit.DeletionTimestamp.IsZero() {
-		if controllerutil.ContainsFinalizer(&jit, jitFinalizer) {
+		if controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
 
 			// Remove finalizer to allow deletion to complete
-			controllerutil.RemoveFinalizer(&jit, jitFinalizer)
+			controllerutil.RemoveFinalizer(&jit, JITFinalizer)
 			if err := r.Update(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -115,19 +121,28 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Check if the JIT Access Request matches a defined policy
 	var policies accessv1alpha1.JITAccessPolicyList
-	if err := r.List(ctx, &policies); err != nil {
+	if err := r.List(ctx, &policies, client.InNamespace(req.Namespace)); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	permitted := policy.IsNamespacedRequestValid(&jit, &policies)
+	isRequestValid, matched_policy := policy.IsNamespacedRequestValid(&jit, &policies)
 
-	if !permitted {
+	if !isRequestValid {
 		log.Info("Access denied: no matching policy")
 		// Optionally set a condition or delete the request
 		return ctrl.Result{}, nil
 	}
 
-	if jit.Status.State == accessv1alpha1.RequestStateApproved {
+	if matched_policy.RequiredApprovals != jit.Status.ApprovalsRequired {
+		jit.Status.ApprovalsRequired = matched_policy.RequiredApprovals
+		if err := r.Status().Update(ctx, &jit); err != nil {
+			log.Error(err, "failed to update status")
+			return ctrl.Result{Requeue: true}, err
+		}
+	}
+
+	switch jit.Status.State {
+	case accessv1alpha1.RequestStateApproved:
 		if jit.Status.ExpiresAt != nil {
 			// If already granted and expired, clean up
 			if time.Now().After(jit.Status.ExpiresAt.Time) {
@@ -250,6 +265,46 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 			return ctrl.Result{RequeueAfter: time.Duration(jit.Spec.DurationSeconds) * time.Second}, nil
 		}
+	case accessv1alpha1.RequestStatePending:
+		responses := &accessv1alpha1.JITAccessResponseList{}
+		if err := r.List(ctx, responses, client.InNamespace(req.Namespace),
+			client.MatchingFields{"spec.requestRef": jit.Name}); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		approved := set.New[string]()
+		denied := set.New[string]()
+
+		for _, r := range responses.Items {
+			if r.Spec.Response == accessv1alpha1.ResponseStateApproved {
+				approved.Insert(r.Spec.Approver)
+			}
+			if r.Spec.Response == accessv1alpha1.ResponseStateDenied {
+				denied.Insert(r.Spec.Approver)
+			}
+		}
+
+		updateStatus := false
+
+		if approved.Len() != jit.Status.ApprovalsReceived {
+			jit.Status.ApprovalsReceived = approved.Len()
+			updateStatus = true
+		}
+
+		if denied.Len() > 0 {
+			jit.Status.State = accessv1alpha1.RequestStateDenied
+			updateStatus = true
+		} else if approved.Len() >= matched_policy.RequiredApprovals {
+			jit.Status.State = accessv1alpha1.RequestStateApproved
+			updateStatus = true
+		}
+
+		if updateStatus {
+			if err := r.Status().Update(ctx, &jit); err != nil {
+				log.Error(err, "failed to update status")
+				return ctrl.Result{Requeue: true}, err
+			}
+		}
 	}
 
 	return ctrl.Result{}, nil
@@ -257,8 +312,43 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *JITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
+
+	if err := indexer.IndexField(ctx, &accessv1alpha1.JITAccessRequest{}, "status.requestId",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*accessv1alpha1.JITAccessRequest); ok {
+				return []string{myObj.Status.RequestId}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestId: %w", err)
+	}
+
+	if err := indexer.IndexField(ctx, &accessv1alpha1.JITAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*accessv1alpha1.JITAccessResponse); ok {
+				return []string{myObj.Spec.RequestRef}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestRef: %w", err)
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.JITAccessRequest{}).
+		Watches(
+			&accessv1alpha1.JITAccessResponse{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				resp := obj.(*accessv1alpha1.JITAccessResponse)
+				return []reconcile.Request{{
+					NamespacedName: types.NamespacedName{
+						Namespace: resp.Namespace,
+						Name:      resp.Spec.RequestRef,
+					},
+				}}
+			}),
+		).
 		Named("jitaccessrequest").
 		Complete(r)
 }
@@ -266,6 +356,7 @@ func (r *JITAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *accessv1alpha1.JITAccessRequest) error {
 	log := logf.FromContext(ctx)
 
+	// If a regular Role Binding was created, delete it
 	if jit.Status.RoleBindingCreated {
 		rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
 		rb := &rbacv1.RoleBinding{}
@@ -287,6 +378,7 @@ func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *
 		}
 	}
 
+	// If an Adhoc Role Binding was created, delete it
 	if jit.Status.AdhocRoleBindingCreated {
 		rbName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
 		rb := &rbacv1.RoleBinding{}
@@ -308,24 +400,52 @@ func (r *JITAccessRequestReconciler) cleanupResources(ctx context.Context, jit *
 		}
 	}
 
+	// If an Adhoc Role was created, delete it
 	if jit.Status.AdhocRoleCreated {
 		roleName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
-		role := &rbacv1.Role{}
-		err := r.Get(ctx, types.NamespacedName{
-			Name:      roleName,
-			Namespace: jit.Namespace,
-		}, role)
 
-		if err != nil && !errors.IsNotFound(err) {
-			return err
+		var obj client.Object
+		var key client.ObjectKey
+
+		if jit.Spec.RoleKind == accessv1alpha1.RoleKindClusterRole {
+			obj = &rbacv1.ClusterRole{}
+			key = client.ObjectKey{Name: roleName}
+		} else {
+			obj = &rbacv1.Role{}
+			key = client.ObjectKey{Name: roleName, Namespace: jit.Namespace}
 		}
 
-		if err == nil {
-			// Role exists, delete it
-			if err := r.Delete(ctx, role); err != nil {
+		// Try to get the role
+		if err := r.Get(ctx, key, obj); err != nil {
+			if !errors.IsNotFound(err) {
 				return err
 			}
-			log.Info("Deleted Adhoc Role for JITAccessRequest", "rolebinding", roleName)
+			// Role does not exist, nothing to do
+		} else {
+			// Role exists, delete it
+			if err := r.Delete(ctx, obj); err != nil {
+				return err
+			}
+
+			log.Info("Deleted Adhoc Role for JITAccessRequest",
+				"roleKind", jit.Spec.RoleKind,
+				"name", roleName,
+			)
+		}
+	}
+
+	// Delete all of the responses for this request
+	responses := &accessv1alpha1.JITAccessResponseList{}
+	if err := r.List(ctx, responses,
+		client.InNamespace(jit.Namespace),
+		client.MatchingFields{"spec.requestRef": jit.Name}); err != nil {
+		return err
+	}
+
+	for _, resp := range responses.Items {
+		log.Info("Deleting JITAccessResponse", "JITAccessResponse", resp.Name)
+		if err := r.Delete(ctx, &resp); err != nil {
+			return err
 		}
 	}
 

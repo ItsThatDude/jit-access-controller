@@ -43,6 +43,16 @@ type ClusterSubjectPolicy struct {
 	// MaxDurationSeconds is the max duration for temporary access.
 	// +kubebuilder:validation:Minimum=1
 	MaxDurationSeconds int64 `json:"maxDurationSeconds"`
+
+	// The minimum number of approvals required to grant the request
+	// +kubebuilder:validation:Minimum=1
+	RequiredApprovals int `json:"requiredApprovals"`
+
+	// Approvers
+	Approvers []string `json:"approvers,omitempty"`
+
+	// Approver Groups
+	ApproverGroups []string `json:"approverGroups,omitempty"`
 }
 
 // ClusterJITAccessPolicyStatus defines the observed state of ClusterJITAccessPolicy.

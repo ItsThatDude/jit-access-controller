@@ -6,5 +6,5 @@ import (
 )
 
 func GenerateRandomId() string {
-	return fmt.Sprintf("%08x", rand.Uint32())
+	return fmt.Sprintf("%08x%08x", rand.Uint32(), rand.Uint32())
 }
