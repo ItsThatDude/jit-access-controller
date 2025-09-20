@@ -9,7 +9,7 @@ spec:
   policies:
     - subjects:
         - alice@example.com
-      allowedClusterRoles:
+      allowedRoles:
         - view
         - dev-debug
       maxDurationSeconds: 1800
@@ -18,7 +18,7 @@ spec:
         - admin
     - subjects:
         - bob@example.com
-      allowedClusterRoles:
+      allowedRoles:
         - readonly
       maxDurationSeconds: 600
       requiredApprovals: 2

@@ -7,6 +7,6 @@ metadata:
   name: clusterjitaccessrequest-sample
 spec:
   subject: alice@example.com
-  clusterRole: view
+  role: view
   durationSeconds: 300
   justification: "This is a sample request"
