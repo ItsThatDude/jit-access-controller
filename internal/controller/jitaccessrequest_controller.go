@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	common "antware.xyz/jitaccess/internal/common"
 	"antware.xyz/jitaccess/internal/policy"
 	"antware.xyz/jitaccess/internal/utils"
 )
@@ -86,10 +87,10 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// Add the finalizer to cleanup resources on deletion
-	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, common.JITFinalizer) {
 		patch := client.MergeFrom(jit.DeepCopy())
 
-		controllerutil.AddFinalizer(&jit, JITFinalizer)
+		controllerutil.AddFinalizer(&jit, common.JITFinalizer)
 
 		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
@@ -100,14 +101,14 @@ func (r *JITAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// Handle deletion
 	if !jit.DeletionTimestamp.IsZero() {
-		if controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
+		if controllerutil.ContainsFinalizer(&jit, common.JITFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
 
 			// Remove finalizer to allow deletion to complete
-			controllerutil.RemoveFinalizer(&jit, JITFinalizer)
+			controllerutil.RemoveFinalizer(&jit, common.JITFinalizer)
 			if err := r.Update(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}

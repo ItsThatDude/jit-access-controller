@@ -26,12 +26,20 @@ func (r *ClusterJITAccessRequest) GetSpec() *JITAccessRequestBaseSpec {
 func (r *ClusterJITAccessRequest) GetStatus() *JITAccessRequestStatus {
 	return &r.Status
 }
-func (r *ClusterJITAccessRequest) SetStatus(st *JITAccessRequestStatus) {
-	r.Status = *st
+func (r *ClusterJITAccessRequest) SetStatus(status *JITAccessRequestStatus) {
+	r.Status = *status
 }
 func (r *ClusterJITAccessRequest) GetRoleKind() RoleKind {
-	// Always ClusterRole for cluster-scoped requests
 	return RoleKindClusterRole
+}
+func (r *ClusterJITAccessRequest) GetScope() string {
+	return "Cluster"
+}
+func (r *ClusterJITAccessRequest) GetNamespace() string {
+	return ""
+}
+func (r *ClusterJITAccessRequest) GetName() string {
+	return r.Name
 }
 
 // ClusterJITAccessRequestSpec defines the desired state of ClusterJITAccessRequest

@@ -203,7 +203,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.JITAccessRequestReconciler{
+	if err := (&controller.GenericJITAccessReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManagerCluster(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterJITAccessRequest")
+		os.Exit(1)
+	}
+
+	if err := (&controller.GenericJITAccessReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManagerNamespaced(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "JITAccessRequest")
+		os.Exit(1)
+	}
+
+	/*if err := (&controller.JITAccessRequestReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -216,7 +232,8 @@ func main() {
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterJITAccessRequest")
 		os.Exit(1)
-	}
+	}*/
+
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		if err := webhookv1alpha1.SetupJITAccessRequestWebhookWithManager(mgr); err != nil {

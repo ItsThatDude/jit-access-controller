@@ -20,8 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *JITAccessResponse) GetResponse() ResponseState {
+	return r.Spec.Response
+}
+
+func (r *JITAccessResponse) GetApprover() string {
+	return r.Spec.Approver
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

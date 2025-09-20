@@ -9,6 +9,10 @@ spec:
   policies:
     - subjects:
         - alice@example.com
+      allowedPermissions:
+        - apiGroups: [""]
+          resources: ["pods"]
+          verbs: ["get", "list", "watch"]
       allowedRoles:
         - view
         - dev-debug

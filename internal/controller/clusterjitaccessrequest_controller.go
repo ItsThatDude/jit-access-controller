@@ -22,6 +22,7 @@ import (
 	"time"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	common "antware.xyz/jitaccess/internal/common"
 	"antware.xyz/jitaccess/internal/policy"
 	"antware.xyz/jitaccess/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -55,6 +56,7 @@ type ClusterJITAccessRequestReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses/finalizers,verbs=update
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -83,10 +85,10 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 		}
 	}
 
-	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
+	if jit.DeletionTimestamp.IsZero() && !controllerutil.ContainsFinalizer(&jit, common.JITFinalizer) {
 		patch := client.MergeFrom(jit.DeepCopy())
 
-		controllerutil.AddFinalizer(&jit, JITFinalizer)
+		controllerutil.AddFinalizer(&jit, common.JITFinalizer)
 
 		if err := r.Patch(ctx, &jit, patch); err != nil {
 			return ctrl.Result{}, err
@@ -97,14 +99,14 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 	// Handle deletion
 	if !jit.DeletionTimestamp.IsZero() {
-		if controllerutil.ContainsFinalizer(&jit, JITFinalizer) {
+		if controllerutil.ContainsFinalizer(&jit, common.JITFinalizer) {
 			// Cleanup any role bindings left behind
 			if err := r.cleanupResources(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}
 
 			// Remove finalizer to allow deletion to complete
-			controllerutil.RemoveFinalizer(&jit, JITFinalizer)
+			controllerutil.RemoveFinalizer(&jit, common.JITFinalizer)
 			if err := r.Update(ctx, &jit); err != nil {
 				return ctrl.Result{}, err
 			}

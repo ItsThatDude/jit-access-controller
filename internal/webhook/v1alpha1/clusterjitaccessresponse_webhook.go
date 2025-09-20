@@ -26,7 +26,7 @@ type ClusterJITAccessResponseValidator struct {
 func SetupClusterJITAccessResponseWebhookWithManager(mgr ctrl.Manager) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-clusterjitaccessresponse",
-		&admission.Webhook{Handler: &JITAccessResponseValidator{
+		&admission.Webhook{Handler: &ClusterJITAccessResponseValidator{
 			decoder: admission.NewDecoder(mgr.GetScheme()),
 			client:  mgr.GetClient(),
 		}},

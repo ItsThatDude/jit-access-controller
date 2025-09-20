@@ -26,11 +26,20 @@ func (r *JITAccessRequest) GetSpec() *JITAccessRequestBaseSpec {
 func (r *JITAccessRequest) GetStatus() *JITAccessRequestStatus {
 	return &r.Status
 }
-func (r *JITAccessRequest) SetStatus(st *JITAccessRequestStatus) {
-	r.Status = *st
+func (r *JITAccessRequest) SetStatus(status *JITAccessRequestStatus) {
+	r.Status = *status
 }
 func (r *JITAccessRequest) GetRoleKind() RoleKind {
 	return r.Spec.RoleKind
+}
+func (r *JITAccessRequest) GetScope() string {
+	return "Namespace"
+}
+func (r *JITAccessRequest) GetNamespace() string {
+	return r.Namespace
+}
+func (r *JITAccessRequest) GetName() string {
+	return r.Name
 }
 
 // JITAccessRequestSpec defines the desired state of JITAccessRequest
