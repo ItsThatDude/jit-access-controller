@@ -17,48 +17,20 @@ limitations under the License.
 package v1alpha1
 
 import (
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r JITAccessPolicy) GetPolicies() []SubjectPolicy {
+	return r.Spec.Policies
+}
 
 // JITAccessPolicySpec defines the desired state of JITAccessPolicy
 type JITAccessPolicySpec struct {
 	Policies []SubjectPolicy `json:"policies"`
 }
 
-// SubjectPolicy defines access rules for a single subject (user/serviceaccount).
-type SubjectPolicy struct {
-	// Subject is the identity (email or K8s username) of the requester.
-	Subjects []string `json:"subjects"`
-
-	// AllowedRoles is a list of roles the subject is allowed to request.
-	AllowedRoles []string `json:"allowedRoles,omitempty"`
-
-	// AllowedPermissions is a list of adhoc permissions the subject is allowed to request.
-	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`
-
-	// MaxDurationSeconds is the max duration for temporary access.
-	// +kubebuilder:validation:Minimum=1
-	MaxDurationSeconds int64 `json:"maxDurationSeconds"`
-
-	// The minimum number of approvals required to grant the request
-	// +kubebuilder:validation:Minimum=1
-	RequiredApprovals int `json:"requiredApprovals"`
-
-	// Approvers
-	Approvers []string `json:"approvers,omitempty"`
-
-	// Approver Groups
-	ApproverGroups []string `json:"approverGroups,omitempty"`
-}
-
 // JITAccessPolicyStatus defines the observed state of JITAccessPolicy.
 type JITAccessPolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true

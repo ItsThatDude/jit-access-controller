@@ -166,7 +166,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 				return ctrl.Result{}, err
 			}
 
-			if jit.Spec.ClusterRole != "" {
+			if jit.Spec.Role != "" {
 				roleBinding := &rbacv1.ClusterRoleBinding{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      fmt.Sprintf("jit-access-%s", jit.Status.RequestId),
@@ -182,7 +182,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 					RoleRef: rbacv1.RoleRef{
 						APIGroup: "rbac.authorization.k8s.io",
 						Kind:     "ClusterRole",
-						Name:     jit.Spec.ClusterRole,
+						Name:     jit.Spec.Role,
 					},
 				}
 
@@ -191,14 +191,14 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 					return ctrl.Result{}, err
 				}
 
-				jit.Status.ClusterRoleBindingCreated = true
+				jit.Status.RoleBindingCreated = true
 
 				if err := r.Status().Update(ctx, &jit); err != nil {
 					log.Error(err, "failed to update status")
 					return ctrl.Result{}, err
 				}
 
-				log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.ClusterRole)
+				log.Info("Granted access", "subject", jit.Spec.Subject, "role", jit.Spec.Role)
 			}
 
 			if len(jit.Spec.Permissions) > 0 {
@@ -219,7 +219,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 				log.Info("ClusterRole created", "namespace", req.Namespace, "role", name)
 
-				jit.Status.AdhocClusterRoleCreated = true
+				jit.Status.AdhocRoleCreated = true
 
 				if err := r.Status().Update(ctx, &jit); err != nil {
 					log.Error(err, "failed to update status")
@@ -251,7 +251,7 @@ func (r *ClusterJITAccessRequestReconciler) Reconcile(ctx context.Context, req c
 
 				log.Info("ClusterRoleBinding Created", "namespace", req.Namespace, "role", name)
 
-				jit.Status.AdhocClusterRoleBindingCreated = true
+				jit.Status.AdhocRoleBindingCreated = true
 
 				if err := r.Status().Update(ctx, &jit); err != nil {
 					log.Error(err, "failed to update status")
@@ -351,7 +351,7 @@ func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context
 	log := logf.FromContext(ctx)
 
 	// If a regular Role Binding was created, delete it
-	if jit.Status.ClusterRoleBindingCreated {
+	if jit.Status.RoleBindingCreated {
 		rbName := fmt.Sprintf("jit-access-%s", jit.Status.RequestId)
 		rb := &rbacv1.ClusterRoleBinding{}
 		err := r.Get(ctx, client.ObjectKey{Name: rbName}, rb)
@@ -370,7 +370,7 @@ func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context
 	}
 
 	// If an Adhoc Role Binding was created, delete it
-	if jit.Status.AdhocClusterRoleBindingCreated {
+	if jit.Status.AdhocRoleBindingCreated {
 		rbName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
 		rb := &rbacv1.ClusterRoleBinding{}
 		err := r.Get(ctx, client.ObjectKey{Name: rbName}, rb)
@@ -389,7 +389,7 @@ func (r *ClusterJITAccessRequestReconciler) cleanupResources(ctx context.Context
 	}
 
 	// If an Adhoc Role was created, delete it
-	if jit.Status.AdhocClusterRoleCreated {
+	if jit.Status.AdhocRoleCreated {
 		roleName := fmt.Sprintf("jit-access-adhoc-%s", jit.Status.RequestId)
 		role := &rbacv1.ClusterRole{}
 		err := r.Get(ctx, client.ObjectKey{Name: roleName}, role)

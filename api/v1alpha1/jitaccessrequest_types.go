@@ -17,68 +17,30 @@ limitations under the License.
 package v1alpha1
 
 import (
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *JITAccessRequest) GetSpec() *JITAccessRequestBaseSpec {
+	return &r.Spec.JITAccessRequestBaseSpec
+}
+func (r *JITAccessRequest) GetStatus() *JITAccessRequestStatus {
+	return &r.Status
+}
+func (r *JITAccessRequest) SetStatus(st *JITAccessRequestStatus) {
+	r.Status = *st
+}
+func (r *JITAccessRequest) GetRoleKind() RoleKind {
+	return r.Spec.RoleKind
+}
 
 // JITAccessRequestSpec defines the desired state of JITAccessRequest
 type JITAccessRequestSpec struct {
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
-	Subject string `json:"subject"`
-
-	// Name of the Role
-	// +optional
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Role cannot be changed after creation"
-	Role string `json:"role,omitempty"`
+	JITAccessRequestBaseSpec `json:",inline"`
 
 	// Type of Role - Role or ClusterRole
 	// +optional
-	// +kubebuilder:validation:Enum=ClusterRole;Role
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RoleKind cannot be changed after creation"
 	RoleKind RoleKind `json:"roleKind,omitempty"`
-
-	// A list of adhoc permissions to request
-	// +optional
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Permissions cannot be changed after creation"
-	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
-
-	// Duration in seconds (e.g. 600 for 10 min)
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="DurationSeconds cannot be changed after creation"
-	DurationSeconds int64 `json:"durationSeconds"`
-
-	// User's justification for the request
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Justification cannot be changed after creation"
-	Justification string `json:"justification"`
-}
-
-// JITAccessRequestStatus defines the observed state of JITAccessRequest.
-type JITAccessRequestStatus struct {
-	// ID of the access request
-	RequestId string `json:"requestId"`
-
-	// State of the Access Request
-	State RequestState `json:"state,omitempty"`
-
-	// Timestamp when the access will expire
-	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
-
-	// True/False if a RoleBinding has been created
-	RoleBindingCreated bool `json:"roleBindingCreated"`
-
-	// True/False if an Adhoc Role has been created
-	AdhocRoleCreated bool `json:"adhocRoleCreated"`
-
-	// True/False if an Adhoc RoleBinding has been created
-	AdhocRoleBindingCreated bool `json:"adhocRoleBindingCreated"`
-
-	// The number of approvals required for this request
-	ApprovalsRequired int `json:"approvalsRequired"`
-
-	// The number of approvals received
-	ApprovalsReceived int `json:"approvalsReceived"`
 }
 
 // +kubebuilder:object:root=true

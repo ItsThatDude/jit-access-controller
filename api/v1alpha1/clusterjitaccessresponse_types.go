@@ -23,25 +23,6 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ClusterJITAccessResponseSpec defines the desired state of ClusterJITAccessResponse
-type ClusterJITAccessResponseSpec struct {
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RequestRef cannot be changed after creation"
-	RequestRef string `json:"requestRef"`
-
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Approver cannot be changed after creation"
-	Approver string `json:"approver"`
-
-	// +kubebuilder:validation:Enum=Approved;Denied
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Response cannot be changed after creation"
-	Response ResponseState `json:"response"`
-}
-
-// ClusterJITAccessResponseStatus defines the observed state of ClusterJITAccessResponse.
-type ClusterJITAccessResponseStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
@@ -56,11 +37,11 @@ type ClusterJITAccessResponse struct {
 
 	// spec defines the desired state of ClusterJITAccessResponse
 	// +required
-	Spec ClusterJITAccessResponseSpec `json:"spec"`
+	Spec JITAccessResponseSpec `json:"spec"`
 
 	// status defines the observed state of ClusterJITAccessResponse
 	// +optional
-	Status ClusterJITAccessResponseStatus `json:"status,omitempty,omitzero"`
+	Status JITAccessResponseStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

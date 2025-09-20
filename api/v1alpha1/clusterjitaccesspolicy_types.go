@@ -17,48 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r ClusterJITAccessPolicy) GetPolicies() []SubjectPolicy {
+	return r.Spec.Policies
+}
 
 // ClusterJITAccessPolicySpec defines the desired state of ClusterJITAccessPolicy
 type ClusterJITAccessPolicySpec struct {
-	Policies []ClusterSubjectPolicy `json:"policies"`
-}
-
-// ClusterSubjectPolicy defines access rules for a single subject (user/serviceaccount).
-type ClusterSubjectPolicy struct {
-	// Subject is the identity (email or K8s username) of the user.
-	Subjects []string `json:"subjects"`
-
-	// AllowedRoles is a list of roles the subject is allowed to request.
-	AllowedClusterRoles []string `json:"allowedClusterRoles,omitempty"`
-
-	// AllowedPermissions is a list of adhoc permissions the subject is allowed to request.
-	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`
-
-	// MaxDurationSeconds is the max duration for temporary access.
-	// +kubebuilder:validation:Minimum=1
-	MaxDurationSeconds int64 `json:"maxDurationSeconds"`
-
-	// The minimum number of approvals required to grant the request
-	// +kubebuilder:validation:Minimum=1
-	RequiredApprovals int `json:"requiredApprovals"`
-
-	// Approvers
-	Approvers []string `json:"approvers,omitempty"`
-
-	// Approver Groups
-	ApproverGroups []string `json:"approverGroups,omitempty"`
-}
-
-// ClusterJITAccessPolicyStatus defines the observed state of ClusterJITAccessPolicy.
-type ClusterJITAccessPolicyStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Policies []SubjectPolicy `json:"policies"`
 }
 
 // +kubebuilder:object:root=true
@@ -79,7 +47,7 @@ type ClusterJITAccessPolicy struct {
 
 	// status defines the observed state of ClusterJITAccessPolicy
 	// +optional
-	Status ClusterJITAccessPolicyStatus `json:"status,omitempty,omitzero"`
+	Status JITAccessPolicyStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

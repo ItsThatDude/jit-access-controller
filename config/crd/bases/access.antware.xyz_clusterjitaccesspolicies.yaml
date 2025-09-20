@@ -42,15 +42,9 @@ spec:
             properties:
               policies:
                 items:
-                  description: ClusterSubjectPolicy defines access rules for a single
-                    subject (user/serviceaccount).
+                  description: SubjectPolicy defines access rules for a single subject
+                    (user/serviceaccount).
                   properties:
-                    allowedClusterRoles:
-                      description: AllowedRoles is a list of roles the subject is
-                        allowed to request.
-                      items:
-                        type: string
-                      type: array
                     allowedPermissions:
                       description: AllowedPermissions is a list of adhoc permissions
                         the subject is allowed to request.
@@ -103,6 +97,12 @@ spec:
                         - verbs
                         type: object
                       type: array
+                    allowedRoles:
+                      description: AllowedRoles is a list of roles the subject is
+                        allowed to request.
+                      items:
+                        type: string
+                      type: array
                     approverGroups:
                       description: Approver Groups
                       items:
@@ -126,7 +126,7 @@ spec:
                       type: integer
                     subjects:
                       description: Subject is the identity (email or K8s username)
-                        of the user.
+                        of the requester.
                       items:
                         type: string
                       type: array

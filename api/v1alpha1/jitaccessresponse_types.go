@@ -23,25 +23,6 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// JITAccessResponseSpec defines the desired state of JITAccessResponse
-type JITAccessResponseSpec struct {
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RequestRef cannot be changed after creation"
-	RequestRef string `json:"requestRef"`
-
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Approver cannot be changed after creation"
-	Approver string `json:"approver"`
-
-	// +kubebuilder:validation:Enum=Approved;Denied
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Response cannot be changed after creation"
-	Response ResponseState `json:"response"`
-}
-
-// JITAccessResponseStatus defines the observed state of JITAccessResponse.
-type JITAccessResponseStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 

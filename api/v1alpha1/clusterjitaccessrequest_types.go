@@ -17,60 +17,26 @@ limitations under the License.
 package v1alpha1
 
 import (
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *ClusterJITAccessRequest) GetSpec() *JITAccessRequestBaseSpec {
+	return &r.Spec.JITAccessRequestBaseSpec
+}
+func (r *ClusterJITAccessRequest) GetStatus() *JITAccessRequestStatus {
+	return &r.Status
+}
+func (r *ClusterJITAccessRequest) SetStatus(st *JITAccessRequestStatus) {
+	r.Status = *st
+}
+func (r *ClusterJITAccessRequest) GetRoleKind() RoleKind {
+	// Always ClusterRole for cluster-scoped requests
+	return RoleKindClusterRole
+}
 
 // ClusterJITAccessRequestSpec defines the desired state of ClusterJITAccessRequest
 type ClusterJITAccessRequestSpec struct {
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
-	Subject string `json:"subject"`
-
-	// Name of the ClusterRole
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="ClusterRole cannot be changed after creation"
-	ClusterRole string `json:"clusterRole,omitempty"`
-
-	// A list of adhoc permissions to request
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Permissions cannot be changed after creation"
-	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
-
-	// Duration in seconds (e.g. 600 for 10 min)
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="DurationSeconds cannot be changed after creation"
-	DurationSeconds int64 `json:"durationSeconds"`
-
-	// User's justification for the request
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Justification cannot be changed after creation"
-	Justification string `json:"justification"`
-}
-
-// ClusterJITAccessRequestStatus defines the observed state of ClusterJITAccessRequest.
-type ClusterJITAccessRequestStatus struct {
-	// ID of the access request
-	RequestId string `json:"requestId"`
-
-	// State of the Access Request
-	State RequestState `json:"state,omitempty"`
-
-	// Timestamp when the access will expire
-	ExpiresAt *metav1.Time `json:"expiresAt,omitempty"`
-
-	// True/False if the RoleBinding has been created
-	ClusterRoleBindingCreated bool `json:"clusterRoleBindingCreated"`
-
-	// True/False if the Adhoc Role has been created
-	AdhocClusterRoleCreated bool `json:"adhocClusterRoleCreated"`
-
-	// True/False if the Adhoc Role has been created
-	AdhocClusterRoleBindingCreated bool `json:"adhocClusterRoleBindingCreated"`
-
-	// The number of approvals required for this request
-	ApprovalsRequired int `json:"approvalsRequired"`
-
-	// The number of approvals received
-	ApprovalsReceived int `json:"approvalsReceived"`
+	JITAccessRequestBaseSpec `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -91,7 +57,7 @@ type ClusterJITAccessRequest struct {
 
 	// status defines the observed state of ClusterJITAccessRequest
 	// +optional
-	Status ClusterJITAccessRequestStatus `json:"status,omitempty,omitzero"`
+	Status JITAccessRequestStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

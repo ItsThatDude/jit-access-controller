@@ -79,7 +79,7 @@ func IsNamespacedRequestValid(
 func IsClusterRequestValid(
 	jit *accessv1alpha1.ClusterJITAccessRequest,
 	policies *accessv1alpha1.ClusterJITAccessPolicyList,
-) (bool, *accessv1alpha1.ClusterSubjectPolicy) {
+) (bool, *accessv1alpha1.SubjectPolicy) {
 	for _, item := range policies.Items {
 		for _, policy := range item.Spec.Policies {
 			// Subject must match
@@ -92,8 +92,8 @@ func IsClusterRequestValid(
 				AllRequestedPolicyRulesAllowed(jit.Spec.Permissions, policy.AllowedPermissions)
 
 			// Role check (empty role means "no role requested", so skip check)
-			roleAllowed := jit.Spec.ClusterRole == "" ||
-				(slices.Contains(policy.AllowedClusterRoles, jit.Spec.ClusterRole) &&
+			roleAllowed := jit.Spec.Role == "" ||
+				(slices.Contains(policy.AllowedRoles, jit.Spec.Role) &&
 					jit.Spec.DurationSeconds <= policy.MaxDurationSeconds)
 
 			if permissionsAllowed && roleAllowed {
