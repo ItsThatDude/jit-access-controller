@@ -27,12 +27,13 @@ import (
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -45,6 +46,7 @@ var (
 	testEnv   *envtest.Environment
 	cfg       *rest.Config
 	k8sClient client.Client
+	mgr       ctrl.Manager
 )
 
 func TestControllers(t *testing.T) {
@@ -59,7 +61,7 @@ var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.TODO())
 
 	var err error
-	err = accessv1alpha1.AddToScheme(scheme.Scheme)
+	err = v1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
@@ -80,9 +82,33 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(k8sClient).NotTo(BeNil())
+	mgr, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &v1alpha1.JITAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if r, ok := obj.(*v1alpha1.JITAccessResponse); ok {
+				return []string{r.Spec.RequestRef}
+			}
+			return nil
+		})).To(Succeed())
+
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &v1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if r, ok := obj.(*v1alpha1.ClusterJITAccessResponse); ok {
+				return []string{r.Spec.RequestRef}
+			}
+			return nil
+		})).To(Succeed())
+
+	go func() {
+		Expect(mgr.Start(ctx)).To(Succeed())
+	}()
+
+	cacheReady := mgr.GetCache().WaitForCacheSync(ctx)
+	Expect(cacheReady).To(BeTrue())
+
+	k8sClient = mgr.GetClient()
 })
 
 var _ = AfterSuite(func() {
