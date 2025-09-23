@@ -464,8 +464,7 @@ func (r *GenericJITAccessReconciler) cleanupResources(ctx context.Context, obj c
 	if status.AdhocRoleCreated {
 		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
 		var roleObj client.Object
-		roleKind := obj.GetRoleKind()
-		if roleKind == v1alpha1.RoleKindClusterRole {
+		if ns == "" {
 			roleObj = &rbacv1.ClusterRole{}
 		} else {
 			roleObj = &rbacv1.Role{}
