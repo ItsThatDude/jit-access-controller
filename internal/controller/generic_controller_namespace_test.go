@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/common"
+	common "antware.xyz/jitaccess/internal/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,8 +59,9 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.JITAccessPolicy{})
 	})
 
-	It("should create a pending JITAccessRequest and update status", func() {
-		requestName := fmt.Sprintf("test-pending-request-%d", time.Now().UnixNano())
+	It("should grant role for approved JITAccessRequest", func() {
+		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
+
 		requestObj := &v1alpha1.JITAccessRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      requestName,
@@ -74,11 +76,10 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 				},
 			},
 		}
-		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
 
-		// Reconcile once to process status/finalizer
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj))
+		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), requestObj)
+		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
 
 		type requestStatus struct {
 			ID         string
@@ -87,15 +88,14 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 		}
 
 		Eventually(func() (requestStatus, error) {
-			updated := &v1alpha1.JITAccessRequest{}
-			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), updated)
+			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
 			if err != nil {
 				return requestStatus{}, err
 			}
 			return requestStatus{
-				ID:         updated.Status.RequestId,
-				State:      updated.Status.State,
-				Finalizers: updated.Finalizers,
+				ID:         requestObj.Status.RequestId,
+				State:      requestObj.Status.State,
+				Finalizers: requestObj.Finalizers,
 			}, nil
 		}, 5*time.Second, 100*time.Millisecond).Should(SatisfyAll(
 			WithTransform(func(rs requestStatus) string { return rs.ID }, Not(BeEmpty())),
@@ -103,41 +103,43 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 			WithTransform(func(rs requestStatus) []string { return rs.Finalizers }, ContainElement(common.JITFinalizer)),
 		))
 
-		// Cleanup
-		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())
-		waitForMarkedForDeletion(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
-
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj))
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
-	})
-
-	It("should cleanup deleted JITAccessRequest and remove finalizer", func() {
-		requestName := fmt.Sprintf("test-delete-request-%d", time.Now().UnixNano())
-		requestObj := &v1alpha1.JITAccessRequest{
+		responseName := fmt.Sprintf("test-approve-response-%d", time.Now().UnixNano())
+		responseObj := &v1alpha1.JITAccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      requestName,
-				Namespace: "default",
-				Finalizers: []string{
-					common.JITFinalizer,
-				},
+				Name:      responseName,
+				Namespace: requestObj.Namespace,
 			},
-			Spec: v1alpha1.JITAccessRequestSpec{
-				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-					Subject:         "user1",
-					Role:            "edit",
-					DurationSeconds: 300,
-				},
+			Spec: v1alpha1.JITAccessResponseSpec{
+				RequestRef: requestName,
+				Approver:   "admin",
+				Response:   v1alpha1.ResponseStateApproved,
 			},
 		}
-		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
+
+		rolebindingName := fmt.Sprintf("jit-access-%s", requestObj.Status.RequestId)
+
+		// Create the response and wait for it to be created
+		Expect(k8sClient.Create(ctx, responseObj)).To(Succeed())
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.JITAccessResponse{})
+
+		// Reconcile the request again, to process the response
+		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
+
+		// Wait for the RoleBindingCreated status to be set
+		Eventually(func() bool {
+			_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
+			return requestObj.Status.RoleBindingCreated
+		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
+
+		// Wait for the ClusterRoleBinding to be created
+		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: requestObj.Namespace, Name: rolebindingName}, &rbacv1.RoleBinding{})
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())
-		waitForMarkedForDeletion(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
+		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
 
 		// Reconcile to handle finalizer cleanup
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj))
+		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
 
 		// Wait until fully deleted
 		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})

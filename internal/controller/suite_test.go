@@ -147,7 +147,7 @@ func waitForCreated(ctx context.Context, c client.Client, key client.ObjectKey, 
 	Eventually(func() error { return c.Get(ctx, key, obj) }, 5*time.Second, 100*time.Millisecond).Should(Succeed())
 }
 
-func waitForMarkedForDeletion(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) {
+func waitForDeletionTimestamp(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) {
 	Eventually(func() bool {
 		err := c.Get(ctx, key, obj)
 		return err == nil && obj.GetDeletionTimestamp() != nil
@@ -158,10 +158,10 @@ func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, 
 	Eventually(func() bool { return errors.IsNotFound(c.Get(ctx, key, obj)) }, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 }
 
-func reconcileOnce(ctx context.Context, r *GenericJITAccessReconciler, key client.ObjectKey) {
+func reconcileOnce(ctx context.Context, r *GenericJITAccessReconciler, key client.ObjectKey) AsyncAssertion {
 	req := ctrl.Request{NamespacedName: key}
-	Eventually(func() error {
+	return Eventually(func() error {
 		_, err := r.Reconcile(ctx, req)
 		return err
-	}, 5*time.Second, 100*time.Millisecond).Should(Succeed())
+	}, 5*time.Second, 100*time.Millisecond)
 }
