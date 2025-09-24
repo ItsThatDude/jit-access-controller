@@ -85,7 +85,7 @@ func newRequestCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&namespace, "namespace", "default", "Namespace for the access request")
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Namespace for the access request")
 	cmd.Flags().StringVar(&scope, "scope", "namespace", "Scope of the request (namespace|cluster)")
 	cmd.Flags().StringVar(&role, "role", "", "Role to request")
 	cmd.Flags().StringVar(&roleKindStr, "roleKind", "Role", "Role kind (Role|ClusterRole)")

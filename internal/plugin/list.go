@@ -56,7 +56,7 @@ func newListCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&listScope, "scope", "namespace", "Scope to list (namespace|cluster)")
-	cmd.Flags().StringVar(&listNamespace, "namespace", "default", "Namespace for listing requests")
+	cmd.Flags().StringVarP(&listNamespace, "namespace", "n", "default", "Namespace for listing requests")
 
 	return cmd
 }

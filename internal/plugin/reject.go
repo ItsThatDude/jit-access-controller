@@ -16,7 +16,7 @@ func newRejectCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&namespace, "namespace", "default", "Namespace of the request")
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Namespace for the access request")
 	cmd.Flags().StringVar(&scope, "scope", "namespace", "Scope of the request (namespace|cluster)")
 	cmd.Flags().StringVar(&approver, "approver", "", "Name of the approver")
 	_ = cmd.MarkFlagRequired("approver")
