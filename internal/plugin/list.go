@@ -42,7 +42,12 @@ func newListCmd() *cobra.Command {
 				fmt.Printf("JITAccessRequests in namespace %s:\n", listNamespace)
 				for _, r := range reqList.Items {
 					state := r.Status.State
-					fmt.Printf("- %s : %s\n", r.Name, state)
+
+					if state == v1alpha1.RequestStateApproved {
+						fmt.Printf("- %s : %s (Expires %s)\n", r.Name, state, r.Status.ExpiresAt)
+					} else {
+						fmt.Printf("- %s : %s\n", r.Name, state)
+					}
 				}
 			}
 
