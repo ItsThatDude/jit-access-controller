@@ -348,7 +348,7 @@ func (r *GenericJITAccessReconciler) handleApproved(
 		log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 
 		if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
+			log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 			return ctrl.Result{}, err
 		}
 		status.AdhocRoleBindingCreated = true
