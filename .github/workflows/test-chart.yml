@@ -2,7 +2,17 @@ name: Test Chart
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - dist/chart/**
   pull_request:
+    branches:
+      - main
+    paths:
+      - dist/chart/**
 
 jobs:
   test-e2e:

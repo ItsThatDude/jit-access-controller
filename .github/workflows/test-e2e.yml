@@ -2,7 +2,27 @@ name: E2E Tests
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - cmd/**
+      - config/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
   pull_request:
+    branches:
+      - main
+    paths:
+      - cmd/**
+      - config/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
 
 jobs:
   test-e2e:

@@ -2,7 +2,25 @@ name: Tests
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - cmd/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
   pull_request:
+    branches:
+      - main
+    paths:
+      - cmd/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
 
 jobs:
   test:
