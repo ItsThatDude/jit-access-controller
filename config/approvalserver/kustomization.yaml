@@ -1,9 +1,0 @@
-resources:
-- approvalserver.yaml
-- service.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: approvalserver
-  newName: itsthatdood/jitaccess-approvalserver
-  newTag: latest
