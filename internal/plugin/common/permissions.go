@@ -1,4 +1,4 @@
-package plugin
+package common
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 //	get:pods
 //	get,list:deployments.apps/status
 //	create:foos.example.com
-func parsePermissions(perms []string) []rbacv1.PolicyRule {
+func ParsePermissions(perms []string) []rbacv1.PolicyRule {
 	rules := make([]rbacv1.PolicyRule, 0, len(perms))
 
 	for _, p := range perms {

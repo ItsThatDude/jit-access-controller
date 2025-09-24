@@ -1,18 +1,19 @@
-package plugin
+package commands
 
 import (
 	"antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/internal/plugin/common"
 	"github.com/spf13/cobra"
 )
 
-func newApproveCmd() *cobra.Command {
+func NewRejectCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "approve <request_name>",
-		Short: "Approve an access request",
+		Use:   "reject <request_name>",
+		Short: "Reject an access request",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
-			return createResponse(name, v1alpha1.ResponseStateApproved)
+			return common.CreateResponse(name, v1alpha1.ResponseStateDenied)
 		},
 	}
 

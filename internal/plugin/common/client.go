@@ -1,4 +1,4 @@
-package plugin
+package common
 
 import (
 	"antware.xyz/jitaccess/api/v1alpha1"
@@ -8,7 +8,7 @@ import (
 )
 
 // getRuntimeClient returns a controller-runtime client with your scheme registered
-func getRuntimeClient() (client.Client, error) {
+func GetRuntimeClient() (client.Client, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags("", clientcmd.RecommendedHomeFile)
 	if err != nil {
 		return nil, err

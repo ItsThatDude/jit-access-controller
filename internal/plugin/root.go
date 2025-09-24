@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"antware.xyz/jitaccess/internal/plugin/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -10,10 +11,10 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
-	rootCmd.AddCommand(newRequestCmd())
-	rootCmd.AddCommand(newApproveCmd())
-	rootCmd.AddCommand(newRejectCmd())
-	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(commands.NewRequestCmd())
+	rootCmd.AddCommand(commands.NewApproveCmd())
+	rootCmd.AddCommand(commands.NewRejectCmd())
+	rootCmd.AddCommand(commands.NewListCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)

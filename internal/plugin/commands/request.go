@@ -1,38 +1,30 @@
-package plugin
+package commands
 
 import (
 	"context"
 	"fmt"
 
 	"antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/internal/plugin/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	role          string
-	roleKindStr   string
-	permissions   []string
-	duration      int64
-	justification string
-	subject       string
-)
-
-func newRequestCmd() *cobra.Command {
+func NewRequestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "request",
 		Short: "Request access",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cli, err := getRuntimeClient()
+			cli, err := common.GetRuntimeClient()
 			if err != nil {
 				return err
 			}
 
 			ctx := context.Background()
-			rules := parsePermissions(permissions)
+			rules := common.ParsePermissions(permissions)
 
-			if scope == SCOPE_CLUSTER {
+			if scope == common.SCOPE_CLUSTER {
 				req := &v1alpha1.ClusterJITAccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: "access-request-",

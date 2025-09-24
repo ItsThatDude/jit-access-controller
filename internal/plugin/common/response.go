@@ -1,4 +1,4 @@
-package plugin
+package common
 
 import (
 	"context"
@@ -15,8 +15,8 @@ var (
 )
 
 // createResponse creates a JITAccessResponse or ClusterJITAccessResponse
-func createResponse(requestName string, state v1alpha1.ResponseState) error {
-	cli, err := getRuntimeClient()
+func CreateResponse(requestName string, state v1alpha1.ResponseState) error {
+	cli, err := GetRuntimeClient()
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,11 @@
-package plugin
+package commands
 
 import (
 	"context"
 	"fmt"
 
 	"antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/jitaccess/internal/plugin/common"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -12,18 +13,18 @@ import (
 var listScope string
 var listNamespace string
 
-func newListCmd() *cobra.Command {
+func NewListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List JIT access requests",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cli, err := getRuntimeClient()
+			cli, err := common.GetRuntimeClient()
 			if err != nil {
 				return err
 			}
 			ctx := context.Background()
 
-			if listScope == SCOPE_CLUSTER {
+			if listScope == common.SCOPE_CLUSTER {
 				reqList := &v1alpha1.ClusterJITAccessRequestList{}
 				if err := cli.List(ctx, reqList); err != nil {
 					return err
