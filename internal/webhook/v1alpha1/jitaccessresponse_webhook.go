@@ -42,12 +42,12 @@ func (v *JITAccessResponseValidator) Handle(ctx context.Context, req admission.R
 
 	request := &accessv1alpha1.JITAccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: obj.Spec.RequestRef}, request); err != nil {
-		return admission.Denied(fmt.Sprintf("an error occured fetching the referenced JITAccessRequest: %s", err))
+		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced JITAccessRequest: %s", err))
 	}
 
 	policies := &accessv1alpha1.JITAccessPolicyList{}
 	if err := v.client.List(ctx, policies, client.InNamespace(req.Namespace)); err != nil {
-		return admission.Denied(fmt.Sprintf("an error occured fetching access policies in namespace '%s': %s", req.Namespace, err))
+		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies in namespace '%s': %s", req.Namespace, err))
 	}
 
 	isRequestValid, matched_policy := policy.IsNamespacedRequestValid(request, policies)
@@ -71,7 +71,7 @@ func (v *JITAccessResponseValidator) Handle(ctx context.Context, req admission.R
 
 	case admissionv1.Update:
 		oldObj := &accessv1alpha1.JITAccessResponse{}
-		if err := v.decoder.DecodeRaw(req.AdmissionRequest.OldObject, oldObj); err != nil {
+		if err := v.decoder.DecodeRaw(req.OldObject, oldObj); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 

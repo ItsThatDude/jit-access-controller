@@ -42,12 +42,12 @@ func (v *ClusterJITAccessResponseValidator) Handle(ctx context.Context, req admi
 
 	request := &accessv1alpha1.ClusterJITAccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Name: obj.Spec.RequestRef}, request); err != nil {
-		return admission.Denied(fmt.Sprintf("an error occured fetching the referenced ClusterJITAccessRequest: %s", err))
+		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterJITAccessRequest: %s", err))
 	}
 
 	policies := &accessv1alpha1.ClusterJITAccessPolicyList{}
 	if err := v.client.List(ctx, policies); err != nil {
-		return admission.Denied(fmt.Sprintf("an error occured fetching access policies: %s", err))
+		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies: %s", err))
 	}
 
 	isRequestValid, matched_policy := policy.IsClusterRequestValid(request, policies)
@@ -71,7 +71,7 @@ func (v *ClusterJITAccessResponseValidator) Handle(ctx context.Context, req admi
 
 	case admissionv1.Update:
 		oldObj := &accessv1alpha1.ClusterJITAccessResponse{}
-		if err := v.decoder.DecodeRaw(req.AdmissionRequest.OldObject, oldObj); err != nil {
+		if err := v.decoder.DecodeRaw(req.OldObject, oldObj); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 
