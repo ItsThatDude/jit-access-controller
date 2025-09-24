@@ -368,10 +368,10 @@ func (r *GenericJITAccessReconciler) handlePending(
 	denied := set.New[string]()
 
 	// Fetch responses
-	if obj.GetNamespace() != "" {
-		// Namespaced responses
-		responses := &v1alpha1.JITAccessResponseList{}
-		if err := r.List(ctx, responses, client.InNamespace(obj.GetNamespace()), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+	if obj.GetNamespace() == "" {
+		// Cluster-scoped responses
+		responses := &v1alpha1.ClusterJITAccessResponseList{}
+		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
@@ -384,9 +384,9 @@ func (r *GenericJITAccessReconciler) handlePending(
 			}
 		}
 	} else {
-		// Cluster-scoped responses
-		responses := &v1alpha1.ClusterJITAccessResponseList{}
-		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+		// Namespaced responses
+		responses := &v1alpha1.JITAccessResponseList{}
+		if err := r.List(ctx, responses, client.InNamespace(obj.GetNamespace()), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
@@ -478,19 +478,19 @@ func (r *GenericJITAccessReconciler) cleanupResources(ctx context.Context, obj c
 
 	// Delete all responses
 	var responses []client.Object
-	if ns != "" {
-		responseList := &v1alpha1.JITAccessResponseList{}
-		if err := r.List(ctx, responseList, client.InNamespace(ns), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
-			errs = append(errs, fmt.Errorf("failed to list JITAccessResponses: %w", err))
+	if ns == "" {
+		responseList := &v1alpha1.ClusterJITAccessResponseList{}
+		if err := r.List(ctx, responseList, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+			errs = append(errs, fmt.Errorf("failed to list ClusterJITAccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
 				responses = append(responses, &responseList.Items[i])
 			}
 		}
 	} else {
-		responseList := &v1alpha1.ClusterJITAccessResponseList{}
-		if err := r.List(ctx, responseList, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
-			errs = append(errs, fmt.Errorf("failed to list ClusterJITAccessResponses: %w", err))
+		responseList := &v1alpha1.JITAccessResponseList{}
+		if err := r.List(ctx, responseList, client.InNamespace(ns), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+			errs = append(errs, fmt.Errorf("failed to list JITAccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
 				responses = append(responses, &responseList.Items[i])
