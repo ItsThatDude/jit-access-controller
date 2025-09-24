@@ -46,14 +46,8 @@ spec:
           spec:
             description: spec defines the desired state of ClusterJITAccessRequest
             properties:
-              clusterRole:
-                description: Name of the ClusterRole
-                type: string
-                x-kubernetes-validations:
-                - message: ClusterRole cannot be changed after creation
-                  rule: self == oldSelf
               durationSeconds:
-                description: Duration in seconds (e.g. 600 for 10 min)
+                description: DurationSeconds defines how long the access should last
                 format: int64
                 type: integer
                 x-kubernetes-validations:
@@ -66,7 +60,8 @@ spec:
                 - message: Justification cannot be changed after creation
                   rule: self == oldSelf
               permissions:
-                description: A list of adhoc permissions to request
+                description: Permissions are adhoc RBAC rules to grant (instead of
+                  a pre-defined role)
                 items:
                   description: |-
                     PolicyRule holds information that describes a policy rule, but does not contain information
@@ -118,7 +113,14 @@ spec:
                 x-kubernetes-validations:
                 - message: Permissions cannot be changed after creation
                   rule: self == oldSelf
+              role:
+                description: Role is an optional pre-defined Role/ClusterRole to bind
+                type: string
+                x-kubernetes-validations:
+                - message: Role cannot be changed after creation
+                  rule: self == oldSelf
               subject:
+                description: Subject is the username or identity requesting access
                 type: string
                 x-kubernetes-validations:
                 - message: Subject cannot be changed after creation
@@ -131,30 +133,27 @@ spec:
           status:
             description: status defines the observed state of ClusterJITAccessRequest
             properties:
-              adhocClusterRoleBindingCreated:
-                description: True/False if the Adhoc Role has been created
+              adhocRoleBindingCreated:
                 type: boolean
-              adhocClusterRoleCreated:
-                description: True/False if the Adhoc Role has been created
+              adhocRoleCreated:
                 type: boolean
-              clusterRoleBindingCreated:
-                description: True/False if the RoleBinding has been created
-                type: boolean
+              approvalsReceived:
+                type: integer
+              approvalsRequired:
+                type: integer
               expiresAt:
-                description: Timestamp when the access will expire
                 format: date-time
                 type: string
               requestId:
-                description: ID of the access request
                 type: string
+              roleBindingCreated:
+                type: boolean
               state:
-                description: State of the Access Request
+                enum:
+                - Pending
+                - Approved
+                - Denied
                 type: string
-            required:
-            - adhocClusterRoleBindingCreated
-            - adhocClusterRoleCreated
-            - clusterRoleBindingCreated
-            - requestId
             type: object
         required:
         - spec

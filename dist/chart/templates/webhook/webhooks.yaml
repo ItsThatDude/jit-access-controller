@@ -84,6 +84,26 @@ webhooks:
           - v1alpha1
         resources:
           - clusterjitaccessrequests
+  - name: vclusterjitaccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jitaccess-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - clusterjitaccessresponses
   - name: vjitaccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
@@ -104,4 +124,24 @@ webhooks:
           - v1alpha1
         resources:
           - jitaccessrequests
+  - name: vjitaccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jitaccess-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-jitaccessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - jitaccessresponses
 {{- end }}

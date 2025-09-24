@@ -12,8 +12,10 @@ rules:
   resources:
   - clusterjitaccesspolicies
   - clusterjitaccessrequests
+  - clusterjitaccessresponses
   - jitaccesspolicies
   - jitaccessrequests
+  - jitaccessresponses
   verbs:
   - create
   - delete
@@ -27,8 +29,10 @@ rules:
   resources:
   - clusterjitaccesspolicies/finalizers
   - clusterjitaccessrequests/finalizers
+  - clusterjitaccessresponses/finalizers
   - jitaccesspolicies/finalizers
   - jitaccessrequests/finalizers
+  - jitaccessresponses/finalizers
   verbs:
   - update
 - apiGroups:
@@ -36,12 +40,25 @@ rules:
   resources:
   - clusterjitaccesspolicies/status
   - clusterjitaccessrequests/status
+  - clusterjitaccessresponses/status
   - jitaccesspolicies/status
   - jitaccessrequests/status
+  - jitaccessresponses/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
@@ -52,16 +69,6 @@ rules:
   - create
   - delete
   - escalate
-  - get
-  - list
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  verbs:
-  - create
-  - delete
   - get
   - list
   - watch
