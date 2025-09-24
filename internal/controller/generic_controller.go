@@ -284,16 +284,13 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 	// State machine
 	switch status.State {
 	case v1alpha1.RequestStateApproved:
-		result, err := r.handleApproved(ctx, obj, status)
-		return result, err
+		return r.handleApproved(ctx, obj, status)
 
 	case v1alpha1.RequestStatePending:
-		result, err := r.handlePending(ctx, obj, matched, status)
-		return result, err
+		return r.handlePending(ctx, obj, matched, status)
 
 	case v1alpha1.RequestStateExpired:
-		result, err := r.handleExpired(ctx, obj)
-		return result, err
+		return r.handleExpired(ctx, obj)
 	}
 
 	return ctrl.Result{}, nil
@@ -424,10 +421,12 @@ func (r *GenericJITAccessReconciler) handleExpired(
 
 	if err := r.cleanupResources(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-		return ctrl.Result{}, err
+		return ctrl.Result{RequeueAfter: 10}, err
 	}
+
 	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
 	_ = r.Delete(ctx, obj)
+
 	return ctrl.Result{}, nil
 }
 

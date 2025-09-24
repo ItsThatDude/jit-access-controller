@@ -9,7 +9,7 @@ import (
 
 // parsePermissions parses "verbs:resources" strings into PolicyRule objects
 func parsePermissions(perms []string) []rbacv1.PolicyRule {
-	var rules []rbacv1.PolicyRule
+	rules := make([]rbacv1.PolicyRule, 0, len(perms)) // pre-allocate capacity
 	for _, p := range perms {
 		parts := strings.Split(p, ":")
 		if len(parts) != 2 {

@@ -23,7 +23,7 @@ func newListCmd() *cobra.Command {
 			}
 			ctx := context.Background()
 
-			if listScope == "cluster" {
+			if listScope == SCOPE_CLUSTER {
 				reqList := &v1alpha1.ClusterJITAccessRequestList{}
 				if err := cli.List(ctx, reqList); err != nil {
 					return err

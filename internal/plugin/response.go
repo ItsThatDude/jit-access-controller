@@ -22,7 +22,7 @@ func createResponse(requestName string, state v1alpha1.ResponseState) error {
 	}
 	ctx := context.Background()
 
-	if scope == "cluster" {
+	if scope == SCOPE_CLUSTER {
 		resp := &v1alpha1.ClusterJITAccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
 				GenerateName: "response-",

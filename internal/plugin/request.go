@@ -32,14 +32,13 @@ func newRequestCmd() *cobra.Command {
 			ctx := context.Background()
 			rules := parsePermissions(permissions)
 
-			if scope == "cluster" {
+			if scope == SCOPE_CLUSTER {
 				req := &v1alpha1.ClusterJITAccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: "access-request-",
 					},
 					Spec: v1alpha1.ClusterJITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Subject:         subject,
 							Role:            role,
 							Permissions:     rules,
 							DurationSeconds: duration,
@@ -47,6 +46,11 @@ func newRequestCmd() *cobra.Command {
 						},
 					},
 				}
+
+				if subject != "" {
+					req.Spec.Subject = subject
+				}
+
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
@@ -59,7 +63,6 @@ func newRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.JITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Subject:         subject,
 							Role:            role,
 							Permissions:     rules,
 							DurationSeconds: duration,
@@ -68,6 +71,11 @@ func newRequestCmd() *cobra.Command {
 						RoleKind: v1alpha1.RoleKind(roleKindStr),
 					},
 				}
+
+				if subject != "" {
+					req.Spec.Subject = subject
+				}
+
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
