@@ -15,7 +15,7 @@ import (
 //	get,list:deployments.apps/status
 //	create:foos.example.com
 func parsePermissions(perms []string) []rbacv1.PolicyRule {
-	var rules []rbacv1.PolicyRule
+	rules := make([]rbacv1.PolicyRule, 0, len(perms))
 
 	for _, p := range perms {
 		parts := strings.Split(p, ":")
