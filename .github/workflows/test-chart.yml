@@ -32,9 +32,8 @@ jobs:
       - name: Prepare jitaccess
         run: |
           go mod tidy
-          make docker-build CONTROLLER_IMG=jitaccess-controller:v0.1.0 APPROVALSERVER_IMG=jitaccess-approvalserver:v0.1.0
+          make docker-build IMG=jitaccess-controller:v0.1.0
           kind load docker-image jitaccess-controller:v0.1.0
-          kind load docker-image jitaccess-approvalserver:v0.1.0
 
       - name: Install Helm
         run: |
