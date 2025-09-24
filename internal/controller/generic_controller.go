@@ -339,16 +339,18 @@ func (r *GenericJITAccessReconciler) handleApproved(
 	if len(spec.Permissions) > 0 {
 		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
 		if err := r.createRole(ctx, obj, adhocName, spec.Permissions, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
+			log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 			return ctrl.Result{}, err
 		}
 		status.AdhocRoleCreated = true
+		log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 
 		if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
 			log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
 			return ctrl.Result{}, err
 		}
 		status.AdhocRoleBindingCreated = true
+		log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 	}
 
 	return ctrl.Result{RequeueAfter: time.Duration(spec.DurationSeconds) * time.Second}, nil
@@ -570,7 +572,11 @@ func (r *GenericJITAccessReconciler) createRoleBinding(
 		}
 		return r.Create(ctx, rb)
 	} else {
-		kind := utils.Ternary(clusterRole, "ClusterRole", "Role")
+		kind := "Role"
+
+		if clusterRole {
+			kind = "ClusterRole"
+		}
 
 		rb := &rbacv1.RoleBinding{
 			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace()},
