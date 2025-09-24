@@ -277,6 +277,10 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 		status.ApprovalsRequired = matched.RequiredApprovals
 	}
 
+	if status.ExpiresAt != nil && time.Now().After(status.ExpiresAt.Time) {
+		status.State = v1alpha1.RequestStateExpired
+	}
+
 	// State machine
 	switch status.State {
 	case v1alpha1.RequestStateApproved:
@@ -285,6 +289,10 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 
 	case v1alpha1.RequestStatePending:
 		result, err := r.handlePending(ctx, obj, matched, status)
+		return result, err
+
+	case v1alpha1.RequestStateExpired:
+		result, err := r.handleExpired(ctx, obj)
 		return result, err
 	}
 
@@ -298,17 +306,6 @@ func (r *GenericJITAccessReconciler) handleApproved(
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
-
-	// Already granted and expired
-	if status.ExpiresAt != nil && time.Now().After(status.ExpiresAt.Time) {
-		if err := r.cleanupResources(ctx, obj); err != nil {
-			log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-			return ctrl.Result{}, err
-		}
-		log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
-		_ = r.Delete(ctx, obj)
-		return ctrl.Result{}, nil
-	}
 
 	// Set expire time if not set
 	if status.ExpiresAt == nil {
@@ -416,6 +413,21 @@ func (r *GenericJITAccessReconciler) handlePending(
 		return r.handleApproved(ctx, obj, status)
 	}
 
+	return ctrl.Result{}, nil
+}
+
+func (r *GenericJITAccessReconciler) handleExpired(
+	ctx context.Context,
+	obj common.JITAccessRequestObject,
+) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	if err := r.cleanupResources(ctx, obj); err != nil {
+		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
+		return ctrl.Result{}, err
+	}
+	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
+	_ = r.Delete(ctx, obj)
 	return ctrl.Result{}, nil
 }
 

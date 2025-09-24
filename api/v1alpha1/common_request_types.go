@@ -12,6 +12,7 @@ const (
 	RequestStatePending  RequestState = "Pending"
 	RequestStateApproved RequestState = "Approved"
 	RequestStateDenied   RequestState = "Denied"
+	RequestStateExpired  RequestState = "Expired"
 )
 
 // +kubebuilder:validation:Enum=Role;ClusterRole
