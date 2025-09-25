@@ -8,14 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
-	namespace string
-	scope     string
-	approver  string
-)
-
 // createResponse creates a JITAccessResponse or ClusterJITAccessResponse
-func CreateResponse(requestName string, state v1alpha1.ResponseState) error {
+func CreateResponse(scope string, namespace string, requestName string, state v1alpha1.ResponseState, approver string) error {
 	cli, err := GetRuntimeClient()
 	if err != nil {
 		return err

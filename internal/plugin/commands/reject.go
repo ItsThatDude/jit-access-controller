@@ -13,7 +13,7 @@ func NewRejectCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
-			return common.CreateResponse(name, v1alpha1.ResponseStateDenied)
+			return common.CreateResponse(scope, namespace, name, v1alpha1.ResponseStateDenied, approver)
 		},
 	}
 
