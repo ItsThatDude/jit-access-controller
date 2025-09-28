@@ -125,7 +125,7 @@ lint-config: golangci-lint ## Verify golangci-lint linter configuration
 
 .PHONY: build-plugin
 build-plugin:
-	go build -o bin/kubectl-access cmd/kubectl-plugin/main.go
+	go build -o bin/kubectl-access cmd/kubectl-access/main.go
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
