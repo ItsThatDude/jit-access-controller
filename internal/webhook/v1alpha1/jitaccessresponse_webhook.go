@@ -50,7 +50,7 @@ func (v *JITAccessResponseValidator) Handle(ctx context.Context, req admission.R
 		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies in namespace '%s': %s", req.Namespace, err))
 	}
 
-	isRequestValid, matched_policy := policy.IsNamespacedRequestValid(request, policies)
+	isRequestValid, matched_policy := policy.IsRequestValid(request, policies.Items)
 
 	if !isRequestValid || matched_policy == nil {
 		return admission.Denied(fmt.Sprintf("the request %s does not match an access policy in namespace '%s'", req.Name, req.Namespace))

@@ -50,7 +50,7 @@ func (v *ClusterJITAccessResponseValidator) Handle(ctx context.Context, req admi
 		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies: %s", err))
 	}
 
-	isRequestValid, matched_policy := policy.IsClusterRequestValid(request, policies)
+	isRequestValid, matched_policy := policy.IsRequestValid(request, policies.Items)
 
 	if !isRequestValid || matched_policy == nil {
 		return admission.Denied(fmt.Sprintf("the request %s does not match an access policy", req.Name))

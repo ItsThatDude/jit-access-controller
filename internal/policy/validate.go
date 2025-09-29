@@ -49,68 +49,11 @@ func AllRequestedPolicyRulesAllowed(requestedRules, allowedRules []rbacv1.Policy
 	return true
 }
 
-func IsNamespacedRequestValid(
-	jit *accessv1alpha1.JITAccessRequest,
-	policies *accessv1alpha1.JITAccessPolicyList,
-) (bool, *accessv1alpha1.SubjectPolicy) {
-	for _, item := range policies.Items {
-		for _, policy := range item.Spec.Policies {
-			// Subject must match
-			if !slices.Contains(policy.Subjects, jit.Spec.Subject) {
-				continue
-			}
-
-			// Permissions check (empty requested permissions are always allowed)
-			permissionsAllowed := len(jit.Spec.Permissions) == 0 ||
-				AllRequestedPolicyRulesAllowed(jit.Spec.Permissions, policy.AllowedPermissions)
-
-			// Role check (empty role means "no role requested", so skip check)
-			roleAllowed := jit.Spec.Role == "" ||
-				(slices.Contains(policy.AllowedRoles, jit.Spec.Role) &&
-					jit.Spec.DurationSeconds <= policy.MaxDurationSeconds)
-
-			if permissionsAllowed && roleAllowed {
-				return true, &policy
-			}
-		}
-	}
-	return false, nil
-}
-
-func IsClusterRequestValid(
-	jit *accessv1alpha1.ClusterJITAccessRequest,
-	policies *accessv1alpha1.ClusterJITAccessPolicyList,
-) (bool, *accessv1alpha1.SubjectPolicy) {
-	for _, item := range policies.Items {
-		for _, policy := range item.Spec.Policies {
-			// Subject must match
-			if !slices.Contains(policy.Subjects, jit.Spec.Subject) {
-				continue
-			}
-
-			// Permissions check (empty requested permissions are always allowed)
-			permissionsAllowed := len(jit.Spec.Permissions) == 0 ||
-				AllRequestedPolicyRulesAllowed(jit.Spec.Permissions, policy.AllowedPermissions)
-
-			// Role check (empty role means "no role requested", so skip check)
-			roleAllowed := jit.Spec.Role == "" ||
-				(slices.Contains(policy.AllowedRoles, jit.Spec.Role) &&
-					jit.Spec.DurationSeconds <= policy.MaxDurationSeconds)
-
-			if permissionsAllowed && roleAllowed {
-				return true, &policy
-			}
-		}
-	}
-	return false, nil
-}
-
 func IsRequestValid[T common.JITAccessPolicyListInterface](
 	req common.JITAccessRequestObject,
 	policies []T,
 ) (bool, *accessv1alpha1.SubjectPolicy) {
-	for i := range policies {
-		p := policies[i]
+	for _, p := range policies {
 		for _, policy := range p.GetPolicies() {
 			spec := req.GetSpec()
 

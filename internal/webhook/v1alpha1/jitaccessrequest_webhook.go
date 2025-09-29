@@ -109,7 +109,7 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 		return nil, err
 	}
 
-	permitted, _ := policy.IsNamespacedRequestValid(jitaccessrequest, &policies)
+	permitted, _ := policy.IsRequestValid(jitaccessrequest, policies.Items)
 	if !permitted {
 		return nil, fmt.Errorf("access request did not match a policy")
 	}
