@@ -133,6 +133,9 @@ spec:
           status:
             description: status defines the observed state of ClusterJITAccessRequest
             properties:
+              accessExpiresAt:
+                format: date-time
+                type: string
               adhocRoleBindingCreated:
                 type: boolean
               adhocRoleCreated:
@@ -141,7 +144,7 @@ spec:
                 type: integer
               approvalsRequired:
                 type: integer
-              expiresAt:
+              requestExpiresAt:
                 format: date-time
                 type: string
               requestId:
@@ -153,6 +156,7 @@ spec:
                 - Pending
                 - Approved
                 - Denied
+                - Expired
                 type: string
             type: object
         required:
