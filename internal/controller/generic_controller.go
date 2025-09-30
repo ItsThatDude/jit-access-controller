@@ -423,6 +423,10 @@ func (r *GenericJITAccessReconciler) handlePending(
 		return r.handleApproved(ctx, obj, status)
 	}
 
+	if status.RequestExpiresAt != nil {
+		return ctrl.Result{RequeueAfter: time.Until(status.RequestExpiresAt.Time)}, nil
+	}
+
 	return ctrl.Result{}, nil
 }
 

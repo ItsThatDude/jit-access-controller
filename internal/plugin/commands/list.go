@@ -44,11 +44,19 @@ func NewListCmd() *cobra.Command {
 				for _, r := range reqList.Items {
 					state := r.Status.State
 
+					expires := ""
+
 					if state == v1alpha1.RequestStateApproved {
-						fmt.Printf("- %s : %s (Expires %s)\n", r.Name, state, r.Status.AccessExpiresAt)
+						expires = r.Status.AccessExpiresAt.String()
 					} else {
-						fmt.Printf("- %s : %s\n", r.Name, state)
+						expires = r.Status.RequestExpiresAt.String()
 					}
+
+					fmt.Printf("  - Name: %s\n", r.Name)
+					fmt.Printf("    Subject: %s\n", r.Spec.Subject)
+					fmt.Printf("    State: %s\n", r.Status.State)
+					fmt.Printf("    Expires: %s\n", expires)
+					fmt.Printf("    Justification: %s\n", r.Spec.Justification)
 				}
 			}
 
