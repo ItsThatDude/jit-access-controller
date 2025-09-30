@@ -1,26 +1,10 @@
 name: Publish to DockerHub
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
-    paths:
-      - cmd/**
-      - internal/**
-      - go.mod
-      - go.sum
-      - Dockerfile
-  pull_request:
-    branches:
-      - main
-    paths:
-      - cmd/**
-      - internal/**
-      - go.mod
-      - go.sum
-      - Dockerfile
+  workflow_run:
+    workflows: ["E2E Tests"]
+    types:
+      - completed
 
 jobs:
   docker:
