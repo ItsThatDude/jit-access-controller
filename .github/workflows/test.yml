@@ -7,6 +7,7 @@ on:
     tags:
       - 'v*'
     paths:
+      - api/**
       - cmd/**
       - internal/**
       - go.mod
@@ -16,6 +17,7 @@ on:
     branches:
       - main
     paths:
+      - api/**
       - cmd/**
       - internal/**
       - go.mod
