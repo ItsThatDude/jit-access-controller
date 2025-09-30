@@ -45,7 +45,7 @@ func NewListCmd() *cobra.Command {
 					state := r.Status.State
 
 					if state == v1alpha1.RequestStateApproved {
-						fmt.Printf("- %s : %s (Expires %s)\n", r.Name, state, r.Status.ExpiresAt)
+						fmt.Printf("- %s : %s (Expires %s)\n", r.Name, state, r.Status.AccessExpiresAt)
 					} else {
 						fmt.Printf("- %s : %s\n", r.Name, state)
 					}

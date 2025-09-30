@@ -62,14 +62,18 @@ func IsRequestValid[T common.JITAccessPolicyListInterface](
 				continue
 			}
 
+			// Duration must be within policy threshold
+			if spec.DurationSeconds > policy.MaxDurationSeconds {
+				continue
+			}
+
 			// Permissions check (empty requested permissions are always allowed)
 			permissionsAllowed := len(spec.Permissions) == 0 ||
 				AllRequestedPolicyRulesAllowed(spec.Permissions, policy.AllowedPermissions)
 
 			// Role check (empty role means "no role requested", so skip check)
 			roleAllowed := spec.Role == "" ||
-				(slices.Contains(policy.AllowedRoles, spec.Role) &&
-					spec.DurationSeconds <= policy.MaxDurationSeconds)
+				slices.Contains(policy.AllowedRoles, spec.Role)
 
 			if permissionsAllowed && roleAllowed {
 				return true, &policy

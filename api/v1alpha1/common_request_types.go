@@ -52,7 +52,9 @@ type JITAccessRequestStatus struct {
 	State             RequestState `json:"state,omitempty"`
 	ApprovalsRequired int          `json:"approvalsRequired,omitempty"`
 	ApprovalsReceived int          `json:"approvalsReceived,omitempty"`
-	ExpiresAt         *metav1.Time `json:"expiresAt,omitempty"`
+
+	RequestExpiresAt *metav1.Time `json:"requestExpiresAt,omitempty"`
+	AccessExpiresAt  *metav1.Time `json:"accessExpiresAt,omitempty"`
 
 	RoleBindingCreated      bool `json:"roleBindingCreated,omitempty"`
 	AdhocRoleCreated        bool `json:"adhocRoleCreated,omitempty"`

@@ -217,6 +217,12 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 		status.State = v1alpha1.RequestStatePending
 	}
 
+	// Set request expire time if not set
+	if status.RequestExpiresAt == nil {
+		expireTime := metav1.NewTime(time.Now().Add(time.Duration(60) * time.Minute))
+		status.RequestExpiresAt = &expireTime
+	}
+
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
 		if err := r.ensureFinalizer(ctx, obj, common.JITFinalizer); err != nil {
@@ -240,6 +246,15 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 			log.Info("Cleaned up and removed finalizer", "name", obj.GetName())
 		}
 		return ctrl.Result{}, nil
+	}
+
+	if (status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time)) ||
+		(status.State != v1alpha1.RequestStateApproved && status.RequestExpiresAt != nil && time.Now().After(status.RequestExpiresAt.Time)) {
+		status.State = v1alpha1.RequestStateExpired
+	}
+
+	if status.State == v1alpha1.RequestStateExpired {
+		return r.handleExpired(ctx, obj)
 	}
 
 	// Match against policies
@@ -277,10 +292,6 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 		status.ApprovalsRequired = matched.RequiredApprovals
 	}
 
-	if status.ExpiresAt != nil && time.Now().After(status.ExpiresAt.Time) {
-		status.State = v1alpha1.RequestStateExpired
-	}
-
 	// State machine
 	switch status.State {
 	case v1alpha1.RequestStateApproved:
@@ -288,9 +299,6 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 
 	case v1alpha1.RequestStatePending:
 		return r.handlePending(ctx, obj, matched, status)
-
-	case v1alpha1.RequestStateExpired:
-		return r.handleExpired(ctx, obj)
 	}
 
 	return ctrl.Result{}, nil
@@ -304,12 +312,6 @@ func (r *GenericJITAccessReconciler) handleApproved(
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
 
-	// Set expire time if not set
-	if status.ExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(time.Duration(spec.DurationSeconds) * time.Second))
-		status.ExpiresAt = &expireTime
-	}
-
 	// Handle pre-defined role or adhoc permissions
 	roleKind := obj.GetRoleKind()
 	ns := obj.GetNamespace()
@@ -318,7 +320,7 @@ func (r *GenericJITAccessReconciler) handleApproved(
 	isClusterScoped := ns == ""
 
 	// Pre-defined Role/ClusterRole
-	if spec.Role != "" {
+	if spec.Role != "" && !status.RoleBindingCreated {
 		isClusterRole := roleKind == v1alpha1.RoleKindClusterRole
 
 		if err := r.createRoleBinding(ctx, obj, spec.Role, reqName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
@@ -330,23 +332,34 @@ func (r *GenericJITAccessReconciler) handleApproved(
 	}
 
 	// Adhoc permissions
-	if len(spec.Permissions) > 0 {
+	if len(spec.Permissions) > 0 && (!status.AdhocRoleCreated || !status.AdhocRoleBindingCreated) {
 		isClusterRole := isClusterScoped
 
 		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
-		if err := r.createRole(ctx, obj, adhocName, spec.Permissions, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-			return ctrl.Result{}, err
-		}
-		status.AdhocRoleCreated = true
-		log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 
-		if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-			return ctrl.Result{}, err
+		if !status.AdhocRoleCreated {
+			if err := r.createRole(ctx, obj, adhocName, spec.Permissions, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
+				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
+				return ctrl.Result{}, err
+			}
+			status.AdhocRoleCreated = true
+			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
 		}
-		status.AdhocRoleBindingCreated = true
-		log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
+
+		if !status.AdhocRoleBindingCreated {
+			if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
+				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
+				return ctrl.Result{}, err
+			}
+			status.AdhocRoleBindingCreated = true
+			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
+		}
+	}
+
+	// Set expire time if not set
+	if status.AccessExpiresAt == nil {
+		expireTime := metav1.NewTime(time.Now().Add(time.Duration(spec.DurationSeconds) * time.Second))
+		status.AccessExpiresAt = &expireTime
 	}
 
 	return ctrl.Result{RequeueAfter: time.Duration(spec.DurationSeconds) * time.Second}, nil

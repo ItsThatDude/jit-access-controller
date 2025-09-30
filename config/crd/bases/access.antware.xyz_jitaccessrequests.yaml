@@ -135,6 +135,9 @@ spec:
           status:
             description: status defines the observed state of JITAccessRequest
             properties:
+              accessExpiresAt:
+                format: date-time
+                type: string
               adhocRoleBindingCreated:
                 type: boolean
               adhocRoleCreated:
@@ -143,7 +146,7 @@ spec:
                 type: integer
               approvalsRequired:
                 type: integer
-              expiresAt:
+              requestExpiresAt:
                 format: date-time
                 type: string
               requestId:
