@@ -158,6 +158,7 @@ spec:
                 - Pending
                 - Approved
                 - Denied
+                - Expired
                 type: string
             type: object
         required:

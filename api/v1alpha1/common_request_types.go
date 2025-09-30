@@ -5,7 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +kubebuilder:validation:Enum=Pending;Approved;Denied
+// +kubebuilder:validation:Enum=Pending;Approved;Denied;Expired
 type RequestState string
 
 const (
