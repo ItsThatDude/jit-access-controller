@@ -9,5 +9,4 @@ var (
 	duration      int64
 	justification string
 	subject       string
-	approver      string
 )

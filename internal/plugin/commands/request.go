@@ -85,7 +85,7 @@ func NewRequestCmd() *cobra.Command {
 	cmd.Flags().Int64Var(&duration, "duration", 3600, "Duration in seconds for the access")
 	cmd.Flags().StringVar(&justification, "justification", "", "Justification for the request")
 	cmd.Flags().StringVar(&subject, "subject", "", "Requesting subject (e.g. username)")
-	_ = cmd.MarkFlagRequired("subject")
+	//_ = cmd.MarkFlagRequired("subject")
 
 	return cmd
 }

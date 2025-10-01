@@ -30,6 +30,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+  failurePolicy: Fail
+  name: mclusterjitaccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusterjitaccessresponses
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-access-antware-xyz-v1alpha1-jitaccessrequest
   failurePolicy: Fail
   name: mjitaccessrequest-v1alpha1.kb.io
@@ -43,6 +63,26 @@ webhooks:
     - UPDATE
     resources:
     - jitaccessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-access-antware-xyz-v1alpha1-jitaccessresponse
+  failurePolicy: Fail
+  name: mjitaccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - jitaccessresponses
   sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1

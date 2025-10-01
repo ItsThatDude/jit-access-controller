@@ -9,7 +9,7 @@ import (
 )
 
 // createResponse creates a JITAccessResponse or ClusterJITAccessResponse
-func CreateResponse(scope string, namespace string, requestName string, state v1alpha1.ResponseState, approver string) error {
+func CreateResponse(scope string, namespace string, requestName string, state v1alpha1.ResponseState) error {
 	cli, err := GetRuntimeClient()
 	if err != nil {
 		return err
@@ -23,14 +23,13 @@ func CreateResponse(scope string, namespace string, requestName string, state v1
 			},
 			Spec: v1alpha1.JITAccessResponseSpec{
 				RequestRef: requestName,
-				Approver:   approver,
 				Response:   state,
 			},
 		}
 		if err := cli.Create(ctx, resp); err != nil {
 			return err
 		}
-		fmt.Printf("ClusterJITAccessResponse created for request %s by %s\n", requestName, approver)
+		fmt.Printf("ClusterJITAccessResponse created for request %s\n", requestName)
 	} else {
 		resp := &v1alpha1.JITAccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
@@ -39,14 +38,13 @@ func CreateResponse(scope string, namespace string, requestName string, state v1
 			},
 			Spec: v1alpha1.JITAccessResponseSpec{
 				RequestRef: requestName,
-				Approver:   approver,
 				Response:   state,
 			},
 		}
 		if err := cli.Create(ctx, resp); err != nil {
 			return err
 		}
-		fmt.Printf("JITAccessResponse created for request %s/%s by %s\n", namespace, requestName, approver)
+		fmt.Printf("JITAccessResponse created for request %s/%s\n", namespace, requestName)
 	}
 	return nil
 }

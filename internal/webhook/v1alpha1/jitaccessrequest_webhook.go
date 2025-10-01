@@ -42,39 +42,7 @@ func SetupJITAccessRequestWebhookWithManager(mgr ctrl.Manager) error {
 	}
 	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.JITAccessRequest{}).
 		WithValidator(validator).
-		WithDefaulter(&JITAccessRequestCustomDefaulter{}).
 		Complete()
-}
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// +kubebuilder:webhook:path=/mutate-access-antware-xyz-v1alpha1-jitaccessrequest,mutating=true,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=jitaccessrequests,verbs=create;update,versions=v1alpha1,name=mjitaccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
-
-// JITAccessRequestCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind JITAccessRequest when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type JITAccessRequestCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
-
-var _ webhook.CustomDefaulter = &JITAccessRequestCustomDefaulter{}
-
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind JITAccessRequest.
-func (d *JITAccessRequestCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	req, ok := obj.(*accessv1alpha1.JITAccessRequest)
-
-	if !ok {
-		return fmt.Errorf("expected an JITAccessRequest object but got %T", obj)
-	}
-	jitaccessrequestlog.Info("Defaulting for JITAccessRequest", "name", req.GetName())
-
-	if req.Spec.RoleKind != accessv1alpha1.RoleKindRole && req.Spec.RoleKind != accessv1alpha1.RoleKindClusterRole {
-		req.Spec.RoleKind = accessv1alpha1.RoleKindRole
-	}
-
-	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

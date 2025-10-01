@@ -231,7 +231,12 @@ func main() {
 			os.Exit(1)
 		}
 
+		webhookv1alpha1.SetupClusterJITAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterJITAccessResponseMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupClusterJITAccessResponseWebhookWithManager(mgr)
+
+		webhookv1alpha1.SetupJITAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupJITAccessResponseMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupJITAccessResponseWebhookWithManager(mgr)
 	}
 	// +kubebuilder:scaffold:builder

@@ -42,35 +42,7 @@ func SetupClusterJITAccessRequestWebhookWithManager(mgr ctrl.Manager) error {
 	}
 	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.ClusterJITAccessRequest{}).
 		WithValidator(validator).
-		WithDefaulter(&ClusterJITAccessRequestCustomDefaulter{}).
 		Complete()
-}
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// +kubebuilder:webhook:path=/mutate-access-antware-xyz-v1alpha1-clusterjitaccessrequest,mutating=true,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusterjitaccessrequests,verbs=create;update,versions=v1alpha1,name=mclusterjitaccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
-
-// ClusterJITAccessRequestCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind ClusterJITAccessRequest when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type ClusterJITAccessRequestCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
-
-var _ webhook.CustomDefaulter = &ClusterJITAccessRequestCustomDefaulter{}
-
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind ClusterJITAccessRequest.
-func (d *ClusterJITAccessRequestCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	req, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
-
-	if !ok {
-		return fmt.Errorf("expected an ClusterJITAccessRequest object but got %T", obj)
-	}
-	clusterjitaccessrequestlog.Info("Defaulting for ClusterJITAccessRequest", "name", req.GetName())
-
-	return nil
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
