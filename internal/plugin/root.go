@@ -1,13 +1,16 @@
 package plugin
 
 import (
+	"os"
+
 	"antware.xyz/jitaccess/internal/plugin/commands"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "kubectl-access",
-	Short: "Manage JIT access requests",
+	Use:          "kubectl-access",
+	Short:        "Manage JIT access requests",
+	SilenceUsage: true,
 }
 
 func Execute() {
@@ -17,6 +20,6 @@ func Execute() {
 	rootCmd.AddCommand(commands.NewListCmd())
 
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		os.Exit(1)
 	}
 }
