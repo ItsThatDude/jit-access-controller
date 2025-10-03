@@ -93,6 +93,10 @@ jobs:
         run: |
           helm status my-release --namespace jitaccess-system
 
+      - name: Wait for controller to be ready
+        run: |
+          kubectl wait --namespace jitaccess-system --for=condition=available --timeout=300s deployment/jitaccess-controller-manager
+
 # TODO: Uncomment if prometheus.enabled is set to true to confirm that the ServiceMonitor gets created
 #      - name: Check Presence of ServiceMonitor
 #        run: |
