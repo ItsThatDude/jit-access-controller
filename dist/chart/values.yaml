@@ -16,11 +16,7 @@ controllerManager:
       requests:
         cpu: 10m
         memory: 64Mi
-    env:
-      - name: SYSTEM_NAMESPACE
-        valueFrom:
-          fieldRef:
-            fieldPath: metadata.namespace
+    env: []
     livenessProbe:
       initialDelaySeconds: 15
       periodSeconds: 20
