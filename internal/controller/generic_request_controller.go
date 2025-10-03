@@ -329,6 +329,7 @@ func (r *GenericRequestReconciler) handlePending(
 	status *v1alpha1.JITAccessRequestStatus,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
+	spec := obj.GetSpec()
 
 	approved := set.New[string]()
 	denied := set.New[string]()
@@ -342,11 +343,13 @@ func (r *GenericRequestReconciler) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
-			switch resp.Spec.Response {
-			case v1alpha1.ResponseStateApproved:
-				approved.Insert(resp.Spec.Approver)
-			case v1alpha1.ResponseStateDenied:
-				denied.Insert(resp.Spec.Approver)
+			if resp.Spec.Approver != spec.Subject {
+				switch resp.Spec.Response {
+				case v1alpha1.ResponseStateApproved:
+					approved.Insert(resp.Spec.Approver)
+				case v1alpha1.ResponseStateDenied:
+					denied.Insert(resp.Spec.Approver)
+				}
 			}
 		}
 	} else {
@@ -357,11 +360,13 @@ func (r *GenericRequestReconciler) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
-			switch resp.Spec.Response {
-			case v1alpha1.ResponseStateApproved:
-				approved.Insert(resp.Spec.Approver)
-			case v1alpha1.ResponseStateDenied:
-				denied.Insert(resp.Spec.Approver)
+			if resp.Spec.Approver != spec.Subject {
+				switch resp.Spec.Response {
+				case v1alpha1.ResponseStateApproved:
+					approved.Insert(resp.Spec.Approver)
+				case v1alpha1.ResponseStateDenied:
+					denied.Insert(resp.Spec.Approver)
+				}
 			}
 		}
 	}

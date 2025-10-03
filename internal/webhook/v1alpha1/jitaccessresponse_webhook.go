@@ -45,6 +45,10 @@ func (v *JITAccessResponseValidator) Handle(ctx context.Context, req admission.R
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced JITAccessRequest: %s", err))
 	}
 
+	if request.Spec.Subject == obj.Spec.Approver {
+		return admission.Denied("The approver can not be the same as the subject of the request.")
+	}
+
 	policies := &accessv1alpha1.JITAccessPolicyList{}
 	if err := v.client.List(ctx, policies, client.InNamespace(req.Namespace)); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies in namespace '%s': %s", req.Namespace, err))

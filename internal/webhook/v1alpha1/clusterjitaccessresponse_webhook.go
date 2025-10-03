@@ -45,6 +45,10 @@ func (v *ClusterJITAccessResponseValidator) Handle(ctx context.Context, req admi
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterJITAccessRequest: %s", err))
 	}
 
+	if request.Spec.Subject == obj.Spec.Approver {
+		return admission.Denied("The approver can not be the same as the subject of the request.")
+	}
+
 	policies := &accessv1alpha1.ClusterJITAccessPolicyList{}
 	if err := v.client.List(ctx, policies); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies: %s", err))
