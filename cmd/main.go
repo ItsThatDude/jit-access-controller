@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -203,19 +204,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.GenericJITAccessReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+	systemNamespace, err := getSystemNamespace()
+	if err != nil {
+		setupLog.Error(err, "unable to find SYSTEM_NAMESPACE env variable")
+		os.Exit(1)
+	}
+
+	if err := (&controller.GenericRequestReconciler{
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
+		SystemNamespace: systemNamespace,
 	}).SetupWithManagerCluster(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterJITAccessRequest")
 		os.Exit(1)
 	}
 
-	if err := (&controller.GenericJITAccessReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+	if err := (&controller.GenericRequestReconciler{
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
+		SystemNamespace: systemNamespace,
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "JITAccessRequest")
+		os.Exit(1)
+	}
+
+	if err := (&controller.GrantReconciler{
+		Client:          mgr.GetClient(),
+		Scheme:          mgr.GetScheme(),
+		SystemNamespace: systemNamespace,
+	}).SetupWithManagerNamespaced(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "JITAccessGrant")
 		os.Exit(1)
 	}
 
@@ -271,4 +289,17 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func getSystemNamespace() (string, error) {
+	// systemNamespaceEnvVar is the constant for env variable SYSTEM_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	var systemNamespaceEnvVar = "SYSTEM_NAMESPACE"
+
+	ns, found := os.LookupEnv(systemNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", systemNamespaceEnvVar)
+	}
+	return ns, nil
 }

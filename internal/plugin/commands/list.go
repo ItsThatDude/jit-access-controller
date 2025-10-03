@@ -46,9 +46,7 @@ func NewListCmd() *cobra.Command {
 
 					expires := ""
 
-					if state == v1alpha1.RequestStateApproved {
-						expires = r.Status.AccessExpiresAt.String()
-					} else {
+					if state != v1alpha1.RequestStateApproved {
 						expires = r.Status.RequestExpiresAt.String()
 					}
 

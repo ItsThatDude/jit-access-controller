@@ -10,7 +10,6 @@ import (
 	common "antware.xyz/jitaccess/internal/common"
 	"antware.xyz/jitaccess/internal/policy"
 	"antware.xyz/jitaccess/internal/utils"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,12 +52,13 @@ import (
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
-type GenericJITAccessReconciler struct {
+type GenericRequestReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme          *runtime.Scheme
+	SystemNamespace string
 }
 
-func (r *GenericJITAccessReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
+func (r *GenericRequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
@@ -108,11 +108,11 @@ func (r *GenericJITAccessReconciler) SetupWithManagerCluster(mgr ctrl.Manager) e
 			}),
 			builder.WithPredicates(eventFilter),
 		).
-		Named("jitreconciler-cluster").
+		Named("request-reconciler-cluster").
 		Complete(r)
 }
 
-func (r *GenericJITAccessReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
+func (r *GenericRequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
@@ -163,11 +163,11 @@ func (r *GenericJITAccessReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager
 			}),
 			builder.WithPredicates(eventFilter),
 		).
-		Named("jitreconciler-namespaced").
+		Named("request-reconciler-namespaced").
 		Complete(r)
 }
 
-func (r *GenericJITAccessReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *GenericRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if req.Namespace == "" {
 		var clusterObj v1alpha1.ClusterJITAccessRequest
 		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
@@ -191,7 +191,7 @@ func (r *GenericJITAccessReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	return r.reconcileGeneric(ctx, &nsObj)
 }
 
-func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj common.JITAccessRequestObject) (ctrl.Result, error) {
+func (r *GenericRequestReconciler) reconcileGeneric(ctx context.Context, obj common.JITAccessRequestObject) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	originalStatus := *obj.GetStatus().DeepCopy()
@@ -248,8 +248,8 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 		return ctrl.Result{}, nil
 	}
 
-	if (status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time)) ||
-		(status.State != v1alpha1.RequestStateApproved && status.RequestExpiresAt != nil && time.Now().After(status.RequestExpiresAt.Time)) {
+	if status.State != v1alpha1.RequestStateApproved &&
+		status.RequestExpiresAt != nil && time.Now().After(status.RequestExpiresAt.Time) {
 		status.State = v1alpha1.RequestStateExpired
 	}
 
@@ -292,80 +292,37 @@ func (r *GenericJITAccessReconciler) reconcileGeneric(ctx context.Context, obj c
 		status.ApprovalsRequired = matched.RequiredApprovals
 	}
 
-	// State machine
-	switch status.State {
-	case v1alpha1.RequestStateApproved:
-		return r.handleApproved(ctx, obj, status)
-
-	case v1alpha1.RequestStatePending:
+	if status.State == v1alpha1.RequestStatePending {
 		return r.handlePending(ctx, obj, matched, status)
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericJITAccessReconciler) handleApproved(
+func (r *GenericRequestReconciler) handleApproved(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	status *v1alpha1.JITAccessRequestStatus,
+	approvers []string,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
 
 	// Handle pre-defined role or adhoc permissions
 	roleKind := obj.GetRoleKind()
-	ns := obj.GetNamespace()
 	reqName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
-	isClusterScoped := ns == ""
-
-	// Pre-defined Role/ClusterRole
-	if spec.Role != "" && !status.RoleBindingCreated {
-		isClusterRole := roleKind == v1alpha1.RoleKindClusterRole
-
-		if err := r.createRoleBinding(ctx, obj, spec.Role, reqName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
-			return ctrl.Result{}, err
-		}
-		status.RoleBindingCreated = true
-		log.Info("Granted Role for request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
+	if err := r.createGrant(ctx, obj, reqName, approvers); err != nil && !errors.IsAlreadyExists(err) {
+		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
+		return ctrl.Result{}, err
 	}
 
-	// Adhoc permissions
-	if len(spec.Permissions) > 0 && (!status.AdhocRoleCreated || !status.AdhocRoleBindingCreated) {
-		isClusterRole := isClusterScoped
-
-		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
-
-		if !status.AdhocRoleCreated {
-			if err := r.createRole(ctx, obj, adhocName, spec.Permissions, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-				return ctrl.Result{}, err
-			}
-			status.AdhocRoleCreated = true
-			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-		}
-
-		if !status.AdhocRoleBindingCreated {
-			if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-				return ctrl.Result{}, err
-			}
-			status.AdhocRoleBindingCreated = true
-			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", spec.Subject, "role", adhocName)
-		}
-	}
-
-	// Set expire time if not set
-	if status.AccessExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(time.Duration(spec.DurationSeconds) * time.Second))
-		status.AccessExpiresAt = &expireTime
-	}
+	status.GrantCreated = true
 
 	return ctrl.Result{RequeueAfter: time.Duration(spec.DurationSeconds) * time.Second}, nil
 }
 
-func (r *GenericJITAccessReconciler) handlePending(
+func (r *GenericRequestReconciler) handlePending(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	matchedPolicy *v1alpha1.SubjectPolicy,
@@ -420,7 +377,7 @@ func (r *GenericJITAccessReconciler) handlePending(
 	}
 
 	if status.State == v1alpha1.RequestStateApproved {
-		return r.handleApproved(ctx, obj, status)
+		return r.handleApproved(ctx, obj, status, approved.UnsortedList())
 	}
 
 	if status.RequestExpiresAt != nil {
@@ -430,7 +387,7 @@ func (r *GenericJITAccessReconciler) handlePending(
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericJITAccessReconciler) handleExpired(
+func (r *GenericRequestReconciler) handleExpired(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 ) (ctrl.Result, error) {
@@ -447,64 +404,11 @@ func (r *GenericJITAccessReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericJITAccessReconciler) cleanupResources(ctx context.Context, obj common.JITAccessRequestObject) error {
+func (r *GenericRequestReconciler) cleanupResources(ctx context.Context, obj common.JITAccessRequestObject) error {
 	log := logf.FromContext(ctx)
-	status := obj.GetStatus()
 	ns := obj.GetNamespace()
-	requestId := status.RequestId
 
 	var errs []error
-
-	deleteResource := func(key client.ObjectKey, obj client.Object, description string) {
-		if err := r.Get(ctx, key, obj); err == nil {
-			if err := r.Delete(ctx, obj); err != nil {
-				errs = append(errs, fmt.Errorf("failed to delete %s %s: %w", description, key.Name, err))
-			} else {
-				log.Info("Deleted "+description, "name", key.Name)
-			}
-		} else if !errors.IsNotFound(err) {
-			errs = append(errs, fmt.Errorf("failed to get %s %s: %w", description, key.Name, err))
-		}
-	}
-
-	// Regular RoleBinding / ClusterRoleBinding
-	if status.RoleBindingCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-%s", requestId)}
-		var rb client.Object
-		if ns == "" {
-			rb = &rbacv1.ClusterRoleBinding{}
-		} else {
-			rb = &rbacv1.RoleBinding{}
-			key.Namespace = ns
-		}
-		deleteResource(key, rb, "RoleBinding/ClusterRoleBinding")
-	}
-
-	// Adhoc RoleBinding / ClusterRoleBinding
-	if status.AdhocRoleBindingCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
-		var rb client.Object
-		if ns == "" {
-			rb = &rbacv1.ClusterRoleBinding{}
-		} else {
-			rb = &rbacv1.RoleBinding{}
-			key.Namespace = ns
-		}
-		deleteResource(key, rb, "Adhoc RoleBinding/ClusterRoleBinding")
-	}
-
-	// Adhoc Role / ClusterRole
-	if status.AdhocRoleCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
-		var roleObj client.Object
-		if ns == "" {
-			roleObj = &rbacv1.ClusterRole{}
-		} else {
-			roleObj = &rbacv1.Role{}
-			key.Namespace = ns
-		}
-		deleteResource(key, roleObj, "Adhoc Role/ClusterRole")
-	}
 
 	// Delete all responses
 	var responses []client.Object
@@ -543,7 +447,7 @@ func (r *GenericJITAccessReconciler) cleanupResources(ctx context.Context, obj c
 	return nil
 }
 
-func (r *GenericJITAccessReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+func (r *GenericRequestReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.AddFinalizer(obj, finalizer)
@@ -554,7 +458,7 @@ func (r *GenericJITAccessReconciler) ensureFinalizer(ctx context.Context, obj cl
 	return nil
 }
 
-func (r *GenericJITAccessReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+func (r *GenericRequestReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.RemoveFinalizer(obj, finalizer)
@@ -563,56 +467,54 @@ func (r *GenericJITAccessReconciler) removeFinalizer(ctx context.Context, obj cl
 	return nil
 }
 
-func (r *GenericJITAccessReconciler) createRole(
+func (r *GenericRequestReconciler) createGrant(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	name string,
-	rules []rbacv1.PolicyRule,
-	clusterRole bool,
+	approvers []string,
 ) error {
-	var role client.Object
-	if clusterRole {
-		role = &rbacv1.ClusterRole{
-			ObjectMeta: metav1.ObjectMeta{Name: name},
-			Rules:      rules,
-		}
-	} else {
-		role = &rbacv1.Role{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.GetNamespace()},
-			Rules:      rules,
-		}
+	spec := obj.GetSpec()
+	status := obj.GetStatus()
+	ns := obj.GetNamespace()
+
+	isClusterGrant := ns == ""
+
+	grant := &v1alpha1.JITAccessGrant{
+		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: name},
+		Spec:       v1alpha1.JITAccessGrantSpec{},
 	}
-	return r.Create(ctx, role)
-}
 
-func (r *GenericJITAccessReconciler) createRoleBinding(
-	ctx context.Context,
-	obj common.JITAccessRequestObject,
-	roleName string,
-	bindingName string,
-	clusterScoped bool,
-	clusterRole bool,
-) error {
-	subject := rbacv1.Subject{Kind: "User", Name: obj.GetSpec().Subject, APIGroup: "rbac.authorization.k8s.io"}
-	if clusterScoped {
-		rb := &rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName},
-			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: roleName},
-		}
-		return r.Create(ctx, rb)
-	} else {
-		kind := "Role"
-
-		if clusterRole {
-			kind = "ClusterRole"
-		}
-
-		rb := &rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace()},
-			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: kind, Name: roleName},
-		}
-		return r.Create(ctx, rb)
+	if err := r.Create(ctx, grant); err != nil {
+		return err
 	}
+
+	original := grant.DeepCopy()
+
+	grant.Status = v1alpha1.JITAccessGrantStatus{
+		Request:   name,
+		RequestId: status.RequestId,
+
+		Subject:    spec.Subject,
+		ApprovedBy: approvers,
+
+		Role:            spec.Role,
+		Permissions:     spec.Permissions,
+		DurationSeconds: spec.DurationSeconds,
+	}
+
+	if isClusterGrant {
+		grant.Status.Scope = v1alpha1.GrantScopeCluster
+	} else {
+		grant.Status.Scope = v1alpha1.GrantScopeNamespace
+		grant.Status.Namespace = ns
+		grant.Status.RoleKind = obj.GetRoleKind()
+	}
+
+	patch := client.MergeFrom(original)
+
+	if err := r.Status().Patch(ctx, grant, patch); err != nil {
+		return err
+	}
+
+	return nil
 }

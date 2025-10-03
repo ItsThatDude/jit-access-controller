@@ -135,24 +135,17 @@ spec:
           status:
             description: status defines the observed state of JITAccessRequest
             properties:
-              accessExpiresAt:
-                format: date-time
-                type: string
-              adhocRoleBindingCreated:
-                type: boolean
-              adhocRoleCreated:
-                type: boolean
               approvalsReceived:
                 type: integer
               approvalsRequired:
                 type: integer
+              grantCreated:
+                type: boolean
               requestExpiresAt:
                 format: date-time
                 type: string
               requestId:
                 type: string
-              roleBindingCreated:
-                type: boolean
               state:
                 enum:
                 - Pending

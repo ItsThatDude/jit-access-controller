@@ -19,7 +19,7 @@ type ClusterJITAccessRequestMutator struct {
 func SetupClusterJITAccessRequestMutatingWebhookWithManager(mgr ctrl.Manager) {
 	mgr.GetWebhookServer().Register(
 		"/mutate-access-antware-xyz-v1alpha1-clusterjitaccessrequest",
-		&admission.Webhook{Handler: &JITAccessRequestMutator{
+		&admission.Webhook{Handler: &ClusterJITAccessRequestMutator{
 			decoder: admission.NewDecoder(mgr.GetScheme()),
 		}},
 	)

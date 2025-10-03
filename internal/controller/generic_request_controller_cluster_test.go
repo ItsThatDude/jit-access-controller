@@ -9,7 +9,6 @@ import (
 	common "antware.xyz/jitaccess/internal/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -18,8 +17,8 @@ import (
 var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 	var (
 		ctx        context.Context
-		reconciler *GenericJITAccessReconciler
-		policyObj  *v1alpha1.JITAccessPolicy
+		reconciler *GenericRequestReconciler
+		policyObj  *v1alpha1.ClusterJITAccessPolicy
 	)
 
 	BeforeEach(func() {
@@ -27,12 +26,11 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 
 		// Create policy object with unique name per run
 		policyName := fmt.Sprintf("test-policy-%d", time.Now().UnixNano())
-		policyObj = &v1alpha1.JITAccessPolicy{
+		policyObj = &v1alpha1.ClusterJITAccessPolicy{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      policyName,
-				Namespace: "default",
+				Name: policyName,
 			},
-			Spec: v1alpha1.JITAccessPolicySpec{
+			Spec: v1alpha1.ClusterJITAccessPolicySpec{
 				Policies: []v1alpha1.SubjectPolicy{
 					{
 						Subjects:           []string{"user1"},
@@ -45,29 +43,51 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, policyObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.JITAccessPolicy{})
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterJITAccessPolicy{})
 
-		reconciler = &GenericJITAccessReconciler{
-			Client: mgr.GetClient(),
-			Scheme: scheme.Scheme,
+		reconciler = &GenericRequestReconciler{
+			Client:          mgr.GetClient(),
+			Scheme:          scheme.Scheme,
+			SystemNamespace: "default",
 		}
 	})
 
 	AfterEach(func() {
 		// Clean up policy
 		Expect(k8sClient.Delete(ctx, policyObj)).To(Succeed())
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.JITAccessPolicy{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterJITAccessPolicy{})
 	})
 
-	It("should grant role for approved JITAccessRequest", func() {
+	It("should fail to reconcile ClusterJITAccessRequest", func() {
 		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
 
-		requestObj := &v1alpha1.JITAccessRequest{
+		requestObj := &v1alpha1.ClusterJITAccessRequest{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      requestName,
-				Namespace: "default",
+				Name: requestName,
 			},
-			Spec: v1alpha1.JITAccessRequestSpec{
+			Spec: v1alpha1.ClusterJITAccessRequestSpec{
+				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
+					Subject:         "user1",
+					Role:            "no-policy",
+					DurationSeconds: 300,
+					Justification:   "test",
+				},
+			},
+		}
+
+		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), requestObj)
+		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).ShouldNot(Succeed())
+	})
+
+	It("should create grant for approved ClusterJITAccessRequest", func() {
+		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
+
+		requestObj := &v1alpha1.ClusterJITAccessRequest{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: requestName,
+			},
+			Spec: v1alpha1.ClusterJITAccessRequestSpec{
 				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
 					Subject:         "user1",
 					Role:            "edit",
@@ -104,10 +124,9 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 		))
 
 		responseName := fmt.Sprintf("test-approve-response-%d", time.Now().UnixNano())
-		responseObj := &v1alpha1.JITAccessResponse{
+		responseObj := &v1alpha1.ClusterJITAccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      responseName,
-				Namespace: requestObj.Namespace,
+				Name: responseName,
 			},
 			Spec: v1alpha1.JITAccessResponseSpec{
 				RequestRef: requestName,
@@ -116,32 +135,31 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 			},
 		}
 
-		rolebindingName := fmt.Sprintf("jit-access-%s", requestObj.Status.RequestId)
-
 		// Create the response and wait for it to be created
 		Expect(k8sClient.Create(ctx, responseObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.JITAccessResponse{})
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.ClusterJITAccessResponse{})
 
 		// Reconcile the request again, to process the response
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
 
-		// Wait for the RoleBindingCreated status to be set
+		// Wait for the GrantCreated status to be set
 		Eventually(func() bool {
 			_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
-			return requestObj.Status.RoleBindingCreated
+			return requestObj.Status.GrantCreated
 		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 
-		// Wait for the ClusterRoleBinding to be created
-		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: requestObj.Namespace, Name: rolebindingName}, &rbacv1.RoleBinding{})
+		// Wait for the Grant to be created
+		grantName := fmt.Sprintf("jit-access-%s", requestObj.Status.RequestId)
+		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: grantName}, &v1alpha1.JITAccessGrant{})
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())
-		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
+		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterJITAccessRequest{})
 
 		// Reconcile to handle finalizer cleanup
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
 
 		// Wait until fully deleted
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.JITAccessRequest{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterJITAccessRequest{})
 	})
 })

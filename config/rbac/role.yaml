@@ -10,6 +10,7 @@ rules:
   - clusterjitaccesspolicies
   - clusterjitaccessrequests
   - clusterjitaccessresponses
+  - jitaccessgrants
   - jitaccesspolicies
   - jitaccessrequests
   - jitaccessresponses
@@ -27,6 +28,7 @@ rules:
   - clusterjitaccesspolicies/finalizers
   - clusterjitaccessrequests/finalizers
   - clusterjitaccessresponses/finalizers
+  - jitaccessgrants/finalizers
   - jitaccesspolicies/finalizers
   - jitaccessrequests/finalizers
   - jitaccessresponses/finalizers
@@ -38,6 +40,7 @@ rules:
   - clusterjitaccesspolicies/status
   - clusterjitaccessrequests/status
   - clusterjitaccessresponses/status
+  - jitaccessgrants/status
   - jitaccesspolicies/status
   - jitaccessrequests/status
   - jitaccessresponses/status

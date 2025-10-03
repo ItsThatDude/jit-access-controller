@@ -73,4 +73,13 @@ resources:
   webhooks:
     validation: true
     webhookVersion: v1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: antware.xyz
+  group: access
+  kind: JITAccessGrant
+  path: antware.xyz/jitaccess/api/v1alpha1
+  version: v1alpha1
 version: "3"

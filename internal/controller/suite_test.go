@@ -34,8 +34,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"antware.xyz/jitaccess/api/v1alpha1"
+	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -63,7 +64,10 @@ var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.TODO())
 
 	var err error
-	err = v1alpha1.AddToScheme(scheme.Scheme)
+	err = accessv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = accessv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
@@ -87,17 +91,17 @@ var _ = BeforeSuite(func() {
 	mgr, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(mgr.GetFieldIndexer().IndexField(ctx, &v1alpha1.JITAccessResponse{}, "spec.requestRef",
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.JITAccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if r, ok := obj.(*v1alpha1.JITAccessResponse); ok {
+			if r, ok := obj.(*accessv1alpha1.JITAccessResponse); ok {
 				return []string{r.Spec.RequestRef}
 			}
 			return nil
 		})).To(Succeed())
 
-	Expect(mgr.GetFieldIndexer().IndexField(ctx, &v1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if r, ok := obj.(*v1alpha1.ClusterJITAccessResponse); ok {
+			if r, ok := obj.(*accessv1alpha1.ClusterJITAccessResponse); ok {
 				return []string{r.Spec.RequestRef}
 			}
 			return nil
@@ -158,7 +162,7 @@ func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, 
 	Eventually(func() bool { return errors.IsNotFound(c.Get(ctx, key, obj)) }, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 }
 
-func reconcileOnce(ctx context.Context, r *GenericJITAccessReconciler, key client.ObjectKey) AsyncAssertion {
+func reconcileOnce(ctx context.Context, r reconcile.TypedReconciler[reconcile.Request], key client.ObjectKey) AsyncAssertion {
 	req := ctrl.Request{NamespacedName: key}
 	return Eventually(func() error {
 		_, err := r.Reconcile(ctx, req)

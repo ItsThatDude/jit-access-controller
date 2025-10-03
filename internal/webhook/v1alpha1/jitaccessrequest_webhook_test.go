@@ -37,11 +37,10 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
 		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
-		// TODO (user): Add any setup logic common to all tests
 	})
 
 	AfterEach(func() {
-		// TODO (user): Add any teardown logic common to all tests
+
 	})
 
 	Context("When creating or updating JITAccessRequest under Validating Webhook", func() {
@@ -49,7 +48,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 		// Example:
 		// It("Should deny creation if a required field is missing", func() {
 		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
+		//     obj.Spec.Role = ""
 		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
 		// })
 		//
