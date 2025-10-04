@@ -484,8 +484,10 @@ func (r *GenericRequestReconciler) createGrant(
 
 	isClusterGrant := ns == ""
 
+	labels := common.CommonLabels()
+
 	grant := &v1alpha1.JITAccessGrant{
-		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: name},
+		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: name, Labels: labels},
 		Spec:       v1alpha1.JITAccessGrantSpec{},
 	}
 

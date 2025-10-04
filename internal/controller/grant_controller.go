@@ -308,15 +308,16 @@ func (r *GrantReconciler) createRole(
 	rules []rbacv1.PolicyRule,
 	clusterRole bool,
 ) error {
+	labels := common.CommonLabels()
 	var role client.Object
 	if clusterRole {
 		role = &rbacv1.ClusterRole{
-			ObjectMeta: metav1.ObjectMeta{Name: name},
+			ObjectMeta: metav1.ObjectMeta{Name: name, Labels: labels},
 			Rules:      rules,
 		}
 	} else {
 		role = &rbacv1.Role{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.GetNamespace()},
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.GetNamespace(), Labels: labels},
 			Rules:      rules,
 		}
 	}
@@ -331,10 +332,11 @@ func (r *GrantReconciler) createRoleBinding(
 	clusterScoped bool,
 	clusterRole bool,
 ) error {
+	labels := common.CommonLabels()
 	subject := rbacv1.Subject{Kind: "User", Name: obj.Status.Subject, APIGroup: "rbac.authorization.k8s.io"}
 	if clusterScoped {
 		rb := &rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName},
+			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Labels: labels},
 			Subjects:   []rbacv1.Subject{subject},
 			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: roleName},
 		}
@@ -347,7 +349,7 @@ func (r *GrantReconciler) createRoleBinding(
 		}
 
 		rb := &rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace()},
+			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace(), Labels: labels},
 			Subjects:   []rbacv1.Subject{subject},
 			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: kind, Name: roleName},
 		}
