@@ -62,7 +62,7 @@ type ClusterJITAccessRequestCustomValidator struct {
 var _ webhook.CustomValidator = &ClusterJITAccessRequestCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type ClusterJITAccessRequest.
-func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	clusterjitaccessrequest, ok := obj.(*accessv1alpha1.ClusterJITAccessRequest)
 	if !ok {
 		return nil, fmt.Errorf("expected a ClusterJITAccessRequest object but got %T", obj)
@@ -73,7 +73,7 @@ func (v *ClusterJITAccessRequestCustomValidator) ValidateCreate(_ context.Contex
 	}
 
 	var policies accessv1alpha1.ClusterJITAccessPolicyList
-	if err := v.client.List(context.TODO(), &policies); err != nil {
+	if err := v.client.List(ctx, &policies); err != nil {
 		return nil, err
 	}
 

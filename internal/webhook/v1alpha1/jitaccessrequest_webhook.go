@@ -73,7 +73,7 @@ func (v *JITAccessRequestCustomValidator) ValidateCreate(ctx context.Context, ob
 	}
 
 	var policies accessv1alpha1.JITAccessPolicyList
-	if err := v.client.List(context.TODO(), &policies); err != nil {
+	if err := v.client.List(ctx, &policies); err != nil {
 		return nil, err
 	}
 
