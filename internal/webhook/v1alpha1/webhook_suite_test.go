@@ -29,6 +29,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -164,4 +165,12 @@ func getFirstFoundEnvTestBinaryDir() string {
 		}
 	}
 	return ""
+}
+
+func waitForCreated(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) AsyncAssertion {
+	return Eventually(func() error { return c.Get(ctx, key, obj) }, 5*time.Second, 500*time.Millisecond)
+}
+
+func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) AsyncAssertion {
+	return Eventually(func() bool { return errors.IsNotFound(c.Get(ctx, key, obj)) }, 5*time.Second, 500*time.Millisecond)
 }

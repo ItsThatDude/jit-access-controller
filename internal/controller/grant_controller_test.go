@@ -58,6 +58,12 @@ var _ = Describe("GenericJITGrantReconciler with envtest", func() {
 
 		Expect(k8sClient.Status().Update(ctx, grantObj)).To(Succeed())
 
+		// Wait for the RequestId status to be set
+		Eventually(func() bool {
+			_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grantObj)
+			return grantObj.Status.RequestId != ""
+		}, 10*time.Second, 1*time.Second).Should(BeTrue())
+
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 		type grantStatus struct {
