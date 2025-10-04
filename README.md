@@ -20,13 +20,70 @@ The controller evaluates the request against configured policies:
 - **`JITAccessPolicy`** – defines rules for namespace-scoped requests  
 - **`ClusterJITAccessPolicy`** – defines rules for cluster-wide requests  
 
-If the request matches a policy, the controller automatically creates the required Kubernetes RBAC objects:
+If the request matches a policy, the controller creates a **`JITAccessGrant`** object.  
+The **`JITAccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
 
-- **Role** / **RoleBinding** (for namespace-scoped access)  
-- **ClusterRole** / **ClusterRoleBinding** (for cluster-wide access)  
+- A **ClusterRole** or **Role** for adhoc permission requests
+- A **ClusterRoleBinding** or **RoleBinding** for both role and adhoc permission requests
 
-Each request must also define a **Duration**.  
+Each request must also define a **Duration** which must be within the maximum configured in the policy.  
 Once the duration expires, the controller automatically revokes access by removing any created roles and bindings.
+
+### Examples
+#### ns-policy.yaml
+```yaml
+apiVersion: access.antware.xyz/v1alpha1
+kind: JITAccessPolicy
+metadata:
+  namespace: example
+  name: jitaccesspolicy-sample
+spec:
+  policies:
+    - subjects:
+        - user1
+      allowedRoles:
+        - view
+      allowedPermissions:
+        - apiGroups: [""]
+          resources: ["pods"]
+          verbs: ["get", "list", "watch"]
+      maxDurationSeconds: 1800
+      requiredApprovals: 1
+      approvers:
+        - admin
+```
+#### ns-request.yaml
+In the example below, we specify the subject - if this is omitted, the user submitting the request will be used.
+```yaml
+apiVersion: access.antware.xyz/v1alpha1
+kind: JITAccessRequest
+metadata:
+  namespace: example
+  name: jitaccessrequest-sample
+spec:
+  subject: user1
+  durationSeconds: 300
+  justification: "This is a sample request"
+  # We can specify a pre-defined role:
+  role: view
+  # Or we can specify a list of permissions we want to request:
+  permissions: 
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+```
+#### ns-response.yaml
+For responses, the user submitting the request will be used as the approver.
+```yaml
+apiVersion: access.antware.xyz/v1alpha1
+kind: JITAccessResponse
+metadata:
+  namespace: example
+  name: jitaccessresponse-sample
+spec:
+  requestRef: jitaccessrequest-sample
+  response: Approved
+```
 
 ## Getting Started
 

@@ -100,7 +100,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 
 			warnings, err := validator.ValidateCreate(ctx, obj)
 			Expect(warnings).To(BeNil())
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 
 			// Clean up the created policy
 			Expect(k8sClient.Delete(ctx, policyObj)).To(Succeed())
