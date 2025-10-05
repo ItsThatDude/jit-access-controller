@@ -307,12 +307,9 @@ func (r *GenericRequestReconciler) handleApproved(
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
-
-	// Handle pre-defined role or adhoc permissions
 	roleKind := obj.GetRoleKind()
-	reqName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
-	if err := r.createGrant(ctx, obj, reqName, approvers); err != nil && !errors.IsAlreadyExists(err) {
+	if err := r.createGrant(ctx, obj, approvers); err != nil && !errors.IsAlreadyExists(err) {
 		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
 		return ctrl.Result{}, err
 	}
@@ -475,9 +472,9 @@ func (r *GenericRequestReconciler) removeFinalizer(ctx context.Context, obj clie
 func (r *GenericRequestReconciler) createGrant(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
-	name string,
 	approvers []string,
 ) error {
+	reqName := obj.GetName()
 	spec := obj.GetSpec()
 	status := obj.GetStatus()
 	ns := obj.GetNamespace()
@@ -487,7 +484,7 @@ func (r *GenericRequestReconciler) createGrant(
 	labels := common.CommonLabels()
 
 	grant := &v1alpha1.JITAccessGrant{
-		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: name, Labels: labels},
+		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: reqName, Labels: labels},
 		Spec:       v1alpha1.JITAccessGrantSpec{},
 	}
 
@@ -498,7 +495,7 @@ func (r *GenericRequestReconciler) createGrant(
 	original := grant.DeepCopy()
 
 	grant.Status = v1alpha1.JITAccessGrantStatus{
-		Request:   name,
+		Request:   reqName,
 		RequestId: status.RequestId,
 
 		Subject:    spec.Subject,

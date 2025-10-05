@@ -41,8 +41,10 @@ spec:
   policies:
     - subjects:
         - user1
+      # allow the user to request the binding of roles
       allowedRoles:
         - view
+      # allow the user to request specific permissions
       allowedPermissions:
         - apiGroups: [""]
           resources: ["pods"]
@@ -66,6 +68,7 @@ spec:
   justification: "This is a sample request"
   # We can specify a pre-defined role:
   role: view
+  roleKind: Role # This can be either Role or ClusterRole
   # Or we can specify a list of permissions we want to request:
   permissions: 
     - apiGroups: [""]
