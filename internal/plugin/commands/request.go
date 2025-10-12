@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/plugin/common"
+	"antware.xyz/jitaccess/internal/common"
+	plugin "antware.xyz/jitaccess/internal/plugin/common"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -17,15 +18,15 @@ func NewRequestCmd() *cobra.Command {
 		Use:   "request",
 		Short: "Request access",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cli, err := common.GetRuntimeClient()
+			cli, err := plugin.GetRuntimeClient()
 			if err != nil {
 				return err
 			}
 
 			ctx := context.Background()
-			rules := common.ParsePermissions(permissions)
+			rules := plugin.ParsePermissions(permissions)
 
-			if scope == common.SCOPE_CLUSTER {
+			if scope == plugin.SCOPE_CLUSTER {
 				req := &v1alpha1.ClusterJITAccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: "access-request-",
@@ -80,7 +81,7 @@ func NewRequestCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Namespace for the access request")
 	cmd.Flags().StringVar(&scope, "scope", "namespace", "Scope of the request (namespace|cluster)")
 	cmd.Flags().StringVar(&role, "role", "", "Role to request")
-	cmd.Flags().StringVar(&roleKindStr, "roleKind", "Role", "Role kind (Role|ClusterRole)")
+	cmd.Flags().StringVar(&roleKindStr, "roleKind", common.RoleKindRole, "Role kind (Role|ClusterRole)")
 	cmd.Flags().StringSliceVar(&permissions, "permissions", []string{}, "List of permissions (verbs:resources)")
 	cmd.Flags().Int64Var(&duration, "duration", 3600, "Duration in seconds for the access")
 	cmd.Flags().StringVar(&justification, "justification", "", "Justification for the request")

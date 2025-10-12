@@ -156,11 +156,11 @@ func (r *GrantReconciler) handleApproved(
 		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
 		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
+			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
 			return ctrl.Result{}, err
 		}
 		status.RoleBindingCreated = true
-		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
+		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
 	}
 
 	// Adhoc permissions
@@ -169,26 +169,26 @@ func (r *GrantReconciler) handleApproved(
 
 		if !status.AdhocRoleCreated {
 			if err := r.createRole(ctx, obj, adhocName, status.Permissions, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
+				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 				return ctrl.Result{}, err
 			}
 			status.AdhocRoleCreated = true
-			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
+			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 		}
 
 		if !status.AdhocRoleBindingCreated {
-			roleKind := "Role"
+			roleKind := common.RoleKindRole
 
 			if isClusterScoped {
-				roleKind = "ClusterRole"
+				roleKind = common.RoleKindCluster
 			}
 
 			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
+				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 				return ctrl.Result{}, err
 			}
 			status.AdhocRoleBindingCreated = true
-			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
+			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 		}
 	}
 
@@ -275,11 +275,11 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 		var desc string
 		if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
 			roleObj = &rbacv1.ClusterRole{}
-			desc = "ClusterRole"
+			desc = common.RoleKindCluster
 		} else {
 			roleObj = &rbacv1.Role{}
 			key.Namespace = obj.Status.Namespace
-			desc = "Role"
+			desc = common.RoleKindRole
 		}
 		deleteResource(key, roleObj, fmt.Sprintf("Adhoc %s", desc))
 	}
@@ -338,13 +338,13 @@ func (r *GrantReconciler) createRoleBinding(
 	labels := common.CommonLabels()
 	subject := rbacv1.Subject{Kind: "User", Name: obj.Status.Subject, APIGroup: "rbac.authorization.k8s.io"}
 	if clusterScoped {
-		if roleRef.Kind != "ClusterRole" {
+		if roleRef.Kind != common.RoleKindCluster {
 			return fmt.Errorf("can not bind a Role via ClusterRoleBinding")
 		}
 		rb := &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Labels: labels},
 			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: roleRef.Name},
+			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: roleRef.Name},
 		}
 		return r.Create(ctx, rb)
 	} else {

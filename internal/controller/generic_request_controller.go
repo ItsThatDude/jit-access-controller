@@ -309,7 +309,7 @@ func (r *GenericRequestReconciler) handleApproved(
 	spec := obj.GetSpec()
 
 	if err := r.createGrant(ctx, obj, approvers); err != nil && !errors.IsAlreadyExists(err) {
-		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "role", spec.Role)
+		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, common.RoleKindRole, spec.Role)
 		return ctrl.Result{}, err
 	}
 
