@@ -15,14 +15,6 @@ const (
 	RequestStateExpired  RequestState = "Expired"
 )
 
-// +kubebuilder:validation:Enum=Role;ClusterRole
-type RoleKind string
-
-const (
-	RoleKindRole        RoleKind = "Role"
-	RoleKindClusterRole RoleKind = "ClusterRole"
-)
-
 type JITAccessRequestBaseSpec struct {
 	// Subject is the username or identity requesting access
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
@@ -31,7 +23,7 @@ type JITAccessRequestBaseSpec struct {
 	// Role is an optional pre-defined Role/ClusterRole to bind
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Role cannot be changed after creation"
-	Role string `json:"role,omitempty"`
+	Role rbacv1.RoleRef `json:"role,omitempty"`
 
 	// Permissions are adhoc RBAC rules to grant (instead of a pre-defined role)
 	// +optional

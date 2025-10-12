@@ -29,9 +29,6 @@ func (r *ClusterJITAccessRequest) GetStatus() *JITAccessRequestStatus {
 func (r *ClusterJITAccessRequest) SetStatus(status *JITAccessRequestStatus) {
 	r.Status = *status
 }
-func (r *ClusterJITAccessRequest) GetRoleKind() RoleKind {
-	return RoleKindClusterRole
-}
 func (r *ClusterJITAccessRequest) GetScope() string {
 	return "Cluster"
 }

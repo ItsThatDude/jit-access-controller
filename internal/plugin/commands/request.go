@@ -6,6 +6,7 @@ import (
 
 	"antware.xyz/jitaccess/api/v1alpha1"
 	"antware.xyz/jitaccess/internal/plugin/common"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ func NewRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.ClusterJITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Role:            role,
+							Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
 							Permissions:     rules,
 							DurationSeconds: duration,
 							Justification:   justification,
@@ -55,12 +56,11 @@ func NewRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.JITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Role:            role,
+							Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
 							Permissions:     rules,
 							DurationSeconds: duration,
 							Justification:   justification,
 						},
-						RoleKind: v1alpha1.RoleKind(roleKindStr),
 					},
 				}
 

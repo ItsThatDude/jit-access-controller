@@ -149,20 +149,18 @@ func (r *GrantReconciler) handleApproved(
 	log := logf.FromContext(ctx)
 
 	// Handle pre-defined role or adhoc permissions
-	roleKind := obj.Status.RoleKind
 	isClusterScoped := obj.Status.Namespace == ""
 
 	// Pre-defined Role/ClusterRole
-	if status.Role != "" && !status.RoleBindingCreated {
-		isClusterRole := roleKind == accessv1alpha1.RoleKindClusterRole
+	if status.Role.Name != "" && !status.RoleBindingCreated {
 		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
-		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped, isClusterRole); err != nil && !errors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, "roleKind", roleKind, "role", status.Role)
+		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
+			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
 			return ctrl.Result{}, err
 		}
 		status.RoleBindingCreated = true
-		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, "roleKind", roleKind, "role", status.Role)
+		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
 	}
 
 	// Adhoc permissions
@@ -179,7 +177,13 @@ func (r *GrantReconciler) handleApproved(
 		}
 
 		if !status.AdhocRoleBindingCreated {
-			if err := r.createRoleBinding(ctx, obj, adhocName, adhocName, isClusterScoped, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
+			roleKind := "Role"
+
+			if isClusterScoped {
+				roleKind = "ClusterRole"
+			}
+
+			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
 				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 				return ctrl.Result{}, err
 			}
@@ -317,7 +321,7 @@ func (r *GrantReconciler) createRole(
 		}
 	} else {
 		role = &rbacv1.Role{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.GetNamespace(), Labels: labels},
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.Status.Namespace, Labels: labels},
 			Rules:      rules,
 		}
 	}
@@ -327,31 +331,27 @@ func (r *GrantReconciler) createRole(
 func (r *GrantReconciler) createRoleBinding(
 	ctx context.Context,
 	obj *accessv1alpha1.JITAccessGrant,
-	roleName string,
+	roleRef rbacv1.RoleRef,
 	bindingName string,
 	clusterScoped bool,
-	clusterRole bool,
 ) error {
 	labels := common.CommonLabels()
 	subject := rbacv1.Subject{Kind: "User", Name: obj.Status.Subject, APIGroup: "rbac.authorization.k8s.io"}
 	if clusterScoped {
+		if roleRef.Kind != "ClusterRole" {
+			return fmt.Errorf("can not bind a Role via ClusterRoleBinding")
+		}
 		rb := &rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Labels: labels},
 			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: roleName},
+			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: roleRef.Name},
 		}
 		return r.Create(ctx, rb)
 	} else {
-		kind := "Role"
-
-		if clusterRole {
-			kind = "ClusterRole"
-		}
-
 		rb := &rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace(), Labels: labels},
+			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.Status.Namespace, Labels: labels},
 			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: kind, Name: roleName},
+			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleRef.Kind, Name: roleRef.Name},
 		}
 		return r.Create(ctx, rb)
 	}

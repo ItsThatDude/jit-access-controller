@@ -52,7 +52,7 @@ var _ = Describe("GenericJITGrantReconciler with envtest", func() {
 		grantObj.Status.Scope = v1alpha1.GrantScopeCluster
 		grantObj.Status.ApprovedBy = []string{"admin"}
 		grantObj.Status.RequestId = "test-request"
-		grantObj.Status.Role = "edit"
+		grantObj.Status.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "edit"}
 		grantObj.Status.Subject = "user1"
 		grantObj.Status.DurationSeconds = 300
 

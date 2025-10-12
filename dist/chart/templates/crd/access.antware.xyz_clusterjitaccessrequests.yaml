@@ -115,7 +115,22 @@ spec:
                   rule: self == oldSelf
               role:
                 description: Role is an optional pre-defined Role/ClusterRole to bind
-                type: string
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - apiGroup
+                - kind
+                - name
+                type: object
+                x-kubernetes-map-type: atomic
                 x-kubernetes-validations:
                 - message: Role cannot be changed after creation
                   rule: self == oldSelf

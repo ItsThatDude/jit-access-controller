@@ -46,8 +46,7 @@ type JITAccessGrantStatus struct {
 
 	Scope           GrantScope          `json:"scope,omitempty"`
 	Namespace       string              `json:"namespace,omitempty"`
-	Role            string              `json:"role,omitempty"`
-	RoleKind        RoleKind            `json:"roleKind,omitempty"`
+	Role            rbacv1.RoleRef      `json:"role,omitempty"`
 	Permissions     []rbacv1.PolicyRule `json:"permissions,omitempty"`
 	DurationSeconds int64               `json:"durationSeconds"`
 

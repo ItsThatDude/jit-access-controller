@@ -7,7 +7,10 @@ metadata:
   name: jitaccessrequest-sample
 spec:
   subject: alice@example.com
-  role: view
+  role:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: view
   durationSeconds: 300
   justification: "This is a sample request"
   permissions: 

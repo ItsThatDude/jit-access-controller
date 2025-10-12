@@ -10,7 +10,7 @@ type SubjectPolicy struct {
 	Subjects []string `json:"subjects"`
 
 	// AllowedRoles is a list of roles the subject is allowed to request.
-	AllowedRoles []string `json:"allowedRoles,omitempty"`
+	AllowedRoles []rbacv1.RoleRef `json:"allowedRoles,omitempty"`
 
 	// AllowedPermissions is a list of adhoc permissions the subject is allowed to request.
 	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`

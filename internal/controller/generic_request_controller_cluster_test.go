@@ -9,6 +9,7 @@ import (
 	common "antware.xyz/jitaccess/internal/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,7 +36,7 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 					{
 						Subjects:           []string{"user1"},
 						RequiredApprovals:  1,
-						AllowedRoles:       []string{"edit"},
+						AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "edit"}},
 						Approvers:          []string{"admin"},
 						MaxDurationSeconds: 3600,
 					},
@@ -68,7 +69,7 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 			Spec: v1alpha1.ClusterJITAccessRequestSpec{
 				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
 					Subject:         "user1",
-					Role:            "no-policy",
+					Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "no-policy"},
 					DurationSeconds: 300,
 					Justification:   "test",
 				},
@@ -90,7 +91,7 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 			Spec: v1alpha1.ClusterJITAccessRequestSpec{
 				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
 					Subject:         "user1",
-					Role:            "edit",
+					Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "ClusterRole", Name: "edit"},
 					DurationSeconds: 300,
 					Justification:   "test",
 				},
@@ -149,8 +150,7 @@ var _ = Describe("GenericJITAccessReconciler with envtest", func() {
 		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 
 		// Wait for the Grant to be created
-		grantName := fmt.Sprintf("jit-access-%s", requestObj.Status.RequestId)
-		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: grantName}, &v1alpha1.JITAccessGrant{})
+		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: requestName}, &v1alpha1.JITAccessGrant{})
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())

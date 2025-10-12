@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,7 +54,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 	Context("When creating or updating JITAccessRequest under Validating Webhook", func() {
 		It("Should deny creation if a required field is missing", func() {
 			By("simulating an invalid creation scenario")
-			obj.Spec.Role = ""
+			obj.Spec.Role = rbacv1.RoleRef{}
 			Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
 		})
 
@@ -61,8 +62,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 			By("simulating an invalid creation scenario")
 
 			obj.Spec.Subject = "unknown_user"
-			obj.Spec.Role = "edit"
-			obj.Spec.RoleKind = "Role"
+			obj.Spec.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "edit"}
 			obj.Spec.DurationSeconds = 100
 
 			_, err := validator.ValidateCreate(ctx, obj)
@@ -83,7 +83,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 						{
 							Subjects:           []string{"user1"},
 							RequiredApprovals:  1,
-							AllowedRoles:       []string{"edit"},
+							AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "edit"}},
 							Approvers:          []string{"admin"},
 							MaxDurationSeconds: 3600,
 						},
@@ -94,8 +94,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 			waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &accessv1alpha1.JITAccessPolicy{}).Should(Succeed())
 
 			obj.Spec.Subject = "user1"
-			obj.Spec.Role = "edit"
-			obj.Spec.RoleKind = "Role"
+			obj.Spec.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: "Role", Name: "edit"}
 			obj.Spec.DurationSeconds = 100
 
 			warnings, err := validator.ValidateCreate(ctx, obj)

@@ -29,9 +29,6 @@ func (r *JITAccessRequest) GetStatus() *JITAccessRequestStatus {
 func (r *JITAccessRequest) SetStatus(status *JITAccessRequestStatus) {
 	r.Status = *status
 }
-func (r *JITAccessRequest) GetRoleKind() RoleKind {
-	return r.Spec.RoleKind
-}
 func (r *JITAccessRequest) GetScope() string {
 	return "Namespace"
 }
@@ -45,11 +42,6 @@ func (r *JITAccessRequest) GetName() string {
 // JITAccessRequestSpec defines the desired state of JITAccessRequest
 type JITAccessRequestSpec struct {
 	JITAccessRequestBaseSpec `json:",inline"`
-
-	// Type of Role - Role or ClusterRole
-	// +optional
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RoleKind cannot be changed after creation"
-	RoleKind RoleKind `json:"roleKind,omitempty"`
 }
 
 // +kubebuilder:object:root=true

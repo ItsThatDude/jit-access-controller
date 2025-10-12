@@ -12,7 +12,6 @@ type JITAccessRequestObject interface {
 	GetSpec() *accessv1alpha1.JITAccessRequestBaseSpec
 	GetStatus() *accessv1alpha1.JITAccessRequestStatus
 	SetStatus(status *accessv1alpha1.JITAccessRequestStatus)
-	GetRoleKind() accessv1alpha1.RoleKind
 	GetScope() string
 	GetNamespace() string
 	GetName() string

@@ -72,7 +72,7 @@ func IsRequestValid[T common.JITAccessPolicyListInterface](
 				AllRequestedPolicyRulesAllowed(spec.Permissions, policy.AllowedPermissions)
 
 			// Role check (empty role means "no role requested", so skip check)
-			roleAllowed := spec.Role == "" ||
+			roleAllowed := spec.Role.Name == "" ||
 				slices.Contains(policy.AllowedRoles, spec.Role)
 
 			if permissionsAllowed && roleAllowed {

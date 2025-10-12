@@ -307,10 +307,9 @@ func (r *GenericRequestReconciler) handleApproved(
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
-	roleKind := obj.GetRoleKind()
 
 	if err := r.createGrant(ctx, obj, approvers); err != nil && !errors.IsAlreadyExists(err) {
-		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "roleKind", roleKind, "role", spec.Role)
+		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "role", spec.Role)
 		return ctrl.Result{}, err
 	}
 
@@ -511,7 +510,6 @@ func (r *GenericRequestReconciler) createGrant(
 	} else {
 		grant.Status.Scope = v1alpha1.GrantScopeNamespace
 		grant.Status.Namespace = ns
-		grant.Status.RoleKind = obj.GetRoleKind()
 	}
 
 	patch := client.MergeFrom(original)

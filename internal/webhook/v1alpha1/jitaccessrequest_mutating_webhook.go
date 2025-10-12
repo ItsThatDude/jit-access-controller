@@ -37,11 +37,6 @@ func (m *JITAccessRequestMutator) Handle(ctx context.Context, req admission.Requ
 		obj.Spec.Subject = req.UserInfo.Username
 	}
 
-	// Set the RoleKind if its not set
-	if obj.Spec.RoleKind == "" {
-		obj.Spec.RoleKind = v1alpha1.RoleKindRole
-	}
-
 	marshaled, err := json.Marshal(obj)
 	if err != nil {
 		return admission.Errored(http.StatusInternalServerError, err)
