@@ -52,13 +52,13 @@ import (
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
-type GenericRequestReconciler struct {
+type RequestReconciler struct {
 	client.Client
 	Scheme          *runtime.Scheme
 	SystemNamespace string
 }
 
-func (r *GenericRequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
+func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
@@ -112,7 +112,7 @@ func (r *GenericRequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) err
 		Complete(r)
 }
 
-func (r *GenericRequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
+func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
@@ -167,7 +167,7 @@ func (r *GenericRequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) 
 		Complete(r)
 }
 
-func (r *GenericRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if req.Namespace == "" {
 		var clusterObj v1alpha1.ClusterJITAccessRequest
 		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
@@ -177,7 +177,7 @@ func (r *GenericRequestReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			}
 			return ctrl.Result{}, err
 		}
-		return r.reconcileGeneric(ctx, &clusterObj)
+		return r.reconcileRequest(ctx, &clusterObj)
 	}
 
 	var nsObj v1alpha1.JITAccessRequest
@@ -188,10 +188,10 @@ func (r *GenericRequestReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		}
 		return ctrl.Result{}, err
 	}
-	return r.reconcileGeneric(ctx, &nsObj)
+	return r.reconcileRequest(ctx, &nsObj)
 }
 
-func (r *GenericRequestReconciler) reconcileGeneric(ctx context.Context, obj common.JITAccessRequestObject) (ctrl.Result, error) {
+func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.JITAccessRequestObject) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	originalStatus := *obj.GetStatus().DeepCopy()
@@ -299,7 +299,7 @@ func (r *GenericRequestReconciler) reconcileGeneric(ctx context.Context, obj com
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericRequestReconciler) handleApproved(
+func (r *RequestReconciler) handleApproved(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	status *v1alpha1.JITAccessRequestStatus,
@@ -318,7 +318,7 @@ func (r *GenericRequestReconciler) handleApproved(
 	return ctrl.Result{RequeueAfter: time.Duration(spec.DurationSeconds) * time.Second}, nil
 }
 
-func (r *GenericRequestReconciler) handlePending(
+func (r *RequestReconciler) handlePending(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	matchedPolicy *v1alpha1.SubjectPolicy,
@@ -388,7 +388,7 @@ func (r *GenericRequestReconciler) handlePending(
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericRequestReconciler) handleExpired(
+func (r *RequestReconciler) handleExpired(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 ) (ctrl.Result, error) {
@@ -405,7 +405,7 @@ func (r *GenericRequestReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *GenericRequestReconciler) cleanupResources(ctx context.Context, obj common.JITAccessRequestObject) error {
+func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.JITAccessRequestObject) error {
 	log := logf.FromContext(ctx)
 	ns := obj.GetNamespace()
 
@@ -448,7 +448,7 @@ func (r *GenericRequestReconciler) cleanupResources(ctx context.Context, obj com
 	return nil
 }
 
-func (r *GenericRequestReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+func (r *RequestReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.AddFinalizer(obj, finalizer)
@@ -459,7 +459,7 @@ func (r *GenericRequestReconciler) ensureFinalizer(ctx context.Context, obj clie
 	return nil
 }
 
-func (r *GenericRequestReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+func (r *RequestReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.RemoveFinalizer(obj, finalizer)
@@ -468,7 +468,7 @@ func (r *GenericRequestReconciler) removeFinalizer(ctx context.Context, obj clie
 	return nil
 }
 
-func (r *GenericRequestReconciler) createGrant(
+func (r *RequestReconciler) createGrant(
 	ctx context.Context,
 	obj common.JITAccessRequestObject,
 	approvers []string,

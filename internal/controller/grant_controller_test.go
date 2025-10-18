@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("GenericJITGrantReconciler with envtest", func() {
+var _ = Describe("JITGrantReconciler with envtest", func() {
 	var (
 		ctx        context.Context
 		reconciler *GrantReconciler
