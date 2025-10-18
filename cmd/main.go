@@ -210,7 +210,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.GenericRequestReconciler{
+	if err := (&controller.RequestReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
 		SystemNamespace: systemNamespace,
@@ -219,7 +219,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.GenericRequestReconciler{
+	if err := (&controller.RequestReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
 		SystemNamespace: systemNamespace,
