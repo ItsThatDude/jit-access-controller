@@ -231,6 +231,7 @@ func main() {
 	if err := (&controller.GrantReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
+		Recorder:        mgr.GetEventRecorderFor("jitaccessgrant-controller"),
 		SystemNamespace: systemNamespace,
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "JITAccessGrant")

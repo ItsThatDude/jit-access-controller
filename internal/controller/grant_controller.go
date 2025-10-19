@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -40,6 +41,7 @@ import (
 type GrantReconciler struct {
 	client.Client
 	Scheme          *runtime.Scheme
+	Recorder        record.EventRecorder
 	SystemNamespace string
 }
 
@@ -198,6 +200,10 @@ func (r *GrantReconciler) handleApproved(
 		status.AccessExpiresAt = &expireTime
 	}
 
+	r.Recorder.Eventf(obj, "Normal", "AccessGranted",
+		"Just-in-time access granted to %s for request %s",
+		obj.Status.Subject, obj.Status.Request)
+
 	return ctrl.Result{RequeueAfter: time.Duration(status.DurationSeconds) * time.Second}, nil
 }
 
@@ -301,6 +307,10 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 	if len(errs) > 0 {
 		return goerr.Join(errs...)
 	}
+
+	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
+		"Just-in-time access revoked from %s for request %s",
+		obj.Status.Subject, obj.Status.Request)
 
 	return nil
 }
