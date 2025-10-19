@@ -21,12 +21,12 @@ import (
 )
 
 func (r JITAccessPolicy) GetPolicy() SubjectPolicy {
-	return r.Spec.Policy
+	return r.Spec.SubjectPolicy
 }
 
 // JITAccessPolicySpec defines the desired state of JITAccessPolicy
 type JITAccessPolicySpec struct {
-	Policy SubjectPolicy `json:",inline"`
+	SubjectPolicy `json:",inline"`
 }
 
 // JITAccessPolicyStatus defines the observed state of JITAccessPolicy.

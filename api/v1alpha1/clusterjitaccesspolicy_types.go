@@ -21,12 +21,12 @@ import (
 )
 
 func (r ClusterJITAccessPolicy) GetPolicy() SubjectPolicy {
-	return r.Spec.Policy
+	return r.Spec.SubjectPolicy
 }
 
 // ClusterJITAccessPolicySpec defines the desired state of ClusterJITAccessPolicy
 type ClusterJITAccessPolicySpec struct {
-	Policy SubjectPolicy `json:",inline"`
+	SubjectPolicy `json:",inline"`
 }
 
 // +kubebuilder:object:root=true

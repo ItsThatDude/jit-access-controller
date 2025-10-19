@@ -80,7 +80,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 					Namespace: "default",
 				},
 				Spec: accessv1alpha1.JITAccessPolicySpec{
-					Policy: accessv1alpha1.SubjectPolicy{
+					SubjectPolicy: accessv1alpha1.SubjectPolicy{
 						Subjects:           []string{"user1"},
 						RequiredApprovals:  1,
 						AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},

@@ -32,7 +32,7 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 				Name: policyName,
 			},
 			Spec: v1alpha1.ClusterJITAccessPolicySpec{
-				Policy: v1alpha1.SubjectPolicy{
+				SubjectPolicy: v1alpha1.SubjectPolicy{
 					Subjects:           []string{"user1"},
 					RequiredApprovals:  1,
 					AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}},
