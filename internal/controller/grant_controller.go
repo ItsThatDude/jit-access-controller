@@ -198,11 +198,11 @@ func (r *GrantReconciler) handleApproved(
 	if status.AccessExpiresAt == nil {
 		expireTime := metav1.NewTime(time.Now().Add(time.Duration(status.DurationSeconds) * time.Second))
 		status.AccessExpiresAt = &expireTime
-	}
 
-	r.Recorder.Eventf(obj, "Normal", "AccessGranted",
-		"Just-in-time access granted to %s for request %s",
-		obj.Status.Subject, obj.Status.Request)
+		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
+			"Just-in-time access granted to %s for request %s",
+			obj.Status.Subject, obj.Status.Request)
+	}
 
 	return ctrl.Result{RequeueAfter: time.Duration(status.DurationSeconds) * time.Second}, nil
 }
