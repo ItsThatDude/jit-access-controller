@@ -27,6 +27,7 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 		reconciler = &GrantReconciler{
 			Client:          mgr.GetClient(),
 			Scheme:          scheme.Scheme,
+			Recorder:        mgr.GetEventRecorderFor("jitaccessgrant-controller"),
 			SystemNamespace: "default",
 		}
 	})
