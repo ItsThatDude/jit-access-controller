@@ -24,5 +24,5 @@ type JITAccessResponseObject interface {
 }
 
 type JITAccessPolicyListInterface interface {
-	GetPolicies() []accessv1alpha1.SubjectPolicy
+	GetPolicy() accessv1alpha1.SubjectPolicy
 }

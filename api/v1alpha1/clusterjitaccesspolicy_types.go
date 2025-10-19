@@ -20,13 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r ClusterJITAccessPolicy) GetPolicies() []SubjectPolicy {
-	return r.Spec.Policies
+func (r ClusterJITAccessPolicy) GetPolicy() SubjectPolicy {
+	return r.Spec.Policy
 }
 
 // ClusterJITAccessPolicySpec defines the desired state of ClusterJITAccessPolicy
 type ClusterJITAccessPolicySpec struct {
-	Policies []SubjectPolicy `json:"policies"`
+	Policy SubjectPolicy `json:",inline"`
 }
 
 // +kubebuilder:object:root=true

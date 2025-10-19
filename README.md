@@ -17,8 +17,8 @@ In each request, the user specifies the **roles** or **permissions** they requir
 
 The controller evaluates the request against configured policies:
 
-- **`JITAccessPolicy`** – defines rules for namespace-scoped requests  
-- **`ClusterJITAccessPolicy`** – defines rules for cluster-wide requests  
+- **`JITAccessPolicy`** – defines rules for namespace-scoped access requests  
+- **`ClusterJITAccessPolicy`** – defines rules for cluster-scoped access requests  
 
 If the request matches a policy, the controller creates a **`JITAccessGrant`** object.  
 The **`JITAccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
@@ -38,21 +38,20 @@ metadata:
   namespace: example
   name: jitaccesspolicy-sample
 spec:
-  policies:
-    - subjects:
-        - user1
-      # allow the user to request the binding of roles
-      allowedRoles:
-        - view
-      # allow the user to request specific permissions
-      allowedPermissions:
-        - apiGroups: [""]
-          resources: ["pods"]
-          verbs: ["get", "list", "watch"]
-      maxDurationSeconds: 1800
-      requiredApprovals: 1
-      approvers:
-        - admin
+  subjects:
+    - user1
+  # allow the user to request the binding of roles
+  allowedRoles:
+    - view
+  # allow the user to request specific permissions
+  allowedPermissions:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+  maxDurationSeconds: 1800
+  requiredApprovals: 1
+  approvers:
+    - admin
 ```
 #### ns-request.yaml
 In the example below, we specify the subject - if this is omitted, the user submitting the request will be used.

@@ -20,13 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r JITAccessPolicy) GetPolicies() []SubjectPolicy {
-	return r.Spec.Policies
+func (r JITAccessPolicy) GetPolicy() SubjectPolicy {
+	return r.Spec.Policy
 }
 
 // JITAccessPolicySpec defines the desired state of JITAccessPolicy
 type JITAccessPolicySpec struct {
-	Policies []SubjectPolicy `json:"policies"`
+	Policy SubjectPolicy `json:",inline"`
 }
 
 // JITAccessPolicyStatus defines the observed state of JITAccessPolicy.

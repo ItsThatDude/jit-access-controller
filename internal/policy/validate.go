@@ -54,30 +54,29 @@ func IsRequestValid[T common.JITAccessPolicyListInterface](
 	policies []T,
 ) (bool, *accessv1alpha1.SubjectPolicy) {
 	for _, p := range policies {
-		for _, policy := range p.GetPolicies() {
-			spec := req.GetSpec()
+		policy := p.GetPolicy()
+		spec := req.GetSpec()
 
-			// Subject must match
-			if !slices.Contains(policy.Subjects, spec.Subject) {
-				continue
-			}
+		// Subject must match
+		if !slices.Contains(policy.Subjects, spec.Subject) {
+			continue
+		}
 
-			// Duration must be within policy threshold
-			if spec.DurationSeconds > policy.MaxDurationSeconds {
-				continue
-			}
+		// Duration must be within policy threshold
+		if spec.DurationSeconds > policy.MaxDurationSeconds {
+			continue
+		}
 
-			// Permissions check (empty requested permissions are always allowed)
-			permissionsAllowed := len(spec.Permissions) == 0 ||
-				AllRequestedPolicyRulesAllowed(spec.Permissions, policy.AllowedPermissions)
+		// Permissions check (empty requested permissions are always allowed)
+		permissionsAllowed := len(spec.Permissions) == 0 ||
+			AllRequestedPolicyRulesAllowed(spec.Permissions, policy.AllowedPermissions)
 
-			// Role check (empty role means "no role requested", so skip check)
-			roleAllowed := spec.Role.Name == "" ||
-				slices.Contains(policy.AllowedRoles, spec.Role)
+		// Role check (empty role means "no role requested", so skip check)
+		roleAllowed := spec.Role.Name == "" ||
+			slices.Contains(policy.AllowedRoles, spec.Role)
 
-			if permissionsAllowed && roleAllowed {
-				return true, &policy
-			}
+		if permissionsAllowed && roleAllowed {
+			return true, &policy
 		}
 	}
 	return false, nil

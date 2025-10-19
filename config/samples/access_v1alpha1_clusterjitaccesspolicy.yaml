@@ -4,34 +4,42 @@ metadata:
   labels:
     app.kubernetes.io/name: jitaccess
     app.kubernetes.io/managed-by: kustomize
-  name: clusterjitaccesspolicy-sample
+  name: clusterjitaccesspolicy-sample-alice
 spec:
-  policies:
-    - subjects:
-        - alice@example.com
-      allowedPermissions:
-        - apiGroups: [""]
-          resources: ["pods"]
-          verbs: ["get", "list", "watch"]
-      allowedRoles:
-        - apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: view
-        - apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: dev-debug
-      maxDurationSeconds: 1800
-      requiredApprovals: 1
-      approvers:
-        - admin
-    - subjects:
-        - bob@example.com
-      allowedRoles:
-        - apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: readonly
-      maxDurationSeconds: 600
-      requiredApprovals: 2
-      approvers:
-        - admin
-        - alice@example.com
+  subjects:
+    - alice@example.com
+  allowedPermissions:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+  allowedRoles:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: view
+    - apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: dev-debug
+  maxDurationSeconds: 1800
+  requiredApprovals: 1
+  approvers:
+    - admin
+---
+apiVersion: access.antware.xyz/v1alpha1
+kind: ClusterJITAccessPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/managed-by: kustomize
+  name: clusterjitaccesspolicy-sample-bob
+spec:
+  subjects:
+    - bob@example.com
+  allowedRoles:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: readonly
+  maxDurationSeconds: 600
+  requiredApprovals: 2
+  approvers:
+    - admin
+    - alice@example.com

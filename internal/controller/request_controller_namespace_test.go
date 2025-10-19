@@ -33,14 +33,12 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 				Namespace: "default",
 			},
 			Spec: v1alpha1.JITAccessPolicySpec{
-				Policies: []v1alpha1.SubjectPolicy{
-					{
-						Subjects:           []string{"user1"},
-						RequiredApprovals:  1,
-						AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
-						Approvers:          []string{"admin"},
-						MaxDurationSeconds: 3600,
-					},
+				Policy: v1alpha1.SubjectPolicy{
+					Subjects:           []string{"user1"},
+					RequiredApprovals:  1,
+					AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
+					Approvers:          []string{"admin"},
+					MaxDurationSeconds: 3600,
 				},
 			},
 		}
