@@ -46,12 +46,13 @@ spec:
           spec:
             description: spec defines the desired state of ClusterJITAccessRequest
             properties:
-              durationSeconds:
-                description: DurationSeconds defines how long the access should last
-                format: int64
-                type: integer
+              duration:
+                description: Duration specifies how long the access should last (e.g.
+                  "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
                 x-kubernetes-validations:
-                - message: DurationSeconds cannot be changed after creation
+                - message: Duration cannot be changed after creation
                   rule: self == oldSelf
               justification:
                 description: User's justification for the request
@@ -141,7 +142,7 @@ spec:
                 - message: Subject cannot be changed after creation
                   rule: self == oldSelf
             required:
-            - durationSeconds
+            - duration
             - justification
             - subject
             type: object

@@ -59,9 +59,8 @@ spec:
                 items:
                   type: string
                 type: array
-              durationSeconds:
-                format: int64
-                type: integer
+              duration:
+                type: string
               namespace:
                 type: string
               permissions:
@@ -147,7 +146,7 @@ spec:
                 type: string
             required:
             - approvedBy
-            - durationSeconds
+            - duration
             - request
             - requestId
             - subject

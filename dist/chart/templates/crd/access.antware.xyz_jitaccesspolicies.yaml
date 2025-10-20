@@ -129,12 +129,11 @@ spec:
                 items:
                   type: string
                 type: array
-              maxDurationSeconds:
-                description: MaxDurationSeconds is the max duration for temporary
-                  access.
-                format: int64
-                minimum: 1
-                type: integer
+              maxDuration:
+                description: Duration specifies the maximum amount of time the access
+                  can last (e.g. "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
               requiredApprovals:
                 description: The minimum number of approvals required to grant the
                   request
@@ -147,7 +146,7 @@ spec:
                   type: string
                 type: array
             required:
-            - maxDurationSeconds
+            - maxDuration
             - requiredApprovals
             - subjects
             type: object
