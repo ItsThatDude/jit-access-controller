@@ -55,7 +55,7 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 		grantObj.Status.RequestId = "test-request"
 		grantObj.Status.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}
 		grantObj.Status.Subject = "user1"
-		grantObj.Status.DurationSeconds = 300
+		grantObj.Status.Duration = "10m"
 
 		Expect(k8sClient.Status().Update(ctx, grantObj)).To(Succeed())
 

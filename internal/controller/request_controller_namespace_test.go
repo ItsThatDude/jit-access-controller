@@ -34,11 +34,11 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 			},
 			Spec: v1alpha1.JITAccessPolicySpec{
 				SubjectPolicy: v1alpha1.SubjectPolicy{
-					Subjects:           []string{"user1"},
-					RequiredApprovals:  1,
-					AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
-					Approvers:          []string{"admin"},
-					MaxDurationSeconds: 3600,
+					Subjects:          []string{"user1"},
+					RequiredApprovals: 1,
+					AllowedRoles:      []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
+					Approvers:         []string{"admin"},
+					MaxDuration:       "60m",
 				},
 			},
 		}
@@ -68,10 +68,10 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 			},
 			Spec: v1alpha1.JITAccessRequestSpec{
 				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-					Subject:         "user1",
-					Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"},
-					DurationSeconds: 300,
-					Justification:   "test",
+					Subject:       "user1",
+					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"},
+					Duration:      "10m",
+					Justification: "test",
 				},
 			},
 		}

@@ -15,9 +15,9 @@ type SubjectPolicy struct {
 	// AllowedPermissions is a list of adhoc permissions the subject is allowed to request.
 	AllowedPermissions []rbacv1.PolicyRule `json:"allowedPermissions,omitempty"`
 
-	// MaxDurationSeconds is the max duration for temporary access.
-	// +kubebuilder:validation:Minimum=1
-	MaxDurationSeconds int64 `json:"maxDurationSeconds"`
+	// Duration specifies the maximum amount of time the access can last (e.g. "5s", "10m", "2h45m").
+	// +kubebuilder:validation:Pattern=`^(\d+(ns|us|µs|ms|s|m|h))+$`
+	MaxDuration string `json:"maxDuration"`
 
 	// The minimum number of approvals required to grant the request
 	// +kubebuilder:validation:Minimum=1

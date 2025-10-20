@@ -6,7 +6,7 @@ var (
 	role          string
 	roleKindStr   string
 	permissions   []string
-	duration      int64
+	duration      string
 	justification string
 	subject       string
 )

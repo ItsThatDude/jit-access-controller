@@ -44,11 +44,11 @@ type JITAccessGrantStatus struct {
 	Subject    string   `json:"subject"`
 	ApprovedBy []string `json:"approvedBy"`
 
-	Scope           GrantScope          `json:"scope,omitempty"`
-	Namespace       string              `json:"namespace,omitempty"`
-	Role            rbacv1.RoleRef      `json:"role,omitempty"`
-	Permissions     []rbacv1.PolicyRule `json:"permissions,omitempty"`
-	DurationSeconds int64               `json:"durationSeconds"`
+	Scope       GrantScope          `json:"scope,omitempty"`
+	Namespace   string              `json:"namespace,omitempty"`
+	Role        rbacv1.RoleRef      `json:"role,omitempty"`
+	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
+	Duration    string              `json:"duration"`
 
 	AccessExpiresAt         *metav1.Time `json:"accessExpiresAt,omitempty"`
 	RoleBindingCreated      bool         `json:"roleBindingCreated,omitempty"`

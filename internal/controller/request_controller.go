@@ -315,7 +315,13 @@ func (r *RequestReconciler) handleApproved(
 
 	status.GrantCreated = true
 
-	return ctrl.Result{RequeueAfter: time.Duration(spec.DurationSeconds) * time.Second}, nil
+	duration, err := time.ParseDuration(spec.Duration)
+	if err != nil {
+		log.Error(err, "failed to parse duration string", "duration", duration)
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{RequeueAfter: duration * time.Second}, nil
 }
 
 func (r *RequestReconciler) handlePending(
@@ -500,9 +506,9 @@ func (r *RequestReconciler) createGrant(
 		Subject:    spec.Subject,
 		ApprovedBy: approvers,
 
-		Role:            spec.Role,
-		Permissions:     spec.Permissions,
-		DurationSeconds: spec.DurationSeconds,
+		Role:        spec.Role,
+		Permissions: spec.Permissions,
+		Duration:    spec.Duration,
 	}
 
 	if isClusterGrant {

@@ -194,9 +194,15 @@ func (r *GrantReconciler) handleApproved(
 		}
 	}
 
+	duration, err := time.ParseDuration(status.Duration)
+	if err != nil {
+		log.Error(err, "failed to parse duration string", "namespace", obj.GetNamespace(), "name", obj.GetName(), "duration", duration)
+		return ctrl.Result{}, nil
+	}
+
 	// Set expire time if not set
 	if status.AccessExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(time.Duration(status.DurationSeconds) * time.Second))
+		expireTime := metav1.NewTime(time.Now().Add(duration * time.Second))
 		status.AccessExpiresAt = &expireTime
 
 		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
@@ -204,7 +210,7 @@ func (r *GrantReconciler) handleApproved(
 			obj.Status.Subject, obj.Status.Request)
 	}
 
-	return ctrl.Result{RequeueAfter: time.Duration(status.DurationSeconds) * time.Second}, nil
+	return ctrl.Result{RequeueAfter: duration * time.Second}, nil
 }
 
 func (r *GrantReconciler) handleExpired(

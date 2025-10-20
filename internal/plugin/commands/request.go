@@ -33,10 +33,10 @@ func NewRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.ClusterJITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
-							Permissions:     rules,
-							DurationSeconds: duration,
-							Justification:   justification,
+							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
+							Permissions:   rules,
+							Duration:      duration,
+							Justification: justification,
 						},
 					},
 				}
@@ -57,10 +57,10 @@ func NewRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.JITAccessRequestSpec{
 						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
-							Role:            rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
-							Permissions:     rules,
-							DurationSeconds: duration,
-							Justification:   justification,
+							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
+							Permissions:   rules,
+							Duration:      duration,
+							Justification: justification,
 						},
 					},
 				}
@@ -83,7 +83,7 @@ func NewRequestCmd() *cobra.Command {
 	cmd.Flags().StringVar(&role, "role", "", "Role to request")
 	cmd.Flags().StringVar(&roleKindStr, "roleKind", common.RoleKindRole, "Role kind (Role|ClusterRole)")
 	cmd.Flags().StringSliceVar(&permissions, "permissions", []string{}, "List of permissions (verbs:resources)")
-	cmd.Flags().Int64Var(&duration, "duration", 3600, "Duration in seconds for the access")
+	cmd.Flags().StringVar(&duration, "duration", "1h", "Duration in seconds for the access")
 	cmd.Flags().StringVar(&justification, "justification", "", "Justification for the request")
 	cmd.Flags().StringVar(&subject, "subject", "", "Requesting subject (e.g. username)")
 

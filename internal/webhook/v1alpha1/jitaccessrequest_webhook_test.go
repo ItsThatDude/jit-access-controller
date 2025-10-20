@@ -64,7 +64,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 
 			obj.Spec.Subject = "unknown_user"
 			obj.Spec.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}
-			obj.Spec.DurationSeconds = 100
+			obj.Spec.Duration = "5m"
 
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(MatchError("access request did not match a policy"))
@@ -81,11 +81,11 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 				},
 				Spec: accessv1alpha1.JITAccessPolicySpec{
 					SubjectPolicy: accessv1alpha1.SubjectPolicy{
-						Subjects:           []string{"user1"},
-						RequiredApprovals:  1,
-						AllowedRoles:       []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
-						Approvers:          []string{"admin"},
-						MaxDurationSeconds: 3600,
+						Subjects:          []string{"user1"},
+						RequiredApprovals: 1,
+						AllowedRoles:      []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}},
+						Approvers:         []string{"admin"},
+						MaxDuration:       "60m",
 					},
 				},
 			}
@@ -94,7 +94,7 @@ var _ = Describe("JITAccessRequest Webhook", func() {
 
 			obj.Spec.Subject = "user1"
 			obj.Spec.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"}
-			obj.Spec.DurationSeconds = 100
+			obj.Spec.Duration = "5m"
 
 			warnings, err := validator.ValidateCreate(ctx, obj)
 			Expect(warnings).To(BeNil())

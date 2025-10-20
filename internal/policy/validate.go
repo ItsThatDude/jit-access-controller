@@ -2,6 +2,7 @@ package policy
 
 import (
 	"slices"
+	"time"
 
 	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
 	common "antware.xyz/jitaccess/internal/common"
@@ -63,7 +64,17 @@ func IsRequestValid[T common.JITAccessPolicyListInterface](
 		}
 
 		// Duration must be within policy threshold
-		if spec.DurationSeconds > policy.MaxDurationSeconds {
+		specDuration, err := time.ParseDuration(spec.Duration)
+		if err != nil {
+			continue
+		}
+
+		maxDuration, err := time.ParseDuration(policy.MaxDuration)
+		if err != nil {
+			continue
+		}
+
+		if specDuration > maxDuration {
 			continue
 		}
 

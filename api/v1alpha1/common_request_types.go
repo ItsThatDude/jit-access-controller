@@ -30,9 +30,10 @@ type JITAccessRequestBaseSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Permissions cannot be changed after creation"
 	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
 
-	// DurationSeconds defines how long the access should last
-	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="DurationSeconds cannot be changed after creation"
-	DurationSeconds int64 `json:"durationSeconds"`
+	// Duration specifies how long the access should last (e.g. "5s", "10m", "2h45m").
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Duration cannot be changed after creation"
+	// +kubebuilder:validation:Pattern=`^(\d+(ns|us|µs|ms|s|m|h))+$`
+	Duration string `json:"duration"`
 
 	// User's justification for the request
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Justification cannot be changed after creation"
