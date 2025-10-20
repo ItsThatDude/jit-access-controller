@@ -19,7 +19,7 @@ spec:
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get", "list", "watch"]
-  maxDurationSeconds: 1800
+  maxDuration: "60m"
   requiredApprovals: 1
   approvers:
     - admin
@@ -38,7 +38,7 @@ spec:
     - apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
       name: readonly
-  maxDurationSeconds: 600
+  maxDuration: "60m"
   requiredApprovals: 2
   approvers:
     - admin
