@@ -48,7 +48,7 @@ spec:
     - apiGroups: [""]
       resources: ["pods"]
       verbs: ["get", "list", "watch"]
-  maxDurationSeconds: 1800
+  maxDuration: "60m"
   requiredApprovals: 1
   approvers:
     - admin
@@ -63,7 +63,7 @@ metadata:
   name: jitaccessrequest-sample
 spec:
   subject: user1
-  durationSeconds: 300
+  duration: "5m"
   justification: "This is a sample request"
   # We can specify a pre-defined role:
   role: view
