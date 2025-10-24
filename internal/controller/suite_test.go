@@ -91,17 +91,17 @@ var _ = BeforeSuite(func() {
 	mgr, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.JITAccessResponse{}, "spec.requestRef",
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.AccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if r, ok := obj.(*accessv1alpha1.JITAccessResponse); ok {
+			if r, ok := obj.(*accessv1alpha1.AccessResponse); ok {
 				return []string{r.Spec.RequestRef}
 			}
 			return nil
 		})).To(Succeed())
 
-	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.ClusterAccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if r, ok := obj.(*accessv1alpha1.ClusterJITAccessResponse); ok {
+			if r, ok := obj.(*accessv1alpha1.ClusterAccessResponse); ok {
 				return []string{r.Spec.RequestRef}
 			}
 			return nil

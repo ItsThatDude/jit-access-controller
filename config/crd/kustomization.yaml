@@ -2,16 +2,16 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/access.antware.xyz_jitaccessrequests.yaml
-- bases/access.antware.xyz_jitaccesspolicies.yaml
-- bases/access.antware.xyz_clusterjitaccesspolicies.yaml
-- bases/access.antware.xyz_clusterjitaccessrequests.yaml
-- bases/access.antware.xyz_jitaccessresponses.yaml
-- bases/access.antware.xyz_clusterjitaccessresponses.yaml
-- bases/access.antware.xyz_jitaccessgrants.yaml
+- bases/access.antware.xyz_accessrequests.yaml
+- bases/access.antware.xyz_accesspolicies.yaml
+- bases/access.antware.xyz_clusteraccesspolicies.yaml
+- bases/access.antware.xyz_clusteraccessrequests.yaml
+- bases/access.antware.xyz_accessresponses.yaml
+- bases/access.antware.xyz_clusteraccessresponses.yaml
+- bases/access.antware.xyz_accessgrants.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
-patches:
+patches: []
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix.
 # patches here are for enabling the conversion webhook for each CRD
 # +kubebuilder:scaffold:crdkustomizewebhookpatch

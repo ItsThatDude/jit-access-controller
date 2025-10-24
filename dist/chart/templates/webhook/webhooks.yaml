@@ -11,12 +11,12 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 webhooks:
-  - name: mclusterjitaccessrequest-v1alpha1.kb.io
+  - name: maccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+        path: /mutate-access-antware-xyz-v1alpha1-accessrequest
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -30,13 +30,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - clusterjitaccessrequests
-  - name: mclusterjitaccessresponse-v1alpha1.kb.io
+          - accessrequests
+  - name: maccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+        path: /mutate-access-antware-xyz-v1alpha1-accessresponse
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -50,13 +50,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - clusterjitaccessresponses
-  - name: mjitaccessrequest-v1alpha1.kb.io
+          - accessresponses
+  - name: mclusteraccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /mutate-access-antware-xyz-v1alpha1-jitaccessrequest
+        path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -70,13 +70,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - jitaccessrequests
-  - name: mjitaccessresponse-v1alpha1.kb.io
+          - clusteraccessrequests
+  - name: mclusteraccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /mutate-access-antware-xyz-v1alpha1-jitaccessresponse
+        path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -90,7 +90,7 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - jitaccessresponses
+          - clusteraccessresponses
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -104,12 +104,12 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 webhooks:
-  - name: vclusterjitaccessrequest-v1alpha1.kb.io
+  - name: vaccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+        path: /validate-access-antware-xyz-v1alpha1-accessrequest
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -123,13 +123,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - clusterjitaccessrequests
-  - name: vclusterjitaccessresponse-v1alpha1.kb.io
+          - accessrequests
+  - name: vaccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+        path: /validate-access-antware-xyz-v1alpha1-accessresponse
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -143,13 +143,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - clusterjitaccessresponses
-  - name: vjitaccessrequest-v1alpha1.kb.io
+          - accessresponses
+  - name: vclusteraccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /validate-access-antware-xyz-v1alpha1-jitaccessrequest
+        path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -163,13 +163,13 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - jitaccessrequests
-  - name: vjitaccessresponse-v1alpha1.kb.io
+          - clusteraccessrequests
+  - name: vclusteraccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
         name: jitaccess-webhook-service
         namespace: {{ .Release.Namespace }}
-        path: /validate-access-antware-xyz-v1alpha1-jitaccessresponse
+        path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
     failurePolicy: Fail
     sideEffects: None
     admissionReviewVersions:
@@ -183,5 +183,5 @@ webhooks:
         apiVersions:
           - v1alpha1
         resources:
-          - jitaccessresponses
+          - clusteraccessresponses
 {{- end }}

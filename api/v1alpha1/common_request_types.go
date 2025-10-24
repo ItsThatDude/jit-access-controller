@@ -15,7 +15,7 @@ const (
 	RequestStateExpired  RequestState = "Expired"
 )
 
-type JITAccessRequestBaseSpec struct {
+type AccessRequestBaseSpec struct {
 	// Subject is the username or identity requesting access
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
 	Subject string `json:"subject"`
@@ -40,7 +40,7 @@ type JITAccessRequestBaseSpec struct {
 	Justification string `json:"justification"`
 }
 
-type JITAccessRequestStatus struct {
+type AccessRequestStatus struct {
 	RequestId         string       `json:"requestId,omitempty"`
 	State             RequestState `json:"state,omitempty"`
 	ApprovalsRequired int          `json:"approvalsRequired,omitempty"`

@@ -10,13 +10,13 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusterjitaccesspolicies
-  - clusterjitaccessrequests
-  - clusterjitaccessresponses
-  - jitaccessgrants
-  - jitaccesspolicies
-  - jitaccessrequests
-  - jitaccessresponses
+  - accessgrants
+  - accesspolicies
+  - accessrequests
+  - accessresponses
+  - clusteraccesspolicies
+  - clusteraccessrequests
+  - clusteraccessresponses
   verbs:
   - create
   - delete
@@ -28,25 +28,25 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusterjitaccesspolicies/finalizers
-  - clusterjitaccessrequests/finalizers
-  - clusterjitaccessresponses/finalizers
-  - jitaccessgrants/finalizers
-  - jitaccesspolicies/finalizers
-  - jitaccessrequests/finalizers
-  - jitaccessresponses/finalizers
+  - accessgrants/finalizers
+  - accesspolicies/finalizers
+  - accessrequests/finalizers
+  - accessresponses/finalizers
+  - clusteraccesspolicies/finalizers
+  - clusteraccessrequests/finalizers
+  - clusteraccessresponses/finalizers
   verbs:
   - update
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusterjitaccesspolicies/status
-  - clusterjitaccessrequests/status
-  - clusterjitaccessresponses/status
-  - jitaccessgrants/status
-  - jitaccesspolicies/status
-  - jitaccessrequests/status
-  - jitaccessresponses/status
+  - accessgrants/status
+  - accesspolicies/status
+  - accessrequests/status
+  - accessresponses/status
+  - clusteraccesspolicies/status
+  - clusteraccessrequests/status
+  - clusteraccessresponses/status
   verbs:
   - get
   - patch

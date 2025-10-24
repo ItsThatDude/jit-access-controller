@@ -27,12 +27,12 @@ func NewRequestCmd() *cobra.Command {
 			rules := plugin.ParsePermissions(permissions)
 
 			if scope == plugin.SCOPE_CLUSTER {
-				req := &v1alpha1.ClusterJITAccessRequest{
+				req := &v1alpha1.ClusterAccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: "access-request-",
 					},
-					Spec: v1alpha1.ClusterJITAccessRequestSpec{
-						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
+					Spec: v1alpha1.ClusterAccessRequestSpec{
+						AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
 							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
 							Permissions:   rules,
 							Duration:      duration,
@@ -48,15 +48,15 @@ func NewRequestCmd() *cobra.Command {
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
-				fmt.Printf("ClusterJITAccessRequest created: %s\n", req.Name)
+				fmt.Printf("ClusterAccessRequest created: %s\n", req.Name)
 			} else {
-				req := &v1alpha1.JITAccessRequest{
+				req := &v1alpha1.AccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: "access-request-",
 						Namespace:    namespace,
 					},
-					Spec: v1alpha1.JITAccessRequestSpec{
-						JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
+					Spec: v1alpha1.AccessRequestSpec{
+						AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
 							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
 							Permissions:   rules,
 							Duration:      duration,
@@ -72,7 +72,7 @@ func NewRequestCmd() *cobra.Command {
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
-				fmt.Printf("JITAccessRequest created: %s/%s\n", namespace, req.Name)
+				fmt.Printf("AccessRequest created: %s/%s\n", namespace, req.Name)
 			}
 			return nil
 		},

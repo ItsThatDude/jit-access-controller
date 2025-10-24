@@ -1,0 +1,11 @@
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessResponse
+metadata:
+  labels:
+    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/managed-by: kustomize
+  name: accessresponse-sample
+spec:
+  requestRef: accessrequest-sample
+  approver: admin
+  response: Approved

@@ -50,8 +50,8 @@ func AllRequestedPolicyRulesAllowed(requestedRules, allowedRules []rbacv1.Policy
 	return true
 }
 
-func IsRequestValid[T common.JITAccessPolicyListInterface](
-	req common.JITAccessRequestObject,
+func IsRequestValid[T common.AccessPolicyListInterface](
+	req common.AccessRequestObject,
 	policies []T,
 ) (bool, *accessv1alpha1.SubjectPolicy) {
 	for _, p := range policies {

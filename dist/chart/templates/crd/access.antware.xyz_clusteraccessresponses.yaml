@@ -1,0 +1,82 @@
+{{- if .Values.crd.enable }}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.crd.keep }}
+    "helm.sh/resource-policy": keep
+    {{- end }}
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: clusteraccessresponses.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: ClusterAccessResponse
+    listKind: ClusterAccessResponseList
+    plural: clusteraccessresponses
+    singular: clusteraccessresponse
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ClusterAccessResponse is the Schema for the clusteraccessresponses
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of ClusterAccessResponse
+            properties:
+              approver:
+                type: string
+                x-kubernetes-validations:
+                - message: Approver cannot be changed after creation
+                  rule: self == oldSelf
+              requestRef:
+                type: string
+                x-kubernetes-validations:
+                - message: RequestRef cannot be changed after creation
+                  rule: self == oldSelf
+              response:
+                enum:
+                - Approved
+                - Denied
+                type: string
+                x-kubernetes-validations:
+                - message: Response cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - approver
+            - requestRef
+            - response
+            type: object
+          status:
+            description: status defines the observed state of ClusterAccessResponse
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+{{- end -}}

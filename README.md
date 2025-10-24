@@ -10,18 +10,18 @@ This controller provides a mechanism for granting temporary, on-demand access to
 
 Users submit either a:
 
-- **`JITAccessRequest`** – for namespace-scoped access  
-- **`ClusterJITAccessRequest`** – for cluster-wide access  
+- **`AccessRequest`** – for namespace-scoped access  
+- **`ClusterAccessRequest`** – for cluster-wide access  
 
 In each request, the user specifies the **roles** or **permissions** they require.  
 
 The controller evaluates the request against configured policies:
 
-- **`JITAccessPolicy`** – defines rules for namespace-scoped access requests  
-- **`ClusterJITAccessPolicy`** – defines rules for cluster-scoped access requests  
+- **`AccessPolicy`** – defines rules for namespace-scoped access requests  
+- **`ClusterAccessPolicy`** – defines rules for cluster-scoped access requests  
 
-If the request matches a policy, the controller creates a **`JITAccessGrant`** object.  
-The **`JITAccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
+If the request matches a policy, the controller creates a **`AccessGrant`** object.  
+The **`AccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
 
 - A **ClusterRole** or **Role** for adhoc permission requests
 - A **ClusterRoleBinding** or **RoleBinding** for both role and adhoc permission requests
@@ -33,10 +33,10 @@ Once the duration expires, the controller automatically revokes access by removi
 #### ns-policy.yaml
 ```yaml
 apiVersion: access.antware.xyz/v1alpha1
-kind: JITAccessPolicy
+kind: AccessPolicy
 metadata:
   namespace: example
-  name: jitaccesspolicy-sample
+  name: accesspolicy-sample
 spec:
   subjects:
     - user1
@@ -57,10 +57,10 @@ spec:
 In the example below, we specify the subject - if this is omitted, the user submitting the request will be used.
 ```yaml
 apiVersion: access.antware.xyz/v1alpha1
-kind: JITAccessRequest
+kind: AccessRequest
 metadata:
   namespace: example
-  name: jitaccessrequest-sample
+  name: accessrequest-sample
 spec:
   subject: user1
   duration: "5m"
@@ -78,12 +78,12 @@ spec:
 For responses, the user submitting the request will be used as the approver.
 ```yaml
 apiVersion: access.antware.xyz/v1alpha1
-kind: JITAccessResponse
+kind: AccessResponse
 metadata:
   namespace: example
-  name: jitaccessresponse-sample
+  name: accessresponse-sample
 spec:
-  requestRef: jitaccessrequest-sample
+  requestRef: accessrequest-sample
   response: Approved
 ```
 

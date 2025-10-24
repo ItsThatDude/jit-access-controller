@@ -7,22 +7,22 @@ import (
 
 const JITFinalizer = "access.antware.xyz/finalizer"
 
-type JITAccessRequestObject interface {
+type AccessRequestObject interface {
 	client.Object
-	GetSpec() *accessv1alpha1.JITAccessRequestBaseSpec
-	GetStatus() *accessv1alpha1.JITAccessRequestStatus
-	SetStatus(status *accessv1alpha1.JITAccessRequestStatus)
+	GetSpec() *accessv1alpha1.AccessRequestBaseSpec
+	GetStatus() *accessv1alpha1.AccessRequestStatus
+	SetStatus(status *accessv1alpha1.AccessRequestStatus)
 	GetScope() string
 	GetNamespace() string
 	GetName() string
 }
 
-type JITAccessResponseObject interface {
+type AccessResponseObject interface {
 	client.Object
 	GetResponse() accessv1alpha1.ResponseState
 	GetApprover() string
 }
 
-type JITAccessPolicyListInterface interface {
+type AccessPolicyListInterface interface {
 	GetPolicy() accessv1alpha1.SubjectPolicy
 }

@@ -1,0 +1,19 @@
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessRequest
+metadata:
+  labels:
+    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/managed-by: kustomize
+  name: accessrequest-sample
+spec:
+  subject: alice@example.com
+  role:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: view
+  duration: "5m"
+  justification: "This is a sample request"
+  permissions: 
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]

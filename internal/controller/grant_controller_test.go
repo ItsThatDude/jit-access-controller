@@ -27,7 +27,7 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 		reconciler = &GrantReconciler{
 			Client:          mgr.GetClient(),
 			Scheme:          scheme.Scheme,
-			Recorder:        mgr.GetEventRecorderFor("jitaccessgrant-controller"),
+			Recorder:        mgr.GetEventRecorderFor("accessgrant-controller"),
 			SystemNamespace: "default",
 		}
 	})
@@ -36,15 +36,15 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 
 	})
 
-	It("should create ClusterRoleBinding for approved cluster scoped JITAccessGrant", func() {
+	It("should create ClusterRoleBinding for approved cluster scoped AccessGrant", func() {
 		grantName := fmt.Sprintf("test-grant-%d", time.Now().UnixNano())
 
-		grantObj := &v1alpha1.JITAccessGrant{
+		grantObj := &v1alpha1.AccessGrant{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: reconciler.SystemNamespace,
 				Name:      grantName,
 			},
-			Spec: v1alpha1.JITAccessGrantSpec{},
+			Spec: v1alpha1.AccessGrantSpec{},
 		}
 
 		Expect(k8sClient.Create(ctx, grantObj)).To(Succeed())
@@ -100,12 +100,12 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, grantObj)).To(Succeed())
-		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.JITAccessGrant{})
+		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})
 
 		// Reconcile to handle finalizer cleanup
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 		// Wait until fully deleted
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.JITAccessGrant{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})
 	})
 })

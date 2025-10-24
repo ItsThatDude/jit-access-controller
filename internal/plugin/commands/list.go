@@ -25,22 +25,22 @@ func NewListCmd() *cobra.Command {
 			ctx := context.Background()
 
 			if listScope == common.SCOPE_CLUSTER {
-				reqList := &v1alpha1.ClusterJITAccessRequestList{}
+				reqList := &v1alpha1.ClusterAccessRequestList{}
 				if err := cli.List(ctx, reqList); err != nil {
 					return err
 				}
-				fmt.Printf("ClusterJITAccessRequests:\n")
+				fmt.Printf("ClusterAccessRequests:\n")
 				for _, r := range reqList.Items {
 					state := r.Status.State
 					fmt.Printf("- %s : %s\n", r.Name, state)
 				}
 			} else {
-				reqList := &v1alpha1.JITAccessRequestList{}
+				reqList := &v1alpha1.AccessRequestList{}
 				listOpts := &client.ListOptions{Namespace: listNamespace}
 				if err := cli.List(ctx, reqList, listOpts); err != nil {
 					return err
 				}
-				fmt.Printf("JITAccessRequests in namespace %s:\n", listNamespace)
+				fmt.Printf("AccessRequests in namespace %s:\n", listNamespace)
 				for _, r := range reqList.Items {
 					state := r.Status.State
 

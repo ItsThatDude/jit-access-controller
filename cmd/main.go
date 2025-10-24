@@ -215,7 +215,7 @@ func main() {
 		Scheme:          mgr.GetScheme(),
 		SystemNamespace: systemNamespace,
 	}).SetupWithManagerCluster(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterJITAccessRequest")
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
@@ -224,39 +224,39 @@ func main() {
 		Scheme:          mgr.GetScheme(),
 		SystemNamespace: systemNamespace,
 	}).SetupWithManagerNamespaced(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "JITAccessRequest")
+		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.GrantReconciler{
 		Client:          mgr.GetClient(),
 		Scheme:          mgr.GetScheme(),
-		Recorder:        mgr.GetEventRecorderFor("jitaccessgrant-controller"),
+		Recorder:        mgr.GetEventRecorderFor("accessgrant-controller"),
 		SystemNamespace: systemNamespace,
 	}).SetupWithManagerNamespaced(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "JITAccessGrant")
+		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
 		os.Exit(1)
 	}
 
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupJITAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "JITAccessRequest")
+		if err := webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "AccessRequest")
 			os.Exit(1)
 		}
 
-		if err := webhookv1alpha1.SetupClusterJITAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterJITAccessRequest")
+		if err := webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterAccessRequest")
 			os.Exit(1)
 		}
 
-		webhookv1alpha1.SetupClusterJITAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterJITAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterJITAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr)
 
-		webhookv1alpha1.SetupJITAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupJITAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupJITAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr)
 	}
 	// +kubebuilder:scaffold:builder
 

@@ -37,7 +37,7 @@ import (
 	common "antware.xyz/jitaccess/internal/common"
 )
 
-// GrantReconciler reconciles a JITAccessGrant object
+// GrantReconciler reconciles a AccessGrant object
 type GrantReconciler struct {
 	client.Client
 	Scheme          *runtime.Scheme
@@ -45,21 +45,21 @@ type GrantReconciler struct {
 	SystemNamespace string
 }
 
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessgrants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessgrants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessgrants/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the JITAccessGrant object against the actual cluster state, and then
+// the AccessGrant object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	var grant accessv1alpha1.JITAccessGrant
+	var grant accessv1alpha1.AccessGrant
 	err := r.Get(ctx, req.NamespacedName, &grant)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -145,8 +145,8 @@ func (r *GrantReconciler) removeFinalizer(ctx context.Context, obj client.Object
 
 func (r *GrantReconciler) handleApproved(
 	ctx context.Context,
-	obj *accessv1alpha1.JITAccessGrant,
-	status *accessv1alpha1.JITAccessGrantStatus,
+	obj *accessv1alpha1.AccessGrant,
+	status *accessv1alpha1.AccessGrantStatus,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
@@ -215,7 +215,7 @@ func (r *GrantReconciler) handleApproved(
 
 func (r *GrantReconciler) handleExpired(
 	ctx context.Context,
-	obj *accessv1alpha1.JITAccessGrant,
+	obj *accessv1alpha1.AccessGrant,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
@@ -230,7 +230,7 @@ func (r *GrantReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alpha1.JITAccessGrant) error {
+func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alpha1.AccessGrant) error {
 	log := logf.FromContext(ctx)
 	requestId := obj.Status.RequestId
 
@@ -301,12 +301,12 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 	var reqObj client.Object
 	var reqType string
 	if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
-		reqObj = &accessv1alpha1.ClusterJITAccessRequest{}
-		reqType = "ClusterJITAccessRequest"
+		reqObj = &accessv1alpha1.ClusterAccessRequest{}
+		reqType = "ClusterAccessRequest"
 	} else {
-		reqObj = &accessv1alpha1.JITAccessRequest{}
+		reqObj = &accessv1alpha1.AccessRequest{}
 		reqKey.Namespace = obj.Status.Namespace
-		reqType = "JITAccessRequest"
+		reqType = "AccessRequest"
 	}
 	deleteResource(reqKey, reqObj, reqType)
 
@@ -323,7 +323,7 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 
 func (r *GrantReconciler) createRole(
 	ctx context.Context,
-	obj *accessv1alpha1.JITAccessGrant,
+	obj *accessv1alpha1.AccessGrant,
 	name string,
 	rules []rbacv1.PolicyRule,
 	clusterRole bool,
@@ -346,7 +346,7 @@ func (r *GrantReconciler) createRole(
 
 func (r *GrantReconciler) createRoleBinding(
 	ctx context.Context,
-	obj *accessv1alpha1.JITAccessGrant,
+	obj *accessv1alpha1.AccessGrant,
 	roleRef rbacv1.RoleRef,
 	bindingName string,
 	clusterScoped bool,
@@ -377,9 +377,9 @@ func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
-	if err := indexer.IndexField(ctx, &accessv1alpha1.JITAccessGrant{}, "status.requestId",
+	if err := indexer.IndexField(ctx, &accessv1alpha1.AccessGrant{}, "status.requestId",
 		func(obj client.Object) []string {
-			if myObj, ok := obj.(*accessv1alpha1.JITAccessGrant); ok {
+			if myObj, ok := obj.(*accessv1alpha1.AccessGrant); ok {
 				return []string{myObj.Status.RequestId}
 			}
 			return nil
@@ -388,7 +388,7 @@ func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&accessv1alpha1.JITAccessGrant{}).
+		For(&accessv1alpha1.AccessGrant{}).
 		Named("grant-reconciler-namespaced").
 		Complete(r)
 }

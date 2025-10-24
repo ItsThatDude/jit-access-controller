@@ -1,0 +1,45 @@
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/managed-by: kustomize
+  name: accesspolicy-sample-alice
+spec:
+  subjects:
+    - alice@example.com
+  allowedRoles:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: view
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: dev-debug
+  allowedPermissions:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+  maxDuration: "60m"
+  requiredApprovals: 1
+  approvers:
+    - admin
+---
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/managed-by: kustomize
+  name: accesspolicy-sample-alice
+spec:
+  subjects:
+    - bob@example.com
+  allowedRoles:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: readonly
+  maxDuration: "60m"
+  requiredApprovals: 2
+  approvers:
+    - admin
+    - alice@example.com

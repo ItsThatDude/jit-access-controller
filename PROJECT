@@ -17,7 +17,7 @@ resources:
   controller: true
   domain: antware.xyz
   group: access
-  kind: JITAccessRequest
+  kind: AccessRequest
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
   webhooks:
@@ -29,14 +29,14 @@ resources:
     namespaced: true
   domain: antware.xyz
   group: access
-  kind: JITAccessPolicy
+  kind: AccessPolicy
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
   domain: antware.xyz
   group: access
-  kind: ClusterJITAccessPolicy
+  kind: ClusterAccessPolicy
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
 - api:
@@ -44,7 +44,7 @@ resources:
   controller: true
   domain: antware.xyz
   group: access
-  kind: ClusterJITAccessRequest
+  kind: ClusterAccessRequest
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
   webhooks:
@@ -56,7 +56,7 @@ resources:
     namespaced: true
   domain: antware.xyz
   group: access
-  kind: JITAccessResponse
+  kind: AccessResponse
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
   webhooks:
@@ -67,7 +67,7 @@ resources:
     namespaced: true
   domain: antware.xyz
   group: access
-  kind: ClusterJITAccessResponse
+  kind: ClusterAccessResponse
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
   webhooks:
@@ -79,7 +79,7 @@ resources:
   controller: true
   domain: antware.xyz
   group: access
-  kind: JITAccessGrant
+  kind: AccessGrant
   path: antware.xyz/jitaccess/api/v1alpha1
   version: v1alpha1
 version: "3"

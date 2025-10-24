@@ -1,10 +1,10 @@
 ## Append samples of your project ##
 resources:
-- access_v1alpha1_jitaccessrequest.yaml
-- access_v1alpha1_jitaccesspolicy.yaml
-- access_v1alpha1_clusterjitaccesspolicy.yaml
-- access_v1alpha1_clusterjitaccessrequest.yaml
-- access_v1alpha1_jitaccessresponse.yaml
-- access_v1alpha1_clusterjitaccessresponse.yaml
-- access_v1alpha1_jitaccessgrant.yaml
+- access_v1alpha1_accessrequest.yaml
+- access_v1alpha1_accesspolicy.yaml
+- access_v1alpha1_clusteraccesspolicy.yaml
+- access_v1alpha1_clusteraccessrequest.yaml
+- access_v1alpha1_accessresponse.yaml
+- access_v1alpha1_clusteraccessresponse.yaml
+- access_v1alpha1_accessgrant.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

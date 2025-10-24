@@ -27,25 +27,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccesspolicies/finalizers,verbs=update
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessrequests/finalizers,verbs=update
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusterjitaccessresponses/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccesspolicies/finalizers,verbs=update
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessrequests/finalizers,verbs=update
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=jitaccessresponses/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/finalizers,verbs=update
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
@@ -62,9 +62,9 @@ func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
-	if err := indexer.IndexField(ctx, &v1alpha1.ClusterJITAccessRequest{}, "status.requestId",
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessRequest{}, "status.requestId",
 		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.ClusterJITAccessRequest); ok {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessRequest); ok {
 				return []string{myObj.Status.RequestId}
 			}
 			return nil
@@ -72,9 +72,9 @@ func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 		return fmt.Errorf("failed to add index for requestId: %w", err)
 	}
 
-	if err := indexer.IndexField(ctx, &v1alpha1.ClusterJITAccessResponse{}, "spec.requestRef",
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.ClusterJITAccessResponse); ok {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
 				return []string{myObj.Spec.RequestRef}
 			}
 			return nil
@@ -95,11 +95,11 @@ func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.ClusterJITAccessRequest{}).
+		For(&v1alpha1.ClusterAccessRequest{}).
 		Watches(
-			&v1alpha1.ClusterJITAccessResponse{},
+			&v1alpha1.ClusterAccessResponse{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				resp := obj.(*v1alpha1.ClusterJITAccessResponse)
+				resp := obj.(*v1alpha1.ClusterAccessResponse)
 				return []reconcile.Request{{
 					NamespacedName: types.NamespacedName{
 						Name: resp.Spec.RequestRef,
@@ -116,9 +116,9 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	indexer := mgr.GetFieldIndexer()
 
-	if err := indexer.IndexField(ctx, &v1alpha1.JITAccessRequest{}, "status.requestId",
+	if err := indexer.IndexField(ctx, &v1alpha1.AccessRequest{}, "status.requestId",
 		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.JITAccessRequest); ok {
+			if myObj, ok := obj.(*v1alpha1.AccessRequest); ok {
 				return []string{myObj.Status.RequestId}
 			}
 			return nil
@@ -126,9 +126,9 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 		return fmt.Errorf("failed to add index for requestId: %w", err)
 	}
 
-	if err := indexer.IndexField(ctx, &v1alpha1.JITAccessResponse{}, "spec.requestRef",
+	if err := indexer.IndexField(ctx, &v1alpha1.AccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.JITAccessResponse); ok {
+			if myObj, ok := obj.(*v1alpha1.AccessResponse); ok {
 				return []string{myObj.Spec.RequestRef}
 			}
 			return nil
@@ -149,11 +149,11 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.JITAccessRequest{}).
+		For(&v1alpha1.AccessRequest{}).
 		Watches(
-			&v1alpha1.JITAccessResponse{},
+			&v1alpha1.AccessResponse{},
 			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				resp := obj.(*v1alpha1.JITAccessResponse)
+				resp := obj.(*v1alpha1.AccessResponse)
 				return []reconcile.Request{{
 					NamespacedName: types.NamespacedName{
 						Namespace: resp.Namespace,
@@ -169,7 +169,7 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 
 func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	if req.Namespace == "" {
-		var clusterObj v1alpha1.ClusterJITAccessRequest
+		var clusterObj v1alpha1.ClusterAccessRequest
 		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
 		if err != nil {
 			if errors.IsNotFound(err) {
@@ -180,7 +180,7 @@ func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return r.reconcileRequest(ctx, &clusterObj)
 	}
 
-	var nsObj v1alpha1.JITAccessRequest
+	var nsObj v1alpha1.AccessRequest
 	err := r.Get(ctx, req.NamespacedName, &nsObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -191,7 +191,7 @@ func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return r.reconcileRequest(ctx, &nsObj)
 }
 
-func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.JITAccessRequestObject) (ctrl.Result, error) {
+func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.AccessRequestObject) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	originalStatus := *obj.GetStatus().DeepCopy()
@@ -262,7 +262,7 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.JIT
 	isValid := false
 	var matched *v1alpha1.SubjectPolicy
 	if ns == "" {
-		var clusterPolicies v1alpha1.ClusterJITAccessPolicyList
+		var clusterPolicies v1alpha1.ClusterAccessPolicyList
 		if err := r.List(ctx, &clusterPolicies); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -272,7 +272,7 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.JIT
 			return ctrl.Result{}, fmt.Errorf("the request does not match a cluster scoped access policy")
 		}
 	} else {
-		var nsPolicies v1alpha1.JITAccessPolicyList
+		var nsPolicies v1alpha1.AccessPolicyList
 		listOpts := []client.ListOption{client.InNamespace(ns)}
 		if err := r.List(ctx, &nsPolicies, listOpts...); err != nil {
 			return ctrl.Result{}, err
@@ -301,8 +301,8 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.JIT
 
 func (r *RequestReconciler) handleApproved(
 	ctx context.Context,
-	obj common.JITAccessRequestObject,
-	status *v1alpha1.JITAccessRequestStatus,
+	obj common.AccessRequestObject,
+	status *v1alpha1.AccessRequestStatus,
 	approvers []string,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
@@ -326,9 +326,9 @@ func (r *RequestReconciler) handleApproved(
 
 func (r *RequestReconciler) handlePending(
 	ctx context.Context,
-	obj common.JITAccessRequestObject,
+	obj common.AccessRequestObject,
 	matchedPolicy *v1alpha1.SubjectPolicy,
-	status *v1alpha1.JITAccessRequestStatus,
+	status *v1alpha1.AccessRequestStatus,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
@@ -339,7 +339,7 @@ func (r *RequestReconciler) handlePending(
 	// Fetch responses
 	if obj.GetNamespace() == "" {
 		// Cluster-scoped responses
-		responses := &v1alpha1.ClusterJITAccessResponseList{}
+		responses := &v1alpha1.ClusterAccessResponseList{}
 		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
@@ -356,7 +356,7 @@ func (r *RequestReconciler) handlePending(
 		}
 	} else {
 		// Namespaced responses
-		responses := &v1alpha1.JITAccessResponseList{}
+		responses := &v1alpha1.AccessResponseList{}
 		if err := r.List(ctx, responses, client.InNamespace(obj.GetNamespace()), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
@@ -396,7 +396,7 @@ func (r *RequestReconciler) handlePending(
 
 func (r *RequestReconciler) handleExpired(
 	ctx context.Context,
-	obj common.JITAccessRequestObject,
+	obj common.AccessRequestObject,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
@@ -411,7 +411,7 @@ func (r *RequestReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.JITAccessRequestObject) error {
+func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.AccessRequestObject) error {
 	log := logf.FromContext(ctx)
 	ns := obj.GetNamespace()
 
@@ -420,18 +420,18 @@ func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.JIT
 	// Delete all responses
 	var responses []client.Object
 	if ns == "" {
-		responseList := &v1alpha1.ClusterJITAccessResponseList{}
+		responseList := &v1alpha1.ClusterAccessResponseList{}
 		if err := r.List(ctx, responseList, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
-			errs = append(errs, fmt.Errorf("failed to list ClusterJITAccessResponses: %w", err))
+			errs = append(errs, fmt.Errorf("failed to list ClusterAccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
 				responses = append(responses, &responseList.Items[i])
 			}
 		}
 	} else {
-		responseList := &v1alpha1.JITAccessResponseList{}
+		responseList := &v1alpha1.AccessResponseList{}
 		if err := r.List(ctx, responseList, client.InNamespace(ns), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
-			errs = append(errs, fmt.Errorf("failed to list JITAccessResponses: %w", err))
+			errs = append(errs, fmt.Errorf("failed to list AccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
 				responses = append(responses, &responseList.Items[i])
@@ -476,7 +476,7 @@ func (r *RequestReconciler) removeFinalizer(ctx context.Context, obj client.Obje
 
 func (r *RequestReconciler) createGrant(
 	ctx context.Context,
-	obj common.JITAccessRequestObject,
+	obj common.AccessRequestObject,
 	approvers []string,
 ) error {
 	reqName := obj.GetName()
@@ -488,9 +488,9 @@ func (r *RequestReconciler) createGrant(
 
 	labels := common.CommonLabels()
 
-	grant := &v1alpha1.JITAccessGrant{
+	grant := &v1alpha1.AccessGrant{
 		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: reqName, Labels: labels},
-		Spec:       v1alpha1.JITAccessGrantSpec{},
+		Spec:       v1alpha1.AccessGrantSpec{},
 	}
 
 	if err := r.Create(ctx, grant); err != nil {
@@ -499,7 +499,7 @@ func (r *RequestReconciler) createGrant(
 
 	original := grant.DeepCopy()
 
-	grant.Status = v1alpha1.JITAccessGrantStatus{
+	grant.Status = v1alpha1.AccessGrantStatus{
 		Request:   reqName,
 		RequestId: status.RequestId,
 

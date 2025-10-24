@@ -19,7 +19,7 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 	var (
 		ctx        context.Context
 		reconciler *RequestReconciler
-		policyObj  *v1alpha1.ClusterJITAccessPolicy
+		policyObj  *v1alpha1.ClusterAccessPolicy
 	)
 
 	BeforeEach(func() {
@@ -27,11 +27,11 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 
 		// Create policy object with unique name per run
 		policyName := fmt.Sprintf("test-policy-%d", time.Now().UnixNano())
-		policyObj = &v1alpha1.ClusterJITAccessPolicy{
+		policyObj = &v1alpha1.ClusterAccessPolicy{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: policyName,
 			},
-			Spec: v1alpha1.ClusterJITAccessPolicySpec{
+			Spec: v1alpha1.ClusterAccessPolicySpec{
 				SubjectPolicy: v1alpha1.SubjectPolicy{
 					Subjects:          []string{"user1"},
 					RequiredApprovals: 1,
@@ -42,7 +42,7 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 			},
 		}
 		Expect(k8sClient.Create(ctx, policyObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterJITAccessPolicy{})
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterAccessPolicy{})
 
 		reconciler = &RequestReconciler{
 			Client:          mgr.GetClient(),
@@ -54,18 +54,18 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 	AfterEach(func() {
 		// Clean up policy
 		Expect(k8sClient.Delete(ctx, policyObj)).To(Succeed())
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterJITAccessPolicy{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.ClusterAccessPolicy{})
 	})
 
-	It("should fail to reconcile ClusterJITAccessRequest", func() {
+	It("should fail to reconcile ClusterAccessRequest", func() {
 		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
 
-		requestObj := &v1alpha1.ClusterJITAccessRequest{
+		requestObj := &v1alpha1.ClusterAccessRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: requestName,
 			},
-			Spec: v1alpha1.ClusterJITAccessRequestSpec{
-				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
+			Spec: v1alpha1.ClusterAccessRequestSpec{
+				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
 					Subject:       "user1",
 					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "no-policy"},
 					Duration:      "10m",
@@ -79,15 +79,15 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).ShouldNot(Succeed())
 	})
 
-	It("should create grant for approved ClusterJITAccessRequest", func() {
+	It("should create grant for approved ClusterAccessRequest", func() {
 		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
 
-		requestObj := &v1alpha1.ClusterJITAccessRequest{
+		requestObj := &v1alpha1.ClusterAccessRequest{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: requestName,
 			},
-			Spec: v1alpha1.ClusterJITAccessRequestSpec{
-				JITAccessRequestBaseSpec: v1alpha1.JITAccessRequestBaseSpec{
+			Spec: v1alpha1.ClusterAccessRequestSpec{
+				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
 					Subject:       "user1",
 					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"},
 					Duration:      "10m",
@@ -123,11 +123,11 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 		))
 
 		responseName := fmt.Sprintf("test-approve-response-%d", time.Now().UnixNano())
-		responseObj := &v1alpha1.ClusterJITAccessResponse{
+		responseObj := &v1alpha1.ClusterAccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: responseName,
 			},
-			Spec: v1alpha1.JITAccessResponseSpec{
+			Spec: v1alpha1.AccessResponseSpec{
 				RequestRef: requestName,
 				Approver:   "admin",
 				Response:   v1alpha1.ResponseStateApproved,
@@ -136,7 +136,7 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 
 		// Create the response and wait for it to be created
 		Expect(k8sClient.Create(ctx, responseObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.ClusterJITAccessResponse{})
+		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.ClusterAccessResponse{})
 
 		// Reconcile the request again, to process the response
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
@@ -148,16 +148,16 @@ var _ = Describe("JITAccessReconciler with envtest", func() {
 		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 
 		// Wait for the Grant to be created
-		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: requestName}, &v1alpha1.JITAccessGrant{})
+		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: requestName}, &v1alpha1.AccessGrant{})
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())
-		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterJITAccessRequest{})
+		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterAccessRequest{})
 
 		// Reconcile to handle finalizer cleanup
 		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
 
 		// Wait until fully deleted
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterJITAccessRequest{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterAccessRequest{})
 	})
 })

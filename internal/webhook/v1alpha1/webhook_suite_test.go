@@ -110,10 +110,10 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupJITAccessRequestWebhookWithManager(mgr)
+	err = SetupAccessRequestWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupClusterJITAccessRequestWebhookWithManager(mgr)
+	err = SetupClusterAccessRequestWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:webhook

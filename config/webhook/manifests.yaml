@@ -10,9 +10,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+      path: /mutate-access-antware-xyz-v1alpha1-accessrequest
   failurePolicy: Fail
-  name: mclusterjitaccessrequest-v1alpha1.kb.io
+  name: maccessrequest-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -22,7 +22,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusterjitaccessrequests
+    - accessrequests
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -30,9 +30,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+      path: /mutate-access-antware-xyz-v1alpha1-accessresponse
   failurePolicy: Fail
-  name: mclusterjitaccessresponse-v1alpha1.kb.io
+  name: maccessresponse-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -42,7 +42,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusterjitaccessresponses
+    - accessresponses
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -50,9 +50,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-access-antware-xyz-v1alpha1-jitaccessrequest
+      path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
   failurePolicy: Fail
-  name: mjitaccessrequest-v1alpha1.kb.io
+  name: mclusteraccessrequest-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -62,7 +62,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - jitaccessrequests
+    - clusteraccessrequests
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -70,9 +70,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-access-antware-xyz-v1alpha1-jitaccessresponse
+      path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
   failurePolicy: Fail
-  name: mjitaccessresponse-v1alpha1.kb.io
+  name: mclusteraccessresponse-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -82,7 +82,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - jitaccessresponses
+    - clusteraccessresponses
   sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -96,9 +96,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessrequest
+      path: /validate-access-antware-xyz-v1alpha1-accessrequest
   failurePolicy: Fail
-  name: vclusterjitaccessrequest-v1alpha1.kb.io
+  name: vaccessrequest-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -108,7 +108,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusterjitaccessrequests
+    - accessrequests
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -116,9 +116,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-access-antware-xyz-v1alpha1-clusterjitaccessresponse
+      path: /validate-access-antware-xyz-v1alpha1-accessresponse
   failurePolicy: Fail
-  name: vclusterjitaccessresponse-v1alpha1.kb.io
+  name: vaccessresponse-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -128,7 +128,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - clusterjitaccessresponses
+    - accessresponses
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -136,9 +136,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-access-antware-xyz-v1alpha1-jitaccessrequest
+      path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
   failurePolicy: Fail
-  name: vjitaccessrequest-v1alpha1.kb.io
+  name: vclusteraccessrequest-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -148,7 +148,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - jitaccessrequests
+    - clusteraccessrequests
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -156,9 +156,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-access-antware-xyz-v1alpha1-jitaccessresponse
+      path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
   failurePolicy: Fail
-  name: vjitaccessresponse-v1alpha1.kb.io
+  name: vclusteraccessresponse-v1alpha1.kb.io
   rules:
   - apiGroups:
     - access.antware.xyz
@@ -168,5 +168,5 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - jitaccessresponses
+    - clusteraccessresponses
   sideEffects: None

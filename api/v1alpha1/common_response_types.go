@@ -8,7 +8,7 @@ const (
 	ResponseStateDenied   ResponseState = "Denied"
 )
 
-type JITAccessResponseSpec struct {
+type AccessResponseSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RequestRef cannot be changed after creation"
 	RequestRef string `json:"requestRef"`
 
@@ -19,5 +19,5 @@ type JITAccessResponseSpec struct {
 	Response ResponseState `json:"response"`
 }
 
-type JITAccessResponseStatus struct {
+type AccessResponseStatus struct {
 }
