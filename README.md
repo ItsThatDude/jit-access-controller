@@ -97,7 +97,7 @@ helm repo add itsthatdude https://itsthatdude.github.io/helm-charts/`
 Install the chart
 ```sh
 kubectl create namespace jitaccess-system
-helm install jitaccess jitaccess -n jitaccess-system
+helm install jitaccess itsthatdude/jitaccess -n jitaccess-system
 ```
 
 Create a policy
