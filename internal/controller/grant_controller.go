@@ -96,7 +96,7 @@ func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		log.Info("Added finalizer to request", "name", grant.GetName())
 	}
 
-	// Handle deletion
+	// Handle finalizer cleanup
 	if !grant.GetDeletionTimestamp().IsZero() {
 		if controllerutil.ContainsFinalizer(&grant, common.JITFinalizer) {
 			if err := r.cleanupResources(ctx, &grant); err != nil {
@@ -112,11 +112,13 @@ func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, nil
 	}
 
+	// If the RequestId is not set, just skip reconciliation.
+	// This happens when the grant is first created.
 	if status.RequestId == "" {
-		log.Info("RequestID has not been set", "name", grant.GetName())
 		return ctrl.Result{}, nil
 	}
 
+	// If the grant has expired, call handleExpired which cleans up the resources
 	if status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time) {
 		return r.handleExpired(ctx, &grant)
 	}
@@ -390,6 +392,6 @@ func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.AccessGrant{}).
-		Named("grant-reconciler-namespaced").
+		Named("grant-reconciler").
 		Complete(r)
 }
