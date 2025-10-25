@@ -89,7 +89,87 @@ spec:
 
 ## Getting Started
 
-TODO: this section
+Install helm repository:
+```sh
+helm repo add itsthatdude https://itsthatdude.github.io/helm-charts/`
+```
+
+Install the chart
+```sh
+kubectl create namespace jitaccess-system
+helm install jitaccess -n jitaccess-system
+```
+
+Create a policy
+```sh
+kubectl apply -f - <<EOF
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessPolicy
+metadata:
+  namespace: example-ns
+  name: accesspolicy-sample
+spec:
+  subjects:
+    - user1
+  # allow the user to request the binding of roles
+  allowedRoles:
+    - view
+  # allow the user to request specific permissions
+  allowedPermissions:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  maxDuration: "60m"
+  requiredApprovals: 1
+  approvers:
+    - admin
+EOF
+```
+
+Request access  
+
+Using kubectl:
+```sh
+kubectl apply -f - <<EOF
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessRequest
+metadata:
+  namespace: example-ns
+  name: accessrequest-sample
+spec:
+  subject: user1
+  duration: "5m"
+  justification: "This is a sample request"
+  permissions: 
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+EOF
+```
+
+Using kubectl-access plugin:
+```sh
+kubectl-access request -n example-ns --subject "user1" --permissions "get,list,watch,create,update,patch,delete:pods"
+```
+
+Approve/Reject access
+Using kubectl:
+```sh
+kubectl apply -f - <<EOF
+apiVersion: access.antware.xyz/v1alpha1
+kind: AccessResponse
+metadata:
+  namespace: example-ns
+  name: accessresponse-sample
+spec:
+  requestRef: accessrequest-sample
+  response: (Approved|Denied)
+EOF
+```
+Using kubectl-access plugin:
+```sh
+kubectl-access (approve|reject) -n example-ns accessrequest-sample
+```
 
 ## Development
 
