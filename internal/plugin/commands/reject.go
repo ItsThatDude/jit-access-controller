@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"antware.xyz/jitaccess/api/v1alpha1"
 	"antware.xyz/jitaccess/internal/plugin/common"
 	"github.com/spf13/cobra"
@@ -8,12 +10,24 @@ import (
 
 func NewRejectCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "reject <request_name>",
+		Use:   "reject [<request_name>]",
 		Short: "Reject an access request",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
-			return common.CreateResponse(scope, namespace, name, v1alpha1.ResponseStateDenied)
+			if len(args) == 0 {
+				fmt.Println("Please select a request to reject:")
+				selection, err := common.HandleRequestSelection(scope, namespace)
+				if err != nil {
+					return fmt.Errorf("an error occurred while requesting a selection: %s", err)
+				}
+				if selection == nil {
+					return fmt.Errorf("the selected request was nil")
+				}
+				return common.CreateResponse(scope, namespace, selection.GetName(), v1alpha1.ResponseStateDenied)
+			} else {
+				name := args[0]
+				return common.CreateResponse(scope, namespace, name, v1alpha1.ResponseStateDenied)
+			}
 		},
 	}
 
