@@ -321,7 +321,7 @@ func (r *RequestReconciler) handleApproved(
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{RequeueAfter: duration * time.Second}, nil
+	return ctrl.Result{RequeueAfter: duration + 1*time.Second}, nil
 }
 
 func (r *RequestReconciler) handlePending(

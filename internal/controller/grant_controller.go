@@ -211,7 +211,7 @@ func (r *GrantReconciler) handleApproved(
 			obj.Status.Subject, obj.Status.Request)
 	}
 
-	return ctrl.Result{RequeueAfter: duration * time.Second}, nil
+	return ctrl.Result{RequeueAfter: duration + 1*time.Second}, nil
 }
 
 func (r *GrantReconciler) handleExpired(
