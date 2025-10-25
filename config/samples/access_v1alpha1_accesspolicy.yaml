@@ -30,7 +30,7 @@ metadata:
   labels:
     app.kubernetes.io/name: jitaccess
     app.kubernetes.io/managed-by: kustomize
-  name: accesspolicy-sample-alice
+  name: accesspolicy-sample-bob
 spec:
   subjects:
     - bob@example.com

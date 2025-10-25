@@ -113,6 +113,7 @@ func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	if status.RequestId == "" {
+		log.Info("RequestID has not been set", "name", grant.GetName())
 		return ctrl.Result{}, nil
 	}
 
@@ -202,7 +203,7 @@ func (r *GrantReconciler) handleApproved(
 
 	// Set expire time if not set
 	if status.AccessExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(duration * time.Second))
+		expireTime := metav1.NewTime(time.Now().Add(duration))
 		status.AccessExpiresAt = &expireTime
 
 		r.Recorder.Eventf(obj, "Normal", "AccessGranted",

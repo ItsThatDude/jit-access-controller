@@ -44,6 +44,8 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
+var Version string
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -90,6 +92,12 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	if Version == "" {
+		Version = "development"
+	}
+
+	setupLog.Info("Controller is starting", "version", Version)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will

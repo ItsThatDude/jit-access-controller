@@ -32,7 +32,7 @@ endif
 
 # Check for changed files
 ifneq ($(DIRTY),)
-VERSION := $(VERSION)+dirty
+VERSION := $(VERSION)-dirty
 endif
 
 IMG ?= $(IMG_NAME):latest
@@ -125,11 +125,11 @@ lint-config: golangci-lint ## Verify golangci-lint linter configuration
 
 .PHONY: build-plugin
 build-plugin:
-	go build -o bin/kubectl-access cmd/kubectl-access/main.go
+	go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access cmd/kubectl-access/main.go
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager cmd/main.go
+	go build -ldflags "-X main.Version=${VERSION}" -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -140,7 +140,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build -t ${IMG} .
+	$(CONTAINER_TOOL) build --build-arg VERSION=${VERSION} -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
