@@ -47,6 +47,7 @@ type ClusterAccessRequestSpec struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
+// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // ClusterAccessRequest is the Schema for the clusteraccessrequests API
 type ClusterAccessRequest struct {

@@ -164,6 +164,8 @@ spec:
         required:
         - spec
         type: object
+    selectableFields:
+    - jsonPath: .status.state
     served: true
     storage: true
     subresources:

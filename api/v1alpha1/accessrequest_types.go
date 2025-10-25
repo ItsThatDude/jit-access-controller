@@ -46,6 +46,7 @@ type AccessRequestSpec struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // AccessRequest is the Schema for the accessrequests API
 type AccessRequest struct {
