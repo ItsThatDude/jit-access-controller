@@ -15,12 +15,17 @@ Users submit either a:
 
 In each request, the user specifies the **roles** or **permissions** they require.  
 
-The controller evaluates the request against configured policies:
+An approver then submits either a:  
+
+- **`AccessResponse`** – for namespace-scoped access  
+- **`ClusterAccessResponse`** – for cluster-wide access
+
+The controller evaluates the requests/responses against configured policies:
 
 - **`AccessPolicy`** – defines rules for namespace-scoped access requests  
-- **`ClusterAccessPolicy`** – defines rules for cluster-scoped access requests  
+- **`ClusterAccessPolicy`** – defines rules for cluster-scoped access requests
 
-If the request matches a policy, the controller creates a **`AccessGrant`** object.  
+If the responses fulful the required number of approvals, the controller creates a **`AccessGrant`** object.  
 The **`AccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
 
 - A **ClusterRole** or **Role** for adhoc permission requests
