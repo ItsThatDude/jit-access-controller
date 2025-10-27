@@ -1,0 +1,2001 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+    control-plane: controller-manager
+  name: jitaccess-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: accessgrants.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: AccessGrant
+    listKind: AccessGrantList
+    plural: accessgrants
+    singular: accessgrant
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AccessGrant is the Schema for the accessgrants API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of AccessGrant
+            type: object
+          status:
+            description: status defines the observed state of AccessGrant
+            properties:
+              accessExpiresAt:
+                format: date-time
+                type: string
+              adhocRoleBindingCreated:
+                type: boolean
+              adhocRoleCreated:
+                type: boolean
+              approvedBy:
+                items:
+                  type: string
+                type: array
+              duration:
+                type: string
+              namespace:
+                type: string
+              permissions:
+                items:
+                  description: |-
+                    PolicyRule holds information that describes a policy rule, but does not contain information
+                    about who the rule applies to or which namespace the rule applies to.
+                  properties:
+                    apiGroups:
+                      description: |-
+                        APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                        the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    nonResourceURLs:
+                      description: |-
+                        NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                        Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                        Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resourceNames:
+                      description: ResourceNames is an optional white list of names
+                        that the rule applies to.  An empty set means that everything
+                        is allowed.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resources:
+                      description: Resources is a list of resources this rule applies
+                        to. '*' represents all resources.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    verbs:
+                      description: Verbs is a list of Verbs that apply to ALL the
+                        ResourceKinds contained in this rule. '*' represents all verbs.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                  required:
+                  - verbs
+                  type: object
+                type: array
+              request:
+                type: string
+              requestId:
+                type: string
+              role:
+                description: RoleRef contains information that points to the role
+                  being used
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - apiGroup
+                - kind
+                - name
+                type: object
+                x-kubernetes-map-type: atomic
+              roleBindingCreated:
+                type: boolean
+              scope:
+                enum:
+                - Cluster
+                - Namespace
+                type: string
+              subject:
+                type: string
+            required:
+            - approvedBy
+            - duration
+            - request
+            - requestId
+            - subject
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: accesspolicies.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: AccessPolicy
+    listKind: AccessPolicyList
+    plural: accesspolicies
+    singular: accesspolicy
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AccessPolicy is the Schema for the accesspolicies API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of AccessPolicy
+            properties:
+              allowedPermissions:
+                description: AllowedPermissions is a list of adhoc permissions the
+                  subject is allowed to request.
+                items:
+                  description: |-
+                    PolicyRule holds information that describes a policy rule, but does not contain information
+                    about who the rule applies to or which namespace the rule applies to.
+                  properties:
+                    apiGroups:
+                      description: |-
+                        APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                        the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    nonResourceURLs:
+                      description: |-
+                        NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                        Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                        Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resourceNames:
+                      description: ResourceNames is an optional white list of names
+                        that the rule applies to.  An empty set means that everything
+                        is allowed.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resources:
+                      description: Resources is a list of resources this rule applies
+                        to. '*' represents all resources.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    verbs:
+                      description: Verbs is a list of Verbs that apply to ALL the
+                        ResourceKinds contained in this rule. '*' represents all verbs.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                  required:
+                  - verbs
+                  type: object
+                type: array
+              allowedRoles:
+                description: AllowedRoles is a list of roles the subject is allowed
+                  to request.
+                items:
+                  description: RoleRef contains information that points to the role
+                    being used
+                  properties:
+                    apiGroup:
+                      description: APIGroup is the group for the resource being referenced
+                      type: string
+                    kind:
+                      description: Kind is the type of resource being referenced
+                      type: string
+                    name:
+                      description: Name is the name of resource being referenced
+                      type: string
+                  required:
+                  - apiGroup
+                  - kind
+                  - name
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              approverGroups:
+                description: Approver Groups
+                items:
+                  type: string
+                type: array
+              approvers:
+                description: Approvers
+                items:
+                  type: string
+                type: array
+              maxDuration:
+                description: Duration specifies the maximum amount of time the access
+                  can last (e.g. "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
+              requiredApprovals:
+                description: The minimum number of approvals required to grant the
+                  request
+                minimum: 1
+                type: integer
+              subjects:
+                description: Subject is the identity (email or K8s username) of the
+                  requester.
+                items:
+                  type: string
+                type: array
+            required:
+            - maxDuration
+            - requiredApprovals
+            - subjects
+            type: object
+          status:
+            description: status defines the observed state of AccessPolicy
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: accessrequests.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: AccessRequest
+    listKind: AccessRequestList
+    plural: accessrequests
+    singular: accessrequest
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AccessRequest is the Schema for the accessrequests API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of AccessRequest
+            properties:
+              duration:
+                description: Duration specifies how long the access should last (e.g.
+                  "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
+                x-kubernetes-validations:
+                - message: Duration cannot be changed after creation
+                  rule: self == oldSelf
+              justification:
+                description: User's justification for the request
+                type: string
+                x-kubernetes-validations:
+                - message: Justification cannot be changed after creation
+                  rule: self == oldSelf
+              permissions:
+                description: Permissions are adhoc RBAC rules to grant (instead of
+                  a pre-defined role)
+                items:
+                  description: |-
+                    PolicyRule holds information that describes a policy rule, but does not contain information
+                    about who the rule applies to or which namespace the rule applies to.
+                  properties:
+                    apiGroups:
+                      description: |-
+                        APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                        the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    nonResourceURLs:
+                      description: |-
+                        NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                        Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                        Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resourceNames:
+                      description: ResourceNames is an optional white list of names
+                        that the rule applies to.  An empty set means that everything
+                        is allowed.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resources:
+                      description: Resources is a list of resources this rule applies
+                        to. '*' represents all resources.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    verbs:
+                      description: Verbs is a list of Verbs that apply to ALL the
+                        ResourceKinds contained in this rule. '*' represents all verbs.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                  required:
+                  - verbs
+                  type: object
+                type: array
+                x-kubernetes-validations:
+                - message: Permissions cannot be changed after creation
+                  rule: self == oldSelf
+              role:
+                description: Role is an optional pre-defined Role/ClusterRole to bind
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - apiGroup
+                - kind
+                - name
+                type: object
+                x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: Role cannot be changed after creation
+                  rule: self == oldSelf
+              subject:
+                description: Subject is the username or identity requesting access
+                type: string
+                x-kubernetes-validations:
+                - message: Subject cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - duration
+            - justification
+            - subject
+            type: object
+          status:
+            description: status defines the observed state of AccessRequest
+            properties:
+              approvalsReceived:
+                type: integer
+              approvalsRequired:
+                type: integer
+              grantCreated:
+                type: boolean
+              requestExpiresAt:
+                format: date-time
+                type: string
+              requestId:
+                type: string
+              state:
+                enum:
+                - Pending
+                - Approved
+                - Denied
+                - Expired
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    selectableFields:
+    - jsonPath: .status.state
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: accessresponses.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: AccessResponse
+    listKind: AccessResponseList
+    plural: accessresponses
+    singular: accessresponse
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: AccessResponse is the Schema for the accessresponses API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of AccessResponse
+            properties:
+              approver:
+                type: string
+                x-kubernetes-validations:
+                - message: Approver cannot be changed after creation
+                  rule: self == oldSelf
+              requestRef:
+                type: string
+                x-kubernetes-validations:
+                - message: RequestRef cannot be changed after creation
+                  rule: self == oldSelf
+              response:
+                enum:
+                - Approved
+                - Denied
+                type: string
+                x-kubernetes-validations:
+                - message: Response cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - approver
+            - requestRef
+            - response
+            type: object
+          status:
+            description: status defines the observed state of AccessResponse
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: clusteraccesspolicies.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: ClusterAccessPolicy
+    listKind: ClusterAccessPolicyList
+    plural: clusteraccesspolicies
+    singular: clusteraccesspolicy
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ClusterAccessPolicy is the Schema for the clusteraccesspolicies
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of ClusterAccessPolicy
+            properties:
+              allowedPermissions:
+                description: AllowedPermissions is a list of adhoc permissions the
+                  subject is allowed to request.
+                items:
+                  description: |-
+                    PolicyRule holds information that describes a policy rule, but does not contain information
+                    about who the rule applies to or which namespace the rule applies to.
+                  properties:
+                    apiGroups:
+                      description: |-
+                        APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                        the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    nonResourceURLs:
+                      description: |-
+                        NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                        Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                        Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resourceNames:
+                      description: ResourceNames is an optional white list of names
+                        that the rule applies to.  An empty set means that everything
+                        is allowed.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resources:
+                      description: Resources is a list of resources this rule applies
+                        to. '*' represents all resources.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    verbs:
+                      description: Verbs is a list of Verbs that apply to ALL the
+                        ResourceKinds contained in this rule. '*' represents all verbs.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                  required:
+                  - verbs
+                  type: object
+                type: array
+              allowedRoles:
+                description: AllowedRoles is a list of roles the subject is allowed
+                  to request.
+                items:
+                  description: RoleRef contains information that points to the role
+                    being used
+                  properties:
+                    apiGroup:
+                      description: APIGroup is the group for the resource being referenced
+                      type: string
+                    kind:
+                      description: Kind is the type of resource being referenced
+                      type: string
+                    name:
+                      description: Name is the name of resource being referenced
+                      type: string
+                  required:
+                  - apiGroup
+                  - kind
+                  - name
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              approverGroups:
+                description: Approver Groups
+                items:
+                  type: string
+                type: array
+              approvers:
+                description: Approvers
+                items:
+                  type: string
+                type: array
+              maxDuration:
+                description: Duration specifies the maximum amount of time the access
+                  can last (e.g. "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
+              requiredApprovals:
+                description: The minimum number of approvals required to grant the
+                  request
+                minimum: 1
+                type: integer
+              subjects:
+                description: Subject is the identity (email or K8s username) of the
+                  requester.
+                items:
+                  type: string
+                type: array
+            required:
+            - maxDuration
+            - requiredApprovals
+            - subjects
+            type: object
+          status:
+            description: status defines the observed state of ClusterAccessPolicy
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: clusteraccessrequests.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: ClusterAccessRequest
+    listKind: ClusterAccessRequestList
+    plural: clusteraccessrequests
+    singular: clusteraccessrequest
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ClusterAccessRequest is the Schema for the clusteraccessrequests
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of ClusterAccessRequest
+            properties:
+              duration:
+                description: Duration specifies how long the access should last (e.g.
+                  "5s", "10m", "2h45m").
+                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
+                type: string
+                x-kubernetes-validations:
+                - message: Duration cannot be changed after creation
+                  rule: self == oldSelf
+              justification:
+                description: User's justification for the request
+                type: string
+                x-kubernetes-validations:
+                - message: Justification cannot be changed after creation
+                  rule: self == oldSelf
+              permissions:
+                description: Permissions are adhoc RBAC rules to grant (instead of
+                  a pre-defined role)
+                items:
+                  description: |-
+                    PolicyRule holds information that describes a policy rule, but does not contain information
+                    about who the rule applies to or which namespace the rule applies to.
+                  properties:
+                    apiGroups:
+                      description: |-
+                        APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of
+                        the enumerated resources in any API group will be allowed. "" represents the core API group and "*" represents all API groups.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    nonResourceURLs:
+                      description: |-
+                        NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path
+                        Since non-resource URLs are not namespaced, this field is only applicable for ClusterRoles referenced from a ClusterRoleBinding.
+                        Rules can either apply to API resources (such as "pods" or "secrets") or non-resource URL paths (such as "/api"),  but not both.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resourceNames:
+                      description: ResourceNames is an optional white list of names
+                        that the rule applies to.  An empty set means that everything
+                        is allowed.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    resources:
+                      description: Resources is a list of resources this rule applies
+                        to. '*' represents all resources.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                    verbs:
+                      description: Verbs is a list of Verbs that apply to ALL the
+                        ResourceKinds contained in this rule. '*' represents all verbs.
+                      items:
+                        type: string
+                      type: array
+                      x-kubernetes-list-type: atomic
+                  required:
+                  - verbs
+                  type: object
+                type: array
+                x-kubernetes-validations:
+                - message: Permissions cannot be changed after creation
+                  rule: self == oldSelf
+              role:
+                description: Role is an optional pre-defined Role/ClusterRole to bind
+                properties:
+                  apiGroup:
+                    description: APIGroup is the group for the resource being referenced
+                    type: string
+                  kind:
+                    description: Kind is the type of resource being referenced
+                    type: string
+                  name:
+                    description: Name is the name of resource being referenced
+                    type: string
+                required:
+                - apiGroup
+                - kind
+                - name
+                type: object
+                x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: Role cannot be changed after creation
+                  rule: self == oldSelf
+              subject:
+                description: Subject is the username or identity requesting access
+                type: string
+                x-kubernetes-validations:
+                - message: Subject cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - duration
+            - justification
+            - subject
+            type: object
+          status:
+            description: status defines the observed state of ClusterAccessRequest
+            properties:
+              approvalsReceived:
+                type: integer
+              approvalsRequired:
+                type: integer
+              grantCreated:
+                type: boolean
+              requestExpiresAt:
+                format: date-time
+                type: string
+              requestId:
+                type: string
+              state:
+                enum:
+                - Pending
+                - Approved
+                - Denied
+                - Expired
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    selectableFields:
+    - jsonPath: .status.state
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: clusteraccessresponses.access.antware.xyz
+spec:
+  group: access.antware.xyz
+  names:
+    kind: ClusterAccessResponse
+    listKind: ClusterAccessResponseList
+    plural: clusteraccessresponses
+    singular: clusteraccessresponse
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ClusterAccessResponse is the Schema for the clusteraccessresponses
+          API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of ClusterAccessResponse
+            properties:
+              approver:
+                type: string
+                x-kubernetes-validations:
+                - message: Approver cannot be changed after creation
+                  rule: self == oldSelf
+              requestRef:
+                type: string
+                x-kubernetes-validations:
+                - message: RequestRef cannot be changed after creation
+                  rule: self == oldSelf
+              response:
+                enum:
+                - Approved
+                - Denied
+                type: string
+                x-kubernetes-validations:
+                - message: Response cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - approver
+            - requestRef
+            - response
+            type: object
+          status:
+            description: status defines the observed state of ClusterAccessResponse
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-leader-election-role
+  namespace: jitaccess-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessgrant-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-editor-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-requester-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-approver-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-editor-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-editor-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-requester-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessrequests/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-admin-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses
+  verbs:
+  - '*'
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-approver-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-editor-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-viewer-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessresponses/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jitaccess-manager-role
+rules:
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants
+  - accesspolicies
+  - accessrequests
+  - accessresponses
+  - clusteraccesspolicies
+  - clusteraccessrequests
+  - clusteraccessresponses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/finalizers
+  - accesspolicies/finalizers
+  - accessrequests/finalizers
+  - accessresponses/finalizers
+  - clusteraccesspolicies/finalizers
+  - clusteraccessrequests/finalizers
+  - clusteraccessresponses/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/status
+  - accesspolicies/status
+  - accessrequests/status
+  - accessresponses/status
+  - clusteraccesspolicies/status
+  - clusteraccessrequests/status
+  - clusteraccessresponses/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - roles
+  verbs:
+  - bind
+  - create
+  - delete
+  - escalate
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jitaccess-metrics-auth-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jitaccess-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-leader-election-rolebinding
+  namespace: jitaccess-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jitaccess-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jitaccess-manager-role
+subjects:
+- kind: ServiceAccount
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jitaccess-metrics-auth-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jitaccess-metrics-auth-role
+subjects:
+- kind: ServiceAccount
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+    control-plane: controller-manager
+  name: jitaccess-controller-manager-metrics-service
+  namespace: jitaccess-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app.kubernetes.io/name: jitaccess
+    control-plane: controller-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-webhook-service
+  namespace: jitaccess-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 9443
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: jitaccess
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+    control-plane: controller-manager
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/name: jitaccess
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/name: jitaccess
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --metrics-bind-address=:8443
+        - --leader-elect
+        - --health-probe-bind-address=:8081
+        - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
+        command:
+        - /manager
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: itsthatdood/jitaccess-controller:latest
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports:
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: webhook-certs
+          readOnly: true
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: jitaccess-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: webhook-certs
+        secret:
+          secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-metrics-certs
+  namespace: jitaccess-system
+spec:
+  dnsNames:
+  - SERVICE_NAME.SERVICE_NAMESPACE.svc
+  - SERVICE_NAME.SERVICE_NAMESPACE.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: jitaccess-selfsigned-issuer
+  secretName: metrics-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-serving-cert
+  namespace: jitaccess-system
+spec:
+  dnsNames:
+  - jitaccess-webhook-service.jitaccess-system.svc
+  - jitaccess-webhook-service.jitaccess-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: jitaccess-selfsigned-issuer
+  secretName: webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-selfsigned-issuer
+  namespace: jitaccess-system
+spec:
+  selfSigned: {}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: jitaccess-system/jitaccess-serving-cert
+  name: jitaccess-mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /mutate-access-antware-xyz-v1alpha1-accessrequest
+  failurePolicy: Fail
+  name: maccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - accessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /mutate-access-antware-xyz-v1alpha1-accessresponse
+  failurePolicy: Fail
+  name: maccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - accessresponses
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
+  failurePolicy: Fail
+  name: mclusteraccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusteraccessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
+  failurePolicy: Fail
+  name: mclusteraccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusteraccessresponses
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: jitaccess-system/jitaccess-serving-cert
+  name: jitaccess-validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /validate-access-antware-xyz-v1alpha1-accessrequest
+  failurePolicy: Fail
+  name: vaccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - accessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /validate-access-antware-xyz-v1alpha1-accessresponse
+  failurePolicy: Fail
+  name: vaccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - accessresponses
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
+  failurePolicy: Fail
+  name: vclusteraccessrequest-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusteraccessrequests
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
+      path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
+  failurePolicy: Fail
+  name: vclusteraccessresponse-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - access.antware.xyz
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clusteraccessresponses
+  sideEffects: None
