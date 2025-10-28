@@ -5,8 +5,10 @@ home: https://https://github.com/ItsThatDude/kairos
 keywords:
   - just-in-time
   - jit
+  - access
+  - rbac
 type: application
-version: 0.2.2
-appVersion: "0.2.2"
+version: 0.1.0
+appVersion: "0.1.0"
 sources:
   - https://https://github.com/ItsThatDude/kairos
