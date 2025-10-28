@@ -7,15 +7,15 @@ on:
     paths:
       - docs/**
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./docs
-
 jobs:
   build:
     name: Build Docusaurus
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./docs
+        
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +38,10 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
+
+    defaults:
+      run:
+        working-directory: ./docs
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:

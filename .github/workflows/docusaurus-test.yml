@@ -7,15 +7,15 @@ on:
     paths:
       - docs/**
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./docs
-
 jobs:
   test-deploy:
     name: Test deployment
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./docs
+
     steps:
       - uses: actions/checkout@v4
         with:
