@@ -61,7 +61,7 @@ const config: Config = {
     navbar: {
       title: 'JIT Access Controller',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'JIT Access Controller',
         src: 'img/logo.svg',
       },
       items: [
