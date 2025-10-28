@@ -24,8 +24,8 @@ import (
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/common"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/internal/common"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

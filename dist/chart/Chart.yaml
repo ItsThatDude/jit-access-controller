@@ -1,7 +1,7 @@
 apiVersion: v2
-name: jitaccess
-description: Helm chart for the jitaccess controller
-home: https://https://github.com/ItsThatDude/jit-access-controller
+name: kairos
+description: Helm chart for the kairos controller
+home: https://https://github.com/ItsThatDude/kairos
 keywords:
   - just-in-time
   - jit
@@ -9,4 +9,4 @@ type: application
 version: 0.2.2
 appVersion: "0.2.2"
 sources:
-  - https://https://github.com/ItsThatDude/jit-access-controller
+  - https://https://github.com/ItsThatDude/kairos

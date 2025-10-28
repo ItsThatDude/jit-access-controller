@@ -5,10 +5,10 @@
   {{- else if .Values.nameOverride }}
     {{ .Values.nameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}
-    jitaccess
+    kairos
   {{- end }}
 {{- else }}
-  jitaccess
+  kairos
 {{- end }}
 {{- end }}
 

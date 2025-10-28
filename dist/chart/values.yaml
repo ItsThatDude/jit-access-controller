@@ -3,7 +3,7 @@ controllerManager:
   replicas: 1
   container:
     image:
-      repository: itsthatdood/jitaccess-controller
+      repository: itsthatdood/kairos-controller
       tag: latest
     args:
       - "--leader-elect"
@@ -39,7 +39,7 @@ controllerManager:
     seccompProfile:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
-  serviceAccountName: jitaccess-controller-manager
+  serviceAccountName: kairos-controller-manager
 
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:

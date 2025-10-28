@@ -1,7 +1,7 @@
 package common
 
 import (
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

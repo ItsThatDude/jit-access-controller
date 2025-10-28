@@ -1,4 +1,4 @@
 itsthatdude/helm-charts:
   - source: dist/chart/
-    dest: charts/jit-access-controller/
+    dest: charts/kairos/
     deleteOrphaned: true

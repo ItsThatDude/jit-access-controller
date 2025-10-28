@@ -40,7 +40,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

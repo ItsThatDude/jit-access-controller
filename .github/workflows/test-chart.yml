@@ -39,11 +39,11 @@ jobs:
       - name: Create kind cluster
         run: kind create cluster
 
-      - name: Prepare jitaccess
+      - name: Prepare kairos
         run: |
           go mod tidy
-          make docker-build IMG=jitaccess-controller:v0.1.0
-          kind load docker-image jitaccess-controller:v0.1.0
+          make docker-build IMG=kairos-controller:v0.1.0
+          kind load docker-image kairos-controller:v0.1.0
 
       - name: Install Helm
         run: |
@@ -87,17 +87,17 @@ jobs:
 
       - name: Install Helm chart for project
         run: |
-          helm install my-release ./dist/chart --create-namespace --namespace jitaccess-system
+          helm install my-release ./dist/chart --create-namespace --namespace kairos-system
 
       - name: Check Helm release status
         run: |
-          helm status my-release --namespace jitaccess-system
+          helm status my-release --namespace kairos-system
 
       - name: Wait for controller to be ready
         run: |
-          kubectl wait --namespace jitaccess-system --for=condition=available --timeout=300s deployment/jitaccess-controller-manager
+          kubectl wait --namespace kairos-system --for=condition=available --timeout=300s deployment/kairos-controller-manager
 
 # TODO: Uncomment if prometheus.enabled is set to true to confirm that the ServiceMonitor gets created
 #      - name: Check Presence of ServiceMonitor
 #        run: |
-#          kubectl wait --namespace jitaccess-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jitaccess-controller-manager-metrics-monitor
+#          kubectl wait --namespace kairos-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/kairos-controller-manager-metrics-monitor

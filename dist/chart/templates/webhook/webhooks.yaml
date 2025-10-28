@@ -2,7 +2,7 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: jitaccess-mutating-webhook-configuration
+  name: kairos-mutating-webhook-configuration
   namespace: {{ .Release.Namespace }}
   annotations:
     {{- if .Values.certmanager.enable }}
@@ -14,7 +14,7 @@ webhooks:
   - name: maccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /mutate-access-antware-xyz-v1alpha1-accessrequest
     failurePolicy: Fail
@@ -34,7 +34,7 @@ webhooks:
   - name: maccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /mutate-access-antware-xyz-v1alpha1-accessresponse
     failurePolicy: Fail
@@ -54,7 +54,7 @@ webhooks:
   - name: mclusteraccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
     failurePolicy: Fail
@@ -74,7 +74,7 @@ webhooks:
   - name: mclusteraccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
     failurePolicy: Fail
@@ -95,7 +95,7 @@ webhooks:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: jitaccess-validating-webhook-configuration
+  name: kairos-validating-webhook-configuration
   namespace: {{ .Release.Namespace }}
   annotations:
     {{- if .Values.certmanager.enable }}
@@ -107,7 +107,7 @@ webhooks:
   - name: vaccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /validate-access-antware-xyz-v1alpha1-accessrequest
     failurePolicy: Fail
@@ -127,7 +127,7 @@ webhooks:
   - name: vaccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /validate-access-antware-xyz-v1alpha1-accessresponse
     failurePolicy: Fail
@@ -147,7 +147,7 @@ webhooks:
   - name: vclusteraccessrequest-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
     failurePolicy: Fail
@@ -167,7 +167,7 @@ webhooks:
   - name: vclusteraccessresponse-v1alpha1.kb.io
     clientConfig:
       service:
-        name: jitaccess-webhook-service
+        name: kairos-webhook-service
         namespace: {{ .Release.Namespace }}
         path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
     failurePolicy: Fail

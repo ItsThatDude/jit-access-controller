@@ -1,184 +1,31 @@
-# Just-in-time Access Controller
+# Kairos Just-in-time Access Controller
 
-[![Lint](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml)
+[![Lint](https://github.com/ItsThatDude/kairos/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/kairos/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/kairos/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/test-chart.yml)
 
-The **JIT Access Controller** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+**Kairos** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 ## Description
 
-This controller provides a mechanism for granting temporary, on-demand access to resources in Kubernetes clusters.
-
-Users submit either a:
-
-- **`AccessRequest`** – for namespace-scoped access  
-- **`ClusterAccessRequest`** – for cluster-wide access  
-
-In each request, the user specifies the **roles** or **permissions** they require.  
-
-An approver then submits either a:  
-
-- **`AccessResponse`** – for namespace-scoped access  
-- **`ClusterAccessResponse`** – for cluster-wide access
-
-The controller evaluates the requests/responses against configured policies:
-
-- **`AccessPolicy`** – defines rules for namespace-scoped access requests  
-- **`ClusterAccessPolicy`** – defines rules for cluster-scoped access requests
-
-If the responses fulful the required number of approvals, the controller creates a **`AccessGrant`** object.  
-The **`AccessGrant`** is then reconciled and creates the requested Kubernetes RBAC objects:
-
-- A **ClusterRole** or **Role** for adhoc permission requests
-- A **ClusterRoleBinding** or **RoleBinding** for both role and adhoc permission requests
-
-Each request must also define a **Duration** which must be within the maximum configured in the policy.  
-Once the duration expires, the controller automatically revokes access by removing any created roles and bindings.
-
-### Examples
-#### ns-policy.yaml
-```yaml
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessPolicy
-metadata:
-  namespace: example
-  name: accesspolicy-sample
-spec:
-  subjects:
-    - user1
-  # allow the user to request the binding of roles
-  allowedRoles:
-    - view
-  # allow the user to request specific permissions
-  allowedPermissions:
-    - apiGroups: [""]
-      resources: ["pods"]
-      verbs: ["get", "list", "watch"]
-  maxDuration: "60m"
-  requiredApprovals: 1
-  approvers:
-    - admin
-```
-#### ns-request.yaml
-In the example below, we specify the subject - if this is omitted, the user submitting the request will be used.
-```yaml
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessRequest
-metadata:
-  namespace: example
-  name: accessrequest-sample
-spec:
-  subject: user1
-  duration: "5m"
-  justification: "This is a sample request"
-  # We can specify a pre-defined role:
-  role: view
-  roleKind: Role # This can be either Role or ClusterRole
-  # Or we can specify a list of permissions we want to request:
-  permissions: 
-    - apiGroups: [""]
-      resources: ["pods"]
-      verbs: ["get", "list", "watch"]
-```
-#### ns-response.yaml
-For responses, the user submitting the request will be used as the approver.
-```yaml
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessResponse
-metadata:
-  namespace: example
-  name: accessresponse-sample
-spec:
-  requestRef: accessrequest-sample
-  response: Approved
-```
+The Kairos controller provides a mechanism for requesting and granting temporary, on-demand access to resources in Kubernetes clusters.
 
 ## Getting Started
 
+To get started with Kairos, add the helm repository and install the chart.
+
 Install helm repository:
+
 ```sh
 helm repo add itsthatdude https://itsthatdude.github.io/helm-charts/`
 ```
 
 Install the chart
-```sh
-kubectl create namespace jitaccess-system
-helm install jitaccess itsthatdude/jitaccess -n jitaccess-system
-```
-
-Create a policy
-```sh
-kubectl apply -f - <<EOF
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessPolicy
-metadata:
-  namespace: example-ns
-  name: accesspolicy-sample
-spec:
-  subjects:
-    - user1
-  # allow the user to request the binding of roles
-  allowedRoles:
-    - view
-  # allow the user to request specific permissions
-  allowedPermissions:
-    - apiGroups: [""]
-      resources: ["pods"]
-      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  maxDuration: "60m"
-  requiredApprovals: 1
-  approvers:
-    - admin
-EOF
-```
-
-Request access  
-
-Using kubectl:
-```sh
-kubectl apply -f - <<EOF
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessRequest
-metadata:
-  namespace: example-ns
-  name: accessrequest-sample
-spec:
-  subject: user1
-  duration: "5m"
-  justification: "This is a sample request"
-  permissions: 
-    - apiGroups: [""]
-      resources: ["pods"]
-      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-EOF
-```
-
-Using kubectl-access plugin:
 
 ```sh
-kubectl-access request -n example-ns --subject "user1" --permissions "get,list,watch,create,update,patch,delete:pods"
+kubectl create namespace kairos-system
+helm install kairos itsthatdude/kairos -n kairos-system
 ```
 
-Approve/Reject access
-Using kubectl:
-
-```sh
-kubectl apply -f - <<EOF
-apiVersion: access.antware.xyz/v1alpha1
-kind: AccessResponse
-metadata:
-  namespace: example-ns
-  name: accessresponse-sample
-spec:
-  requestRef: accessrequest-sample
-  response: (Approved|Denied)
-EOF
-```
-
-Using kubectl-access plugin:
-
-```sh
-kubectl-access (approve|reject) -n example-ns accessrequest-sample
-```
+See the Getting Started guide for more information
 
 ## Development
 
@@ -194,7 +41,7 @@ kubectl-access (approve|reject) -n example-ns accessrequest-sample
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/jitaccess:tag
+make docker-build docker-push IMG=<some-registry>/kairos:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
@@ -210,7 +57,7 @@ make install
 **Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-make deploy IMG=<some-registry>/jitaccess:tag
+make deploy IMG=<some-registry>/kairos:tag
 ```
 
 > **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
@@ -254,7 +101,7 @@ Following the options to release and provide this solution to the users.
 #### Build the installer for the image built and published in the registry
 
   ```sh
-  make build-installer IMG=<some-registry>/jitaccess:tag
+  make build-installer IMG=<some-registry>/kairos:tag
   ```
 
   > **NOTE:** The makefile target mentioned above generates an 'install.yaml'
@@ -269,7 +116,7 @@ Following the options to release and provide this solution to the users.
   the project, i.e.:
 
   ```sh
-  kubectl apply -f https://raw.githubusercontent.com/<org>/jitaccess/<tag or branch>/dist/install.yaml
+  kubectl apply -f https://raw.githubusercontent.com/<org>/kairos/<tag or branch>/dist/install.yaml
   ```
 
 ### By providing a Helm Chart

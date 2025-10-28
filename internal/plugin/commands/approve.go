@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 
-	"antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/plugin/common"
+	"antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/internal/plugin/common"
 	"github.com/spf13/cobra"
 )
 

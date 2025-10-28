@@ -33,8 +33,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	common "antware.xyz/jitaccess/internal/common"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	common "antware.xyz/kairos/internal/common"
 )
 
 // GrantReconciler reconciles a AccessGrant object

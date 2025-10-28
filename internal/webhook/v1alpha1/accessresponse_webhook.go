@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"slices"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/policy"
-	"antware.xyz/jitaccess/internal/utils"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/internal/policy"
+	"antware.xyz/kairos/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"

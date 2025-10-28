@@ -4,8 +4,8 @@ import (
 	"slices"
 	"time"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	common "antware.xyz/jitaccess/internal/common"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	common "antware.xyz/kairos/internal/common"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )

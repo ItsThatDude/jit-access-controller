@@ -1,7 +1,7 @@
 package common
 
 import (
-	"antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/kairos/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"

@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	// TODO (user): Add any additional imports if needed
 )
 

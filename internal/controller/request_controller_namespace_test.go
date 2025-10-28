@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"antware.xyz/jitaccess/api/v1alpha1"
-	common "antware.xyz/jitaccess/internal/common"
+	"antware.xyz/kairos/api/v1alpha1"
+	common "antware.xyz/kairos/internal/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("JITAccessReconciler with envtest", func() {
+var _ = Describe("KairosReconciler with envtest", func() {
 	var (
 		ctx        context.Context
 		reconciler *RequestReconciler

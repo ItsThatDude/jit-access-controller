@@ -1,4 +1,4 @@
-module antware.xyz/jitaccess
+module antware.xyz/kairos
 
 go 1.24.0
 

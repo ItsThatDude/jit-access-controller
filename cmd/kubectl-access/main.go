@@ -1,7 +1,7 @@
 package main
 
 import (
-	"antware.xyz/jitaccess/internal/plugin"
+	"antware.xyz/kairos/internal/plugin"
 )
 
 var Version string

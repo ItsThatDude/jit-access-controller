@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"antware.xyz/jitaccess/api/v1alpha1"
+	"antware.xyz/kairos/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )

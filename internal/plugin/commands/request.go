@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/common"
-	plugin "antware.xyz/jitaccess/internal/plugin/common"
+	"antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/internal/common"
+	plugin "antware.xyz/kairos/internal/plugin/common"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

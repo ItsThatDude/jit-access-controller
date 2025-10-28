@@ -8,8 +8,8 @@ layout:
 - go.kubebuilder.io/v4
 plugins:
   helm.kubebuilder.io/v1-alpha: {}
-projectName: jitaccess
-repo: antware.xyz/jitaccess
+projectName: kairos
+repo: antware.xyz/kairos
 resources:
 - api:
     crdVersion: v1
@@ -18,7 +18,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessRequest
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
@@ -30,14 +30,14 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessPolicy
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
   domain: antware.xyz
   group: access
   kind: ClusterAccessPolicy
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -45,7 +45,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: ClusterAccessRequest
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
@@ -57,7 +57,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessResponse
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
@@ -68,7 +68,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: ClusterAccessResponse
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
@@ -80,6 +80,6 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessGrant
-  path: antware.xyz/jitaccess/api/v1alpha1
+  path: antware.xyz/kairos/api/v1alpha1
   version: v1alpha1
 version: "3"

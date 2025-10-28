@@ -25,9 +25,9 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
   dnsNames:
-    - jitaccess.{{ .Release.Namespace }}.svc
-    - jitaccess.{{ .Release.Namespace }}.svc.cluster.local
-    - jitaccess-webhook-service.{{ .Release.Namespace }}.svc
+    - kairos.{{ .Release.Namespace }}.svc
+    - kairos.{{ .Release.Namespace }}.svc.cluster.local
+    - kairos-webhook-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
@@ -49,9 +49,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   dnsNames:
-    - jitaccess.{{ .Release.Namespace }}.svc
-    - jitaccess.{{ .Release.Namespace }}.svc.cluster.local
-    - jitaccess-metrics-service.{{ .Release.Namespace }}.svc
+    - kairos.{{ .Release.Namespace }}.svc
+    - kairos.{{ .Release.Namespace }}.svc.cluster.local
+    - kairos-metrics-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer

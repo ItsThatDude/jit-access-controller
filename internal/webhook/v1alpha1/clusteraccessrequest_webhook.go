@@ -27,8 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	accessv1alpha1 "antware.xyz/jitaccess/api/v1alpha1"
-	"antware.xyz/jitaccess/internal/policy"
+	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/internal/policy"
 )
 
 // nolint:unused

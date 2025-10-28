@@ -3,7 +3,7 @@ package plugin
 import (
 	"os"
 
-	"antware.xyz/jitaccess/internal/plugin/commands"
+	"antware.xyz/kairos/internal/plugin/commands"
 	"github.com/spf13/cobra"
 )
 
