@@ -40,7 +40,9 @@ const config: Config = {
     [
       'classic',
       {
+        blog: false,
         docs: {
+          routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl:
             'https://github.com/itsthatdude/jit-access-controller/tree/main/docs/',
