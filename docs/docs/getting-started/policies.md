@@ -6,7 +6,7 @@ sidebar_position: 3
 
 ## Create a policy
 
-The JIT Access Controller utilizes policies to enforce who can restrict access to resources.
+Kairos utilizes policies to enforce who can restrict access to resources.
 
 The following policy allows `user1` to request either the `view` role, or adhoc permissions to get and modify pods in the `example-ns` namespace.
 

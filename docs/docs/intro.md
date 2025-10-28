@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## Overview
 
-The **JIT Access Controller** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+**Kairos** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 Users submit either a:
 

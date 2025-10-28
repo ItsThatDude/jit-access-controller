@@ -61,9 +61,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'JIT Access Controller',
+      title: 'Kairos',
       logo: {
-        alt: 'JIT Access Controller',
+        alt: 'Kairos',
         src: 'img/logo.svg',
       },
       items: [
