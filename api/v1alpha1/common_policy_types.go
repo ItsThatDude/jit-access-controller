@@ -20,7 +20,8 @@ type SubjectPolicy struct {
 	MaxDuration string `json:"maxDuration"`
 
 	// The minimum number of approvals required to grant the request
-	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:default:=1
 	RequiredApprovals int `json:"requiredApprovals"`
 
 	// Approvers

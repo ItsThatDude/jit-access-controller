@@ -129,9 +129,10 @@ spec:
                 pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
                 type: string
               requiredApprovals:
+                default: 1
                 description: The minimum number of approvals required to grant the
                   request
-                minimum: 1
+                minimum: 0
                 type: integer
               subjects:
                 description: Subject is the identity (email or K8s username) of the
