@@ -1,5 +1,6 @@
 ---
 sidebar_position: 5
+description: How to approve access requests
 ---
 
 # Approving Access

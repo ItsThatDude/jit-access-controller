@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Installing Kairos via Helm
 ---
 
 # Install via Helm
