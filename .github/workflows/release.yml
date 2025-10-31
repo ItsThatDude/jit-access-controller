@@ -31,8 +31,14 @@ jobs:
         run: |
           make build-plugin
 
+      - name: Create archive
+        run: |
+          tar -czvf bin/kubectl-access-linux-amd64.tar.gz bin/kubectl-access-linux-amd64
+          tar -czvf bin/kubectl-access-windows-amd64.tar.gz bin/kubectl-access-windows-amd64.exe
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            bin/kubectl-access
+            bin/kubectl-access-linux-amd64.tar.gz
+            bin/kubectl-access-windows-amd64.tar.gz

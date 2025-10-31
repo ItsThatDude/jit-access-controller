@@ -124,8 +124,15 @@ lint-config: golangci-lint ## Verify golangci-lint linter configuration
 ##@ Build
 
 .PHONY: build-plugin
-build-plugin:
-	go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access cmd/kubectl-access/main.go
+build-plugin: build-plugin-linux build-plugin-win
+
+.PHONY: build-plugin-linux
+build-plugin-linux:
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access-linux-amd64 cmd/kubectl-access/main.go
+
+.PHONY: build-plugin-win
+build-plugin-win:
+	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access-windows-amd64.exe cmd/kubectl-access/main.go
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
