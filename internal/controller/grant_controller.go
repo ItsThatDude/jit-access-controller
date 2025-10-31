@@ -18,13 +18,13 @@ package controller
 
 import (
 	"context"
-	goerr "errors"
+	"errors"
 	"fmt"
 	"time"
 
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -49,20 +49,11 @@ type GrantReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the AccessGrant object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.21.0/pkg/reconcile
 func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var grant accessv1alpha1.AccessGrant
 	err := r.Get(ctx, req.NamespacedName, &grant)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -154,13 +145,13 @@ func (r *GrantReconciler) handleApproved(
 	log := logf.FromContext(ctx)
 
 	// Handle pre-defined role or adhoc permissions
-	isClusterScoped := obj.Status.Namespace == ""
+	isClusterScoped := obj.Status.Scope == accessv1alpha1.GrantScopeCluster
 
 	// Pre-defined Role/ClusterRole
 	if status.Role.Name != "" && !status.RoleBindingCreated {
 		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
-		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
+		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
 			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
 			return ctrl.Result{}, err
 		}
@@ -173,7 +164,7 @@ func (r *GrantReconciler) handleApproved(
 		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
 
 		if !status.AdhocRoleCreated {
-			if err := r.createRole(ctx, obj, adhocName, status.Permissions, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
+			if err := r.createRole(ctx, obj, adhocName, status.Permissions, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
 				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 				return ctrl.Result{}, err
 			}
@@ -188,7 +179,7 @@ func (r *GrantReconciler) handleApproved(
 				roleKind = common.RoleKindCluster
 			}
 
-			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName, isClusterScoped); err != nil && !errors.IsAlreadyExists(err) {
+			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
 				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
 				return ctrl.Result{}, err
 			}
@@ -200,7 +191,7 @@ func (r *GrantReconciler) handleApproved(
 	duration, err := time.ParseDuration(status.Duration)
 	if err != nil {
 		log.Error(err, "failed to parse duration string", "namespace", obj.GetNamespace(), "name", obj.GetName(), "duration", duration)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, fmt.Errorf("failed to parse duration string: %w", err)
 	}
 
 	// Set expire time if not set
@@ -213,7 +204,7 @@ func (r *GrantReconciler) handleApproved(
 			obj.Status.Subject, obj.Status.Request)
 	}
 
-	return ctrl.Result{RequeueAfter: duration + 1*time.Second}, nil
+	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
 }
 
 func (r *GrantReconciler) handleExpired(
@@ -224,7 +215,7 @@ func (r *GrantReconciler) handleExpired(
 
 	if err := r.cleanupResources(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10}, err
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 	}
 
 	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
@@ -246,7 +237,7 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 			} else {
 				log.Info("Deleted "+description, "name", key.Name)
 			}
-		} else if !errors.IsNotFound(err) {
+		} else if !k8serrors.IsNotFound(err) {
 			errs = append(errs, fmt.Errorf("failed to get %s %s: %w", description, key.Name, err))
 		}
 	}
@@ -314,7 +305,7 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alp
 	deleteResource(reqKey, reqObj, reqType)
 
 	if len(errs) > 0 {
-		return goerr.Join(errs...)
+		return errors.Join(errs...)
 	}
 
 	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
@@ -342,6 +333,10 @@ func (r *GrantReconciler) createRole(
 		role = &rbacv1.Role{
 			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.Status.Namespace, Labels: labels},
 			Rules:      rules,
+		}
+
+		if err := controllerutil.SetControllerReference(obj, role.(metav1.Object), r.Scheme); err != nil {
+			return fmt.Errorf("failed to set owner reference on Role %s: %w", name, err)
 		}
 	}
 	return r.Create(ctx, role)
@@ -372,6 +367,11 @@ func (r *GrantReconciler) createRoleBinding(
 			Subjects:   []rbacv1.Subject{subject},
 			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleRef.Kind, Name: roleRef.Name},
 		}
+
+		if err := controllerutil.SetControllerReference(obj, rb, r.Scheme); err != nil {
+			return fmt.Errorf("failed to set owner reference on RoleBinding %s: %w", bindingName, err)
+		}
+
 		return r.Create(ctx, rb)
 	}
 }
@@ -383,6 +383,9 @@ func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	if err := indexer.IndexField(ctx, &accessv1alpha1.AccessGrant{}, "status.requestId",
 		func(obj client.Object) []string {
 			if myObj, ok := obj.(*accessv1alpha1.AccessGrant); ok {
+				if myObj.Status.RequestId == "" {
+					return nil
+				}
 				return []string{myObj.Status.RequestId}
 			}
 			return nil

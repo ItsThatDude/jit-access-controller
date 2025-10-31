@@ -11,5 +11,6 @@ func main() {
 		Version = "development"
 	}
 
+	plugin.Init()
 	plugin.Execute()
 }

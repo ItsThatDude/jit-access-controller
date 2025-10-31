@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-	goerr "errors"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 	"antware.xyz/kairos/internal/policy"
 	"antware.xyz/kairos/internal/utils"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -172,7 +172,7 @@ func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		var clusterObj v1alpha1.ClusterAccessRequest
 		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if k8serrors.IsNotFound(err) {
 				return ctrl.Result{}, nil
 			}
 			return ctrl.Result{}, err
@@ -183,7 +183,7 @@ func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	var nsObj v1alpha1.AccessRequest
 	err := r.Get(ctx, req.NamespacedName, &nsObj)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -308,7 +308,7 @@ func (r *RequestReconciler) handleApproved(
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
 
-	if err := r.createGrant(ctx, obj, approvers); err != nil && !errors.IsAlreadyExists(err) {
+	if err := r.createGrant(ctx, obj, approvers); err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, common.RoleKindRole, spec.Role)
 		return ctrl.Result{}, err
 	}
@@ -448,7 +448,7 @@ func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.Acc
 	}
 
 	if len(errs) > 0 {
-		return goerr.Join(errs...)
+		return errors.Join(errs...)
 	}
 
 	return nil

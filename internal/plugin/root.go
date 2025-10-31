@@ -13,12 +13,14 @@ var rootCmd = &cobra.Command{
 	SilenceUsage: true,
 }
 
-func Execute() {
+func Init() {
 	rootCmd.AddCommand(commands.NewRequestCmd())
 	rootCmd.AddCommand(commands.NewApproveCmd())
 	rootCmd.AddCommand(commands.NewRejectCmd())
 	rootCmd.AddCommand(commands.NewListCmd())
+}
 
+func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
