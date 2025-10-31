@@ -40,6 +40,10 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
+	if obj.Spec.Approver != req.UserInfo.Username {
+		return admission.Denied("The approver must be the same as the user creating the approval.")
+	}
+
 	request := &accessv1alpha1.ClusterAccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Name: obj.Spec.RequestRef}, request); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterAccessRequest: %s", err))

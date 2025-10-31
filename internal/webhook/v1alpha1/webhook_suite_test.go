@@ -110,12 +110,6 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupAccessRequestWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = SetupClusterAccessRequestWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
 	// +kubebuilder:scaffold:webhook
 
 	go func() {

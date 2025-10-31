@@ -8,5 +8,4 @@ var (
 	permissions   []string
 	duration      string
 	justification string
-	subject       string
 )

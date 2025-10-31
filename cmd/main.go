@@ -248,21 +248,13 @@ func main() {
 
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AccessRequest")
-			os.Exit(1)
-		}
-
-		if err := webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterAccessRequest")
-			os.Exit(1)
-		}
-
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr)
 		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr)
 		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr)
 	}

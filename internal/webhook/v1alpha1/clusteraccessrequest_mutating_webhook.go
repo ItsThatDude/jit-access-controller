@@ -32,10 +32,7 @@ func (m *ClusterAccessRequestMutator) Handle(ctx context.Context, req admission.
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	// Set the subject field if not already set
-	if obj.Spec.Subject == "" {
-		obj.Spec.Subject = req.UserInfo.Username
-	}
+	obj.Spec.Subject = req.UserInfo.Username
 
 	marshaled, err := json.Marshal(obj)
 	if err != nil {

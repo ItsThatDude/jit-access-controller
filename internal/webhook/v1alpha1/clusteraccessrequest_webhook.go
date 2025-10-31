@@ -18,95 +18,57 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
+	"net/http"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	"antware.xyz/kairos/internal/policy"
 )
 
-// nolint:unused
-// log is for logging in this package.
-var clusteraccessrequestlog = logf.Log.WithName("clusteraccessrequest-resource")
-
-// SetupClusterAccessRequestWebhookWithManager registers the webhook for ClusterAccessRequest in the manager.
-func SetupClusterAccessRequestWebhookWithManager(mgr ctrl.Manager) error {
-	validator := &ClusterAccessRequestCustomValidator{
-		client: mgr.GetClient(),
-	}
-	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.ClusterAccessRequest{}).
-		WithValidator(validator).
-		Complete()
-}
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
-// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessrequest,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessrequests,verbs=create;update,versions=v1alpha1,name=vclusteraccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// ClusterAccessRequestCustomValidator struct is responsible for validating the ClusterAccessRequest resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type ClusterAccessRequestCustomValidator struct {
-	client client.Client
+type ClusterAccessRequestValidator struct {
+	decoder admission.Decoder
+	client  client.Client
 }
 
-var _ webhook.CustomValidator = &ClusterAccessRequestCustomValidator{}
+func SetupClusterAccessRequestWebhookWithManager(mgr ctrl.Manager) {
+	mgr.GetWebhookServer().Register(
+		"/validate-access-antware-xyz-v1alpha1-clusteraccessrequest",
+		&admission.Webhook{Handler: &ClusterAccessRequestValidator{
+			decoder: admission.NewDecoder(mgr.GetScheme()),
+			client:  mgr.GetClient(),
+		}},
+	)
+}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessRequest.
-func (v *ClusterAccessRequestCustomValidator) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clusteraccessrequest, ok := obj.(*accessv1alpha1.ClusterAccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterAccessRequest object but got %T", obj)
+func (v *ClusterAccessRequestValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	obj := &accessv1alpha1.ClusterAccessRequest{}
+
+	if err := v.decoder.Decode(req, obj); err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if clusteraccessrequest.Spec.Role.Name == "" && len(clusteraccessrequest.Spec.Permissions) == 0 {
-		return nil, fmt.Errorf("either ClusterRole or Permissions needs to be set")
+	if obj.Spec.Subject != req.UserInfo.Username {
+		return admission.Denied("The subject must be the same as the user creating the request.")
+	}
+
+	if obj.Spec.Role.Name == "" && len(obj.Spec.Permissions) == 0 {
+		return admission.Denied("either ClusterRole or Permissions needs to be set")
 	}
 
 	var policies accessv1alpha1.ClusterAccessPolicyList
 	if err := v.client.List(ctx, &policies); err != nil {
-		return nil, err
+		admission.Errored(http.StatusBadRequest, err)
 	}
 
-	permitted, _ := policy.IsRequestValid(clusteraccessrequest, policies.Items)
+	permitted, _ := policy.IsRequestValid(obj, policies.Items)
 	if !permitted {
-		return nil, fmt.Errorf("cluster access request did not match a policy")
+		return admission.Denied("cluster access request did not match a policy")
 	}
 
-	return nil, nil
-}
-
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessRequest.
-func (v *ClusterAccessRequestCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	/*
-		clusteraccessrequest, ok := newObj.(*accessv1alpha1.ClusterAccessRequest)
-		if !ok {
-			return nil, fmt.Errorf("expected a ClusterAccessRequest object for the newObj but got %T", newObj)
-		}
-		clusteraccessrequestlog.Info("Validation for ClusterAccessRequest upon update", "name", clusteraccessrequest.GetName())
-	*/
-
-	return nil, nil
-}
-
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessRequest.
-func (v *ClusterAccessRequestCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	/*
-		clusteraccessrequest, ok := obj.(*accessv1alpha1.ClusterAccessRequest)
-		if !ok {
-			return nil, fmt.Errorf("expected a ClusterAccessRequest object but got %T", obj)
-		}
-		clusteraccessrequestlog.Info("Validation for ClusterAccessRequest upon deletion", "name", clusteraccessrequest.GetName())
-	*/
-
-	return nil, nil
+	return admission.Allowed("valid")
 }

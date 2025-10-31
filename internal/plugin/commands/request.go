@@ -41,10 +41,6 @@ func NewRequestCmd() *cobra.Command {
 					},
 				}
 
-				if subject != "" {
-					req.Spec.Subject = subject
-				}
-
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
@@ -65,10 +61,6 @@ func NewRequestCmd() *cobra.Command {
 					},
 				}
 
-				if subject != "" {
-					req.Spec.Subject = subject
-				}
-
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
@@ -85,7 +77,6 @@ func NewRequestCmd() *cobra.Command {
 	cmd.Flags().StringSliceVar(&permissions, "permissions", []string{}, "List of permissions (verbs:resources)")
 	cmd.Flags().StringVar(&duration, "duration", "1h", "Duration in seconds for the access")
 	cmd.Flags().StringVar(&justification, "justification", "", "Justification for the request")
-	cmd.Flags().StringVar(&subject, "subject", "", "Requesting subject (e.g. username)")
 
 	return cmd
 }
