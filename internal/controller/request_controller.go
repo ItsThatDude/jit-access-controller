@@ -8,6 +8,7 @@ import (
 
 	"antware.xyz/kairos/api/v1alpha1"
 	common "antware.xyz/kairos/internal/common"
+	"antware.xyz/kairos/internal/metrics"
 	"antware.xyz/kairos/internal/policy"
 	"antware.xyz/kairos/internal/utils"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -30,9 +31,11 @@ import (
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/finalizers,verbs=update
+
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/finalizers,verbs=update
+
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/finalizers,verbs=update
@@ -40,22 +43,24 @@ import (
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/finalizers,verbs=update
+
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/finalizers,verbs=update
+
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
+
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
 
 type RequestReconciler struct {
 	client.Client
-	Scheme          *runtime.Scheme
-	SystemNamespace string
+	Scheme *runtime.Scheme
 }
 
 func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
@@ -65,6 +70,9 @@ func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessRequest{}, "status.requestId",
 		func(obj client.Object) []string {
 			if myObj, ok := obj.(*v1alpha1.ClusterAccessRequest); ok {
+				if myObj.Status.RequestId == "" {
+					return nil
+				}
 				return []string{myObj.Status.RequestId}
 			}
 			return nil
@@ -75,6 +83,9 @@ func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
 	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
 			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
+				if myObj.Spec.RequestRef == "" {
+					return nil
+				}
 				return []string{myObj.Spec.RequestRef}
 			}
 			return nil
@@ -119,6 +130,9 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	if err := indexer.IndexField(ctx, &v1alpha1.AccessRequest{}, "status.requestId",
 		func(obj client.Object) []string {
 			if myObj, ok := obj.(*v1alpha1.AccessRequest); ok {
+				if myObj.Status.RequestId == "" {
+					return nil
+				}
 				return []string{myObj.Status.RequestId}
 			}
 			return nil
@@ -129,6 +143,9 @@ func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 	if err := indexer.IndexField(ctx, &v1alpha1.AccessResponse{}, "spec.requestRef",
 		func(obj client.Object) []string {
 			if myObj, ok := obj.(*v1alpha1.AccessResponse); ok {
+				if myObj.Spec.RequestRef == "" {
+					return nil
+				}
 				return []string{myObj.Spec.RequestRef}
 			}
 			return nil
@@ -215,6 +232,8 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.Acc
 	if status.RequestId == "" {
 		status.RequestId = utils.GenerateRandomId()
 		status.State = v1alpha1.RequestStatePending
+
+		metrics.RequestsCreated.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject()).Inc()
 	}
 
 	// Set request expire time if not set
@@ -224,26 +243,34 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.Acc
 	}
 
 	// Add finalizer
-	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-		if err := r.ensureFinalizer(ctx, obj, common.JITFinalizer); err != nil {
-			log.Error(err, "an error occurred updating the finalizer for the request", "name", obj.GetName())
-			return ctrl.Result{}, err
+	if obj.GetDeletionTimestamp().IsZero() {
+		if !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+			patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
+			controllerutil.AddFinalizer(obj, common.JITFinalizer)
+			log.Info("Adding finalizer to request", "name", obj.GetName())
+			if err := r.Patch(ctx, obj, patch); err != nil {
+				return ctrl.Result{}, err
+			}
+			log.Info("Added finalizer to request", "name", obj.GetName())
 		}
-		log.Info("Added finalizer to request", "name", obj.GetName())
 	}
 
 	// Handle deletion
 	if !obj.GetDeletionTimestamp().IsZero() {
 		if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+			log.Info("Cleaning up resources for request", "name", obj.GetName())
 			if err := r.cleanupResources(ctx, obj); err != nil {
 				log.Error(err, "an error occurred running cleanup for the request", "name", obj.GetName())
 				return ctrl.Result{}, err
 			}
+			log.Info("Successfully cleaned up resources for request", "name", obj.GetName())
+
+			log.Info("Removing finalizer for request", "name", obj.GetName())
 			if err := r.removeFinalizer(ctx, obj, common.JITFinalizer); err != nil {
 				log.Error(err, "an error occurred removing the request finalizer", "name", obj.GetName())
 				return ctrl.Result{}, err
 			}
-			log.Info("Cleaned up and removed finalizer", "name", obj.GetName())
+			log.Info("Removed finalizer for request", "name", obj.GetName())
 		}
 		return ctrl.Result{}, nil
 	}
@@ -308,6 +335,17 @@ func (r *RequestReconciler) handleApproved(
 	log := logf.FromContext(ctx)
 	spec := obj.GetSpec()
 
+	durationStr := spec.Duration
+	if durationStr == "" {
+		durationStr = "10m"
+	}
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		log.Error(err, "failed to parse duration string", "duration", durationStr)
+		return ctrl.Result{}, err
+	}
+
 	if err := r.createGrant(ctx, obj, approvers); err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, common.RoleKindRole, spec.Role)
 		return ctrl.Result{}, err
@@ -315,13 +353,34 @@ func (r *RequestReconciler) handleApproved(
 
 	status.GrantCreated = true
 
-	duration, err := time.ParseDuration(spec.Duration)
-	if err != nil {
-		log.Error(err, "failed to parse duration string", "duration", duration)
-		return ctrl.Result{}, err
+	metrics.RequestsApproved.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject()).Inc()
+
+	if spec.Role.Name != "" {
+		metrics.RolesGranted.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject(), spec.Role.Kind, spec.Role.Name).Inc()
 	}
 
-	return ctrl.Result{RequeueAfter: duration + 1*time.Second}, nil
+	// this may need to be revisited
+	if len(spec.Permissions) > 0 {
+		for _, perm := range spec.Permissions {
+			for _, apiGroup := range perm.APIGroups {
+				for _, resource := range perm.Resources {
+					for _, verb := range perm.Verbs {
+						metrics.PermissionsGranted.WithLabelValues(
+							string(obj.GetScope()),
+							obj.GetNamespace(),
+							obj.GetSubject(),
+							apiGroup,
+							resource,
+							verb,
+						).Inc()
+					}
+				}
+			}
+		}
+	}
+
+	// Requeue just after access expiry to handle cleanup
+	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
 }
 
 func (r *RequestReconciler) handlePending(
@@ -337,7 +396,7 @@ func (r *RequestReconciler) handlePending(
 	denied := set.New[string]()
 
 	// Fetch responses
-	if obj.GetNamespace() == "" {
+	if obj.GetScope() == v1alpha1.RequestScopeCluster {
 		// Cluster-scoped responses
 		responses := &v1alpha1.ClusterAccessResponseList{}
 		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
@@ -402,7 +461,7 @@ func (r *RequestReconciler) handleExpired(
 
 	if err := r.cleanupResources(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10}, err
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 	}
 
 	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
@@ -413,13 +472,14 @@ func (r *RequestReconciler) handleExpired(
 
 func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.AccessRequestObject) error {
 	log := logf.FromContext(ctx)
+	scope := obj.GetScope()
 	ns := obj.GetNamespace()
 
 	var errs []error
 
 	// Delete all responses
 	var responses []client.Object
-	if ns == "" {
+	if scope == v1alpha1.RequestScopeCluster {
 		responseList := &v1alpha1.ClusterAccessResponseList{}
 		if err := r.List(ctx, responseList, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
 			errs = append(errs, fmt.Errorf("failed to list ClusterAccessResponses: %w", err))
@@ -454,22 +514,13 @@ func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.Acc
 	return nil
 }
 
-func (r *RequestReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
-	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, finalizer) {
-		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-		controllerutil.AddFinalizer(obj, finalizer)
-		if err := r.Patch(ctx, obj, patch); err != nil {
-			return fmt.Errorf("failed to add finalizer: %w", err)
-		}
-	}
-	return nil
-}
-
 func (r *RequestReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.RemoveFinalizer(obj, finalizer)
-		return r.Patch(ctx, obj, patch)
+		if err := r.Patch(ctx, obj, patch); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -484,22 +535,10 @@ func (r *RequestReconciler) createGrant(
 	status := obj.GetStatus()
 	ns := obj.GetNamespace()
 
-	isClusterGrant := ns == ""
-
+	isClusterGrant := obj.GetScope() == v1alpha1.RequestScopeCluster
 	labels := common.CommonLabels()
 
-	grant := &v1alpha1.AccessGrant{
-		ObjectMeta: metav1.ObjectMeta{Namespace: r.SystemNamespace, Name: reqName, Labels: labels},
-		Spec:       v1alpha1.AccessGrantSpec{},
-	}
-
-	if err := r.Create(ctx, grant); err != nil {
-		return err
-	}
-
-	original := grant.DeepCopy()
-
-	grant.Status = v1alpha1.AccessGrantStatus{
+	grantBaseStatus := v1alpha1.AccessGrantStatus{
 		Request:   reqName,
 		RequestId: status.RequestId,
 
@@ -511,12 +550,32 @@ func (r *RequestReconciler) createGrant(
 		Duration:    spec.Duration,
 	}
 
+	var grant common.AccessGrantObject
+
 	if isClusterGrant {
-		grant.Status.Scope = v1alpha1.GrantScopeCluster
+		grant = &v1alpha1.ClusterAccessGrant{
+			ObjectMeta: metav1.ObjectMeta{Name: reqName, Labels: labels},
+		}
 	} else {
-		grant.Status.Scope = v1alpha1.GrantScopeNamespace
-		grant.Status.Namespace = ns
+		if spec.Role.Kind != common.RoleKindRole {
+			return fmt.Errorf("invalid role kind for namespace scoped grant: %s", spec.Role.Kind)
+		}
+
+		grant = &v1alpha1.AccessGrant{
+			ObjectMeta: metav1.ObjectMeta{Namespace: ns, Name: reqName, Labels: labels},
+		}
 	}
+
+	if err := controllerutil.SetControllerReference(obj, grant.(metav1.Object), r.Scheme); err != nil {
+		return fmt.Errorf("failed to set owner reference on Grant %s: %w", grant.GetName(), err)
+	}
+
+	if err := r.Create(ctx, grant); err != nil {
+		return err
+	}
+
+	original := grant.DeepCopyObject().(client.Object)
+	grant.SetStatus(&grantBaseStatus)
 
 	patch := client.MergeFrom(original)
 

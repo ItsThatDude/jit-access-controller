@@ -118,11 +118,13 @@ spec:
                 items:
                   type: string
                 type: array
+                uniqueItems: true
               approvers:
                 description: Approvers
                 items:
                   type: string
                 type: array
+                uniqueItems: true
               maxDuration:
                 description: Duration specifies the maximum amount of time the access
                   can last (e.g. "5s", "10m", "2h45m").

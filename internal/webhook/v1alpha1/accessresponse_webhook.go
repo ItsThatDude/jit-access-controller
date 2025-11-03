@@ -40,8 +40,8 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if obj.Spec.Approver != req.UserInfo.Username {
-		return admission.Denied("The approver must be the same as the user creating the approval.")
+	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
+		return admission.Denied("The approver must be the user creating the approval.")
 	}
 
 	request := &accessv1alpha1.AccessRequest{}

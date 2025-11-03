@@ -36,9 +36,6 @@ spec:
             type: string
           metadata:
             type: object
-          spec:
-            description: spec defines the desired state of AccessGrant
-            type: object
           status:
             description: status defines the observed state of AccessGrant
             properties:
@@ -54,8 +51,6 @@ spec:
                   type: string
                 type: array
               duration:
-                type: string
-              namespace:
                 type: string
               permissions:
                 items:
@@ -131,11 +126,6 @@ spec:
                 x-kubernetes-map-type: atomic
               roleBindingCreated:
                 type: boolean
-              scope:
-                enum:
-                - Cluster
-                - Namespace
-                type: string
               subject:
                 type: string
             required:

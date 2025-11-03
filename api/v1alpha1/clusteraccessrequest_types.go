@@ -29,14 +29,17 @@ func (r *ClusterAccessRequest) GetStatus() *AccessRequestStatus {
 func (r *ClusterAccessRequest) SetStatus(status *AccessRequestStatus) {
 	r.Status = *status
 }
-func (r *ClusterAccessRequest) GetScope() string {
-	return "Cluster"
+func (r *ClusterAccessRequest) GetScope() RequestScope {
+	return RequestScopeCluster
 }
 func (r *ClusterAccessRequest) GetNamespace() string {
 	return ""
 }
 func (r *ClusterAccessRequest) GetName() string {
 	return r.Name
+}
+func (r *ClusterAccessRequest) GetSubject() string {
+	return r.Spec.Subject
 }
 
 // ClusterAccessRequestSpec defines the desired state of ClusterAccessRequest

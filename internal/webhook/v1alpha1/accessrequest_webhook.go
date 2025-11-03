@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -52,7 +53,7 @@ func (v *AccessRequestValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if obj.Spec.Subject != req.UserInfo.Username {
+	if req.Operation == admissionv1.Create && obj.Spec.Subject != req.UserInfo.Username {
 		return admission.Denied("The subject must be the same as the user creating the request.")
 	}
 

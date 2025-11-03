@@ -41,6 +41,7 @@ spec:
             description: spec defines the desired state of ClusterAccessRequest
             properties:
               duration:
+                default: 10m
                 description: Duration specifies how long the access should last (e.g.
                   "5s", "10m", "2h45m").
                 pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$

@@ -4,20 +4,21 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: accessrequests.access.antware.xyz
+  name: clusteraccessgrants.access.antware.xyz
 spec:
   group: access.antware.xyz
   names:
-    kind: AccessRequest
-    listKind: AccessRequestList
-    plural: accessrequests
-    singular: accessrequest
-  scope: Namespaced
+    kind: ClusterAccessGrant
+    listKind: ClusterAccessGrantList
+    plural: clusteraccessgrants
+    singular: clusteraccessgrant
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AccessRequest is the Schema for the accessrequests API
+        description: ClusterAccessGrant is the Schema for the clusteraccessgrants
+          API
         properties:
           apiVersion:
             description: |-
@@ -36,27 +37,23 @@ spec:
             type: string
           metadata:
             type: object
-          spec:
-            description: spec defines the desired state of AccessRequest
+          status:
+            description: status defines the observed state of ClusterAccessGrant
             properties:
+              accessExpiresAt:
+                format: date-time
+                type: string
+              adhocRoleBindingCreated:
+                type: boolean
+              adhocRoleCreated:
+                type: boolean
+              approvedBy:
+                items:
+                  type: string
+                type: array
               duration:
-                default: 10m
-                description: Duration specifies how long the access should last (e.g.
-                  "5s", "10m", "2h45m").
-                pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
                 type: string
-                x-kubernetes-validations:
-                - message: Duration cannot be changed after creation
-                  rule: self == oldSelf
-              justification:
-                description: User's justification for the request
-                type: string
-                x-kubernetes-validations:
-                - message: Justification cannot be changed after creation
-                  rule: self == oldSelf
               permissions:
-                description: Permissions are adhoc RBAC rules to grant (instead of
-                  a pre-defined role)
                 items:
                   description: |-
                     PolicyRule holds information that describes a policy rule, but does not contain information
@@ -105,11 +102,13 @@ spec:
                   - verbs
                   type: object
                 type: array
-                x-kubernetes-validations:
-                - message: Permissions cannot be changed after creation
-                  rule: self == oldSelf
+              request:
+                type: string
+              requestId:
+                type: string
               role:
-                description: Role is an optional pre-defined Role/ClusterRole to bind
+                description: RoleRef contains information that points to the role
+                  being used
                 properties:
                   apiGroup:
                     description: APIGroup is the group for the resource being referenced
@@ -126,47 +125,18 @@ spec:
                 - name
                 type: object
                 x-kubernetes-map-type: atomic
-                x-kubernetes-validations:
-                - message: Role cannot be changed after creation
-                  rule: self == oldSelf
+              roleBindingCreated:
+                type: boolean
               subject:
-                description: Subject is the username or identity requesting access
                 type: string
-                x-kubernetes-validations:
-                - message: Subject cannot be changed after creation
-                  rule: self == oldSelf
             required:
+            - approvedBy
             - duration
-            - justification
+            - request
+            - requestId
             - subject
             type: object
-          status:
-            description: status defines the observed state of AccessRequest
-            properties:
-              approvalsReceived:
-                type: integer
-              approvalsRequired:
-                type: integer
-              grantCreated:
-                type: boolean
-              requestExpiresAt:
-                format: date-time
-                type: string
-              requestId:
-                type: string
-              state:
-                enum:
-                - Pending
-                - Approved
-                - Denied
-                - Expired
-                type: string
-            type: object
-        required:
-        - spec
         type: object
-    selectableFields:
-    - jsonPath: .status.state
     served: true
     storage: true
     subresources:

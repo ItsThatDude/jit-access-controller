@@ -29,14 +29,17 @@ func (r *AccessRequest) GetStatus() *AccessRequestStatus {
 func (r *AccessRequest) SetStatus(status *AccessRequestStatus) {
 	r.Status = *status
 }
-func (r *AccessRequest) GetScope() string {
-	return "Namespace"
+func (r *AccessRequest) GetScope() RequestScope {
+	return RequestScopeNamespace
 }
 func (r *AccessRequest) GetNamespace() string {
 	return r.Namespace
 }
 func (r *AccessRequest) GetName() string {
 	return r.Name
+}
+func (r *AccessRequest) GetSubject() string {
+	return r.Spec.Subject
 }
 
 // AccessRequestSpec defines the desired state of AccessRequest

@@ -40,7 +40,7 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if obj.Spec.Approver != req.UserInfo.Username {
+	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
 		return admission.Denied("The approver must be the same as the user creating the approval.")
 	}
 

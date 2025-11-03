@@ -19,7 +19,6 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -40,6 +39,7 @@ import (
 
 	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	"antware.xyz/kairos/internal/controller"
+	"antware.xyz/kairos/internal/metrics"
 	webhookv1alpha1 "antware.xyz/kairos/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
@@ -188,6 +188,8 @@ func main() {
 		})
 	}
 
+	metrics.RegisterMetrics(Version)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -212,35 +214,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	systemNamespace, err := getSystemNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to find SYSTEM_NAMESPACE env variable")
-		os.Exit(1)
-	}
-
 	if err := (&controller.RequestReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		SystemNamespace: systemNamespace,
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManagerCluster(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.RequestReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		SystemNamespace: systemNamespace,
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.GrantReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		Recorder:        mgr.GetEventRecorderFor("accessgrant-controller"),
-		SystemNamespace: systemNamespace,
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+	}).SetupWithManagerCluster(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
+		os.Exit(1)
+	}
+
+	if err := (&controller.GrantReconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
 		os.Exit(1)
@@ -290,17 +292,4 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
-}
-
-func getSystemNamespace() (string, error) {
-	// systemNamespaceEnvVar is the constant for env variable SYSTEM_NAMESPACE
-	// which specifies the Namespace to watch.
-	// An empty value means the operator is running with cluster scope.
-	var systemNamespaceEnvVar = "SYSTEM_NAMESPACE"
-
-	ns, found := os.LookupEnv(systemNamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s must be set", systemNamespaceEnvVar)
-	}
-	return ns, nil
 }
