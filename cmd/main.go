@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -98,6 +99,20 @@ func main() {
 	}
 
 	setupLog.Info("Controller is starting", "version", Version)
+
+	namespace, err := getSystemNamespace()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get system namespace from environment variable")
+		os.Exit(1)
+	}
+
+	serviceAccount, err := getServiceAccountName()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get service account name")
+		os.Exit(1)
+	}
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -251,14 +266,14 @@ func main() {
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
 	}
 	// +kubebuilder:scaffold:builder
 
@@ -292,4 +307,27 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func getSystemNamespace() (string, error) {
+	// systemNamespaceEnvVar is the constant for env variable SYSTEM_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	var systemNamespaceEnvVar = "SYSTEM_NAMESPACE"
+
+	ns, found := os.LookupEnv(systemNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", systemNamespaceEnvVar)
+	}
+	return ns, nil
+}
+
+func getServiceAccountName() (string, error) {
+	var serviceAccountEnvVar = "SERVICE_ACCOUNT_NAME"
+
+	sa, found := os.LookupEnv(serviceAccountEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", serviceAccountEnvVar)
+	}
+	return sa, nil
 }

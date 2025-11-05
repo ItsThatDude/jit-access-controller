@@ -48,6 +48,15 @@ spec:
                 x-kubernetes-validations:
                 - message: Duration cannot be changed after creation
                   rule: self == oldSelf
+              groups:
+                description: Groups are the groups the subject belongs to
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+                x-kubernetes-validations:
+                - message: Groups cannot be changed after creation
+                  rule: self == oldSelf
               justification:
                 description: User's justification for the request
                 type: string

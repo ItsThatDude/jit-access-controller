@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,21 +28,26 @@ import (
 
 	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	"antware.xyz/kairos/internal/policy"
+	"antware.xyz/kairos/internal/utils"
 )
 
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessrequest,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessrequests,verbs=create;update,versions=v1alpha1,name=vclusteraccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
 
 type ClusterAccessRequestValidator struct {
-	decoder admission.Decoder
-	client  client.Client
+	decoder        admission.Decoder
+	client         client.Client
+	namespace      string
+	serviceAccount string
 }
 
-func SetupClusterAccessRequestWebhookWithManager(mgr ctrl.Manager) {
+func SetupClusterAccessRequestWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-clusteraccessrequest",
 		&admission.Webhook{Handler: &ClusterAccessRequestValidator{
-			decoder: admission.NewDecoder(mgr.GetScheme()),
-			client:  mgr.GetClient(),
+			decoder:        admission.NewDecoder(mgr.GetScheme()),
+			client:         mgr.GetClient(),
+			namespace:      namespace,
+			serviceAccount: serviceAccount,
 		}},
 	)
 }
@@ -53,8 +59,23 @@ func (v *ClusterAccessRequestValidator) Handle(ctx context.Context, req admissio
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if req.Operation == admissionv1.Create && obj.Spec.Subject != req.UserInfo.Username {
-		return admission.Denied("The subject must be the same as the user creating the request.")
+	if req.Operation == admissionv1.Delete {
+		return admission.Allowed("deletion is allowed")
+	}
+
+	if req.Operation == admissionv1.Update {
+		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
+			return admission.Allowed("kairos-controller-manager is allowed to update access requests")
+		}
+	}
+
+	if req.Operation == admissionv1.Create {
+		if obj.Spec.Subject != req.UserInfo.Username {
+			return admission.Denied("The subject must be the same as the user creating the request.")
+		}
+		if !reflect.DeepEqual(obj.Spec.Groups, req.UserInfo.Groups) {
+			return admission.Denied("The subject's groups must be the same as the user creating the request.")
+		}
 	}
 
 	if obj.Spec.Role.Name == "" && len(obj.Spec.Permissions) == 0 {

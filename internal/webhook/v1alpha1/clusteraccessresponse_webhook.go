@@ -19,16 +19,20 @@ import (
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessresponses,verbs=create;update,versions=v1alpha1,name=vclusteraccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
 type ClusterAccessResponseValidator struct {
-	decoder admission.Decoder
-	client  client.Client
+	decoder        admission.Decoder
+	client         client.Client
+	namespace      string
+	serviceAccount string
 }
 
-func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager) {
+func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-clusteraccessresponse",
 		&admission.Webhook{Handler: &ClusterAccessResponseValidator{
-			decoder: admission.NewDecoder(mgr.GetScheme()),
-			client:  mgr.GetClient(),
+			decoder:        admission.NewDecoder(mgr.GetScheme()),
+			client:         mgr.GetClient(),
+			namespace:      namespace,
+			serviceAccount: serviceAccount,
 		}},
 	)
 }
@@ -38,6 +42,16 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 
 	if err := v.decoder.Decode(req, obj); err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
+	}
+
+	if req.Operation == admissionv1.Delete {
+		return admission.Allowed("deletion is allowed")
+	}
+
+	if req.Operation == admissionv1.Update {
+		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
+			return admission.Allowed("kairos-controller-manager is allowed to update access requests")
+		}
 	}
 
 	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {

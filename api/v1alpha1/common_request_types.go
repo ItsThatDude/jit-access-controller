@@ -29,6 +29,12 @@ type AccessRequestBaseSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Subject cannot be changed after creation"
 	Subject string `json:"subject"`
 
+	// Groups are the groups the subject belongs to
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Groups cannot be changed after creation"
+	Groups []string `json:"groups,omitempty"`
+
 	// Role is an optional pre-defined Role/ClusterRole to bind
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Role cannot be changed after creation"

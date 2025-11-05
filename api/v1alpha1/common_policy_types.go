@@ -27,10 +27,10 @@ type SubjectPolicy struct {
 	RequiredApprovals int `json:"requiredApprovals"`
 
 	// Approvers
-	// +kubebuilder:validation:UniqueItems:=true
+	// +listType=set
 	Approvers []string `json:"approvers,omitempty"`
 
 	// Approver Groups
-	// +kubebuilder:validation:UniqueItems:=true
+	// +listType=set
 	ApproverGroups []string `json:"approverGroups,omitempty"`
 }

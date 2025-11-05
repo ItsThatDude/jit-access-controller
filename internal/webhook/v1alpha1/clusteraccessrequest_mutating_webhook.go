@@ -35,6 +35,7 @@ func (m *ClusterAccessRequestMutator) Handle(ctx context.Context, req admission.
 
 	if req.Operation == admissionv1.Create {
 		obj.Spec.Subject = req.UserInfo.Username
+		obj.Spec.Groups = req.UserInfo.Groups
 	}
 
 	marshaled, err := json.Marshal(obj)
