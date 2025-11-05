@@ -8,12 +8,20 @@ metadata:
   name: kairos-manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - access.antware.xyz
   resources:
   - accessgrants
   - accesspolicies
   - accessrequests
   - accessresponses
+  - clusteraccessgrants
   - clusteraccesspolicies
   - clusteraccessrequests
   - clusteraccessresponses
@@ -32,6 +40,7 @@ rules:
   - accesspolicies/finalizers
   - accessrequests/finalizers
   - accessresponses/finalizers
+  - clusteraccessgrants/finalizers
   - clusteraccesspolicies/finalizers
   - clusteraccessrequests/finalizers
   - clusteraccessresponses/finalizers
@@ -44,6 +53,7 @@ rules:
   - accesspolicies/status
   - accessrequests/status
   - accessresponses/status
+  - clusteraccessgrants/status
   - clusteraccesspolicies/status
   - clusteraccessrequests/status
   - clusteraccessresponses/status

@@ -10,20 +10,21 @@ metadata:
     "helm.sh/resource-policy": keep
     {{- end }}
     controller-gen.kubebuilder.io/version: v0.18.0
-  name: accessgrants.access.antware.xyz
+  name: clusteraccessgrants.access.antware.xyz
 spec:
   group: access.antware.xyz
   names:
-    kind: AccessGrant
-    listKind: AccessGrantList
-    plural: accessgrants
-    singular: accessgrant
-  scope: Namespaced
+    kind: ClusterAccessGrant
+    listKind: ClusterAccessGrantList
+    plural: clusteraccessgrants
+    singular: clusteraccessgrant
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: AccessGrant is the Schema for the accessgrants API
+        description: ClusterAccessGrant is the Schema for the clusteraccessgrants
+          API
         properties:
           apiVersion:
             description: |-
@@ -43,7 +44,7 @@ spec:
           metadata:
             type: object
           status:
-            description: status defines the observed state of AccessGrant
+            description: status defines the observed state of ClusterAccessGrant
             properties:
               accessExpiresAt:
                 format: date-time
