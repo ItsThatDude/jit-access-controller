@@ -67,8 +67,9 @@ var _ = Describe("KairosReconciler with envtest", func() {
 			},
 			Spec: v1alpha1.AccessRequestSpec{
 				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-					Subject:       "user1",
-					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"},
+					Subject: "user1",
+					Role:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindRole, Name: "edit"},
+					// nolint:goconst
 					Duration:      "10m",
 					Justification: "test",
 				},

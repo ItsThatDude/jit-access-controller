@@ -65,8 +65,9 @@ var _ = Describe("KairosReconciler with envtest", func() {
 			},
 			Spec: v1alpha1.ClusterAccessRequestSpec{
 				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-					Subject:       "user1",
-					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "no-policy"},
+					Subject: "user1",
+					Role:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "no-policy"},
+					// nolint:goconst
 					Duration:      "10m",
 					Justification: "test",
 				},
@@ -87,8 +88,9 @@ var _ = Describe("KairosReconciler with envtest", func() {
 			},
 			Spec: v1alpha1.ClusterAccessRequestSpec{
 				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-					Subject:       "user1",
-					Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"},
+					Subject: "user1",
+					Role:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"},
+					// nolint:goconst
 					Duration:      "10m",
 					Justification: "test",
 				},

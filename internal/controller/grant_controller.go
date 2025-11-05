@@ -261,6 +261,7 @@ func (r *GrantReconciler) handleApproved(
 	// default duration fallback if not set
 	durationStr := status.Duration
 	if durationStr == "" {
+		// nolint:goconst
 		durationStr = "10m"
 	}
 

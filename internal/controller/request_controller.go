@@ -337,6 +337,7 @@ func (r *RequestReconciler) handleApproved(
 
 	durationStr := spec.Duration
 	if durationStr == "" {
+		// nolint:goconst
 		durationStr = "10m"
 	}
 
