@@ -6,6 +6,7 @@ import (
 
 	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	common "antware.xyz/kairos/internal/common"
+	"antware.xyz/kairos/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -58,8 +59,22 @@ func IsRequestValid[T common.AccessPolicyListInterface](
 		policy := p.GetPolicy()
 		spec := req.GetSpec()
 
-		// Subject must match
-		if !slices.Contains(policy.Subjects, spec.Subject) {
+		userNames := []string{}
+		groupNames := []string{}
+		for _, approver := range policy.Requesters {
+			switch approver.Kind {
+			case rbacv1.UserKind:
+				userNames = append(userNames, approver.Name)
+			case rbacv1.GroupKind:
+				groupNames = append(groupNames, approver.Name)
+			}
+		}
+
+		group_matched := utils.SliceOverlaps(groupNames, spec.Groups)
+		user_matched := slices.Contains(userNames, spec.Subject)
+
+		// Subject or group must match
+		if !group_matched && !user_matched {
 			continue
 		}
 

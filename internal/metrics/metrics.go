@@ -25,7 +25,7 @@ var (
 			Name:      "requests_created",
 			Help:      "Number of access requests created",
 		},
-		[]string{"scope", "namespace", "subject"},
+		[]string{"scope", "target_namespace", "subject"},
 	)
 
 	RequestsApproved = prometheus.NewCounterVec(
@@ -34,7 +34,7 @@ var (
 			Name:      "requests_approved",
 			Help:      "Number of access requests approved",
 		},
-		[]string{"scope", "namespace", "subject"},
+		[]string{"scope", "target_namespace", "subject"},
 	)
 
 	RolesGranted = prometheus.NewCounterVec(
@@ -43,7 +43,7 @@ var (
 			Name:      "roles_granted",
 			Help:      "Number of roles granted",
 		},
-		[]string{"scope", "namespace", "subject", "roleKind", "role"},
+		[]string{"scope", "target_namespace", "subject", "roleKind", "role"},
 	)
 
 	PermissionsGranted = prometheus.NewCounterVec(
@@ -52,7 +52,7 @@ var (
 			Name:      "permissions_granted",
 			Help:      "Number of permissions granted",
 		},
-		[]string{"scope", "namespace", "subject", "apiGroup", "resource", "verb"},
+		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb"},
 	)
 )
 

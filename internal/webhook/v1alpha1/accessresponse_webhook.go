@@ -10,6 +10,7 @@ import (
 	"antware.xyz/kairos/internal/policy"
 	"antware.xyz/kairos/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -84,8 +85,19 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 			return admission.Denied(fmt.Sprintf("cannot specify an approver other than yourself (%s vs %s)", obj.Spec.Approver, req.UserInfo.Username))
 		}
 
-		group_matched := utils.SliceOverlaps(matched_policy.ApproverGroups, req.UserInfo.Groups)
-		user_matched := slices.Contains(matched_policy.Approvers, req.UserInfo.Username)
+		userNames := []string{}
+		groupNames := []string{}
+		for _, approver := range matched_policy.Approvers {
+			switch approver.Kind {
+			case rbacv1.UserKind:
+				userNames = append(userNames, approver.Name)
+			case rbacv1.GroupKind:
+				groupNames = append(groupNames, approver.Name)
+			}
+		}
+
+		group_matched := utils.SliceOverlaps(groupNames, req.UserInfo.Groups)
+		user_matched := slices.Contains(userNames, req.UserInfo.Username)
 
 		if !group_matched && !user_matched {
 			return admission.Denied(fmt.Sprintf("user %s is not in the list of approvers for the matched policy", req.UserInfo.Username))

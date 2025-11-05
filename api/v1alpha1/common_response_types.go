@@ -17,6 +17,12 @@ type AccessResponseSpec struct {
 	// +required
 	Approver string `json:"approver"`
 
+	// Groups are the groups the approver belongs to
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Groups cannot be changed after creation"
+	Groups []string `json:"groups,omitempty"`
+
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Response cannot be changed after creation"
 	// +required
 	Response ResponseState `json:"response"`

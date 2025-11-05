@@ -113,39 +113,90 @@ spec:
                   type: object
                   x-kubernetes-map-type: atomic
                 type: array
-              approverGroups:
-                description: Approver Groups
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
               approvers:
-                description: Approvers
+                description: The users and groups allowed to approve requests for
+                  this subject
                 items:
-                  type: string
+                  description: |-
+                    Subject contains a reference to the object or user identities a role binding applies to.  This can either hold a direct API object reference,
+                    or a value for non-objects such as user and group names.
+                  properties:
+                    apiGroup:
+                      description: |-
+                        APIGroup holds the API group of the referenced subject.
+                        Defaults to "" for ServiceAccount subjects.
+                        Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount".
+                        If the Authorizer does not recognized the kind value, the Authorizer should report an error.
+                      type: string
+                    name:
+                      description: Name of the object being referenced.
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referenced object.  If the object kind is non-namespace, such as "User" or "Group", and this value is not empty
+                        the Authorizer should report an error.
+                      type: string
+                  required:
+                  - kind
+                  - name
+                  type: object
+                  x-kubernetes-map-type: atomic
+                minItems: 1
                 type: array
-                x-kubernetes-list-type: set
               maxDuration:
                 description: Duration specifies the maximum amount of time the access
                   can last (e.g. "5s", "10m", "2h45m").
                 pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
                 type: string
+              requesters:
+                description: The permitted users and groups that can request resources
+                  under this policy.
+                items:
+                  description: |-
+                    Subject contains a reference to the object or user identities a role binding applies to.  This can either hold a direct API object reference,
+                    or a value for non-objects such as user and group names.
+                  properties:
+                    apiGroup:
+                      description: |-
+                        APIGroup holds the API group of the referenced subject.
+                        Defaults to "" for ServiceAccount subjects.
+                        Defaults to "rbac.authorization.k8s.io" for User and Group subjects.
+                      type: string
+                    kind:
+                      description: |-
+                        Kind of object being referenced. Values defined by this API group are "User", "Group", and "ServiceAccount".
+                        If the Authorizer does not recognized the kind value, the Authorizer should report an error.
+                      type: string
+                    name:
+                      description: Name of the object being referenced.
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the referenced object.  If the object kind is non-namespace, such as "User" or "Group", and this value is not empty
+                        the Authorizer should report an error.
+                      type: string
+                  required:
+                  - kind
+                  - name
+                  type: object
+                  x-kubernetes-map-type: atomic
+                minItems: 1
+                type: array
               requiredApprovals:
                 default: 1
                 description: The minimum number of approvals required to grant the
                   request
                 minimum: 0
                 type: integer
-              subjects:
-                description: Subject is the identity (email or K8s username) of the
-                  requester.
-                items:
-                  type: string
-                type: array
             required:
+            - approvers
             - maxDuration
+            - requesters
             - requiredApprovals
-            - subjects
             type: object
           status:
             description: status defines the observed state of AccessPolicy

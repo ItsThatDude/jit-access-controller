@@ -1,6 +1,8 @@
 package utils
 
-import "slices"
+import (
+	"slices"
+)
 
 func SliceOverlaps(a, b []string) bool {
 	for _, x := range a {

@@ -44,6 +44,15 @@ spec:
                 x-kubernetes-validations:
                 - message: Approver cannot be changed after creation
                   rule: self == oldSelf
+              groups:
+                description: Groups are the groups the approver belongs to
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+                x-kubernetes-validations:
+                - message: Groups cannot be changed after creation
+                  rule: self == oldSelf
               requestRef:
                 type: string
                 x-kubernetes-validations:

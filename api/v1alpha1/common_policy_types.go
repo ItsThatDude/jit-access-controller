@@ -6,9 +6,10 @@ import (
 
 // SubjectPolicy defines access rules for a single subject (user/serviceaccount).
 type SubjectPolicy struct {
-	// Subject is the identity (email or K8s username) of the requester.
+	// The permitted users and groups that can request resources under this policy.
 	// +required
-	Subjects []string `json:"subjects"`
+	// +kubebuilder:validation:MinItems=1
+	Requesters []rbacv1.Subject `json:"requesters,omitempty"`
 
 	// AllowedRoles is a list of roles the subject is allowed to request.
 	AllowedRoles []rbacv1.RoleRef `json:"allowedRoles,omitempty"`
@@ -26,11 +27,8 @@ type SubjectPolicy struct {
 	// +kubebuilder:default:=1
 	RequiredApprovals int `json:"requiredApprovals"`
 
-	// Approvers
-	// +listType=set
-	Approvers []string `json:"approvers,omitempty"`
-
-	// Approver Groups
-	// +listType=set
-	ApproverGroups []string `json:"approverGroups,omitempty"`
+	// The users and groups allowed to approve requests for this subject
+	// +required
+	// +kubebuilder:validation:MinItems=1
+	Approvers []rbacv1.Subject `json:"approvers,omitempty"`
 }
