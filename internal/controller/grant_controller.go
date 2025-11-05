@@ -27,6 +27,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,343 +38,44 @@ import (
 	common "antware.xyz/kairos/internal/common"
 )
 
-// GrantReconciler reconciles a AccessGrant object
-type GrantReconciler struct {
-	client.Client
-	Scheme          *runtime.Scheme
-	Recorder        record.EventRecorder
-	SystemNamespace string
-}
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
 
-func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	var grant accessv1alpha1.AccessGrant
-	err := r.Get(ctx, req.NamespacedName, &grant)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
-	}
+// +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 
-	log := logf.FromContext(ctx)
+// GrantReconciler reconciles a AccessGrant object
+type GrantReconciler struct {
+	client.Client
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
+}
 
-	originalStatus := *grant.Status.DeepCopy()
-	status := grant.Status.DeepCopy()
+func (r *GrantReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
 
-	base := grant.DeepCopyObject().(client.Object)
-
-	defer func() {
-		if grant.GetDeletionTimestamp().IsZero() {
-			if !equality.Semantic.DeepEqual(originalStatus, *status) {
-				grant.Status = *status
-
-				if err := r.Status().Patch(ctx, &grant, client.MergeFrom(base)); err != nil {
-					log.Error(err, "failed to persist status with patch")
+	if err := indexer.IndexField(ctx, &accessv1alpha1.ClusterAccessGrant{}, "status.requestId",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*accessv1alpha1.ClusterAccessGrant); ok {
+				if myObj.Status.RequestId == "" {
+					return nil
 				}
+				return []string{myObj.Status.RequestId}
 			}
-		}
-	}()
-
-	// Add finalizer
-	if grant.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(&grant, common.JITFinalizer) {
-		if err := r.ensureFinalizer(ctx, &grant, common.JITFinalizer); err != nil {
-			log.Error(err, "an error occurred updating the finalizer for the request", "name", grant.GetName())
-			return ctrl.Result{}, err
-		}
-		log.Info("Added finalizer to request", "name", grant.GetName())
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestId: %w", err)
 	}
 
-	// Handle finalizer cleanup
-	if !grant.GetDeletionTimestamp().IsZero() {
-		if controllerutil.ContainsFinalizer(&grant, common.JITFinalizer) {
-			if err := r.cleanupResources(ctx, &grant); err != nil {
-				log.Error(err, "an error occurred running cleanup for the request", "name", grant.GetName())
-				return ctrl.Result{}, err
-			}
-			if err := r.removeFinalizer(ctx, &grant, common.JITFinalizer); err != nil {
-				log.Error(err, "an error occurred removing the request finalizer", "name", grant.GetName())
-				return ctrl.Result{}, err
-			}
-			log.Info("Cleaned up and removed finalizer", "name", grant.GetName())
-		}
-		return ctrl.Result{}, nil
-	}
-
-	// If the RequestId is not set, just skip reconciliation.
-	// This happens when the grant is first created.
-	if status.RequestId == "" {
-		return ctrl.Result{}, nil
-	}
-
-	// If the grant has expired, call handleExpired which cleans up the resources
-	if status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time) {
-		return r.handleExpired(ctx, &grant)
-	}
-
-	return r.handleApproved(ctx, &grant, status)
-}
-
-func (r *GrantReconciler) ensureFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
-	if obj.GetDeletionTimestamp().IsZero() && !controllerutil.ContainsFinalizer(obj, finalizer) {
-		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-		controllerutil.AddFinalizer(obj, finalizer)
-		if err := r.Patch(ctx, obj, patch); err != nil {
-			return fmt.Errorf("failed to add finalizer: %w", err)
-		}
-	}
-	return nil
-}
-
-func (r *GrantReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
-	if controllerutil.ContainsFinalizer(obj, finalizer) {
-		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-		controllerutil.RemoveFinalizer(obj, finalizer)
-		return r.Patch(ctx, obj, patch)
-	}
-	return nil
-}
-
-func (r *GrantReconciler) handleApproved(
-	ctx context.Context,
-	obj *accessv1alpha1.AccessGrant,
-	status *accessv1alpha1.AccessGrantStatus,
-) (ctrl.Result, error) {
-	log := logf.FromContext(ctx)
-
-	// Handle pre-defined role or adhoc permissions
-	isClusterScoped := obj.Status.Scope == accessv1alpha1.GrantScopeCluster
-
-	// Pre-defined Role/ClusterRole
-	if status.Role.Name != "" && !status.RoleBindingCreated {
-		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
-
-		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
-			return ctrl.Result{}, err
-		}
-		status.RoleBindingCreated = true
-		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
-	}
-
-	// Adhoc permissions
-	if len(status.Permissions) > 0 && (!status.AdhocRoleCreated || !status.AdhocRoleBindingCreated) {
-		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
-
-		if !status.AdhocRoleCreated {
-			if err := r.createRole(ctx, obj, adhocName, status.Permissions, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
-				return ctrl.Result{}, err
-			}
-			status.AdhocRoleCreated = true
-			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
-		}
-
-		if !status.AdhocRoleBindingCreated {
-			roleKind := common.RoleKindRole
-
-			if isClusterScoped {
-				roleKind = common.RoleKindCluster
-			}
-
-			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName, isClusterScoped); err != nil && !k8serrors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
-				return ctrl.Result{}, err
-			}
-			status.AdhocRoleBindingCreated = true
-			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
-		}
-	}
-
-	duration, err := time.ParseDuration(status.Duration)
-	if err != nil {
-		log.Error(err, "failed to parse duration string", "namespace", obj.GetNamespace(), "name", obj.GetName(), "duration", duration)
-		return ctrl.Result{}, fmt.Errorf("failed to parse duration string: %w", err)
-	}
-
-	// Set expire time if not set
-	if status.AccessExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(duration))
-		status.AccessExpiresAt = &expireTime
-
-		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
-			"Just-in-time access granted to %s for request %s",
-			obj.Status.Subject, obj.Status.Request)
-	}
-
-	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
-}
-
-func (r *GrantReconciler) handleExpired(
-	ctx context.Context,
-	obj *accessv1alpha1.AccessGrant,
-) (ctrl.Result, error) {
-	log := logf.FromContext(ctx)
-
-	if err := r.cleanupResources(ctx, obj); err != nil {
-		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
-	}
-
-	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
-	_ = r.Delete(ctx, obj)
-
-	return ctrl.Result{}, nil
-}
-
-func (r *GrantReconciler) cleanupResources(ctx context.Context, obj *accessv1alpha1.AccessGrant) error {
-	log := logf.FromContext(ctx)
-	requestId := obj.Status.RequestId
-
-	var errs []error
-
-	deleteResource := func(key client.ObjectKey, obj client.Object, description string) {
-		if err := r.Get(ctx, key, obj); err == nil {
-			if err := r.Delete(ctx, obj); err != nil {
-				errs = append(errs, fmt.Errorf("failed to delete %s %s: %w", description, key.Name, err))
-			} else {
-				log.Info("Deleted "+description, "name", key.Name)
-			}
-		} else if !k8serrors.IsNotFound(err) {
-			errs = append(errs, fmt.Errorf("failed to get %s %s: %w", description, key.Name, err))
-		}
-	}
-
-	// Regular RoleBinding / ClusterRoleBinding
-	if obj.Status.RoleBindingCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-%s", requestId)}
-		var rb client.Object
-		var desc string
-		if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
-			rb = &rbacv1.ClusterRoleBinding{}
-			desc = "ClusterRoleBinding"
-		} else {
-			rb = &rbacv1.RoleBinding{}
-			key.Namespace = obj.Status.Namespace
-			desc = "RoleBinding"
-		}
-		deleteResource(key, rb, desc)
-	}
-
-	// Adhoc RoleBinding / ClusterRoleBinding
-	if obj.Status.AdhocRoleBindingCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
-		var rb client.Object
-		var desc string
-		if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
-			rb = &rbacv1.ClusterRoleBinding{}
-			desc = "ClusterRoleBinding"
-		} else {
-			rb = &rbacv1.RoleBinding{}
-			key.Namespace = obj.Status.Namespace
-			desc = "RoleBinding"
-		}
-		deleteResource(key, rb, fmt.Sprintf("Adhoc %s", desc))
-	}
-
-	// Adhoc Role / ClusterRole
-	if obj.Status.AdhocRoleCreated {
-		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
-		var roleObj client.Object
-		var desc string
-		if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
-			roleObj = &rbacv1.ClusterRole{}
-			desc = common.RoleKindCluster
-		} else {
-			roleObj = &rbacv1.Role{}
-			key.Namespace = obj.Status.Namespace
-			desc = common.RoleKindRole
-		}
-		deleteResource(key, roleObj, fmt.Sprintf("Adhoc %s", desc))
-	}
-
-	// Delete the Request object
-	reqKey := client.ObjectKey{Name: obj.Status.Request}
-	var reqObj client.Object
-	var reqType string
-	if obj.Status.Scope == accessv1alpha1.GrantScopeCluster {
-		reqObj = &accessv1alpha1.ClusterAccessRequest{}
-		reqType = "ClusterAccessRequest"
-	} else {
-		reqObj = &accessv1alpha1.AccessRequest{}
-		reqKey.Namespace = obj.Status.Namespace
-		reqType = "AccessRequest"
-	}
-	deleteResource(reqKey, reqObj, reqType)
-
-	if len(errs) > 0 {
-		return errors.Join(errs...)
-	}
-
-	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
-		"Just-in-time access revoked from %s for request %s",
-		obj.Status.Subject, obj.Status.Request)
-
-	return nil
-}
-
-func (r *GrantReconciler) createRole(
-	ctx context.Context,
-	obj *accessv1alpha1.AccessGrant,
-	name string,
-	rules []rbacv1.PolicyRule,
-	clusterRole bool,
-) error {
-	labels := common.CommonLabels()
-	var role client.Object
-	if clusterRole {
-		role = &rbacv1.ClusterRole{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Labels: labels},
-			Rules:      rules,
-		}
-	} else {
-		role = &rbacv1.Role{
-			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.Status.Namespace, Labels: labels},
-			Rules:      rules,
-		}
-
-		if err := controllerutil.SetControllerReference(obj, role.(metav1.Object), r.Scheme); err != nil {
-			return fmt.Errorf("failed to set owner reference on Role %s: %w", name, err)
-		}
-	}
-	return r.Create(ctx, role)
-}
-
-func (r *GrantReconciler) createRoleBinding(
-	ctx context.Context,
-	obj *accessv1alpha1.AccessGrant,
-	roleRef rbacv1.RoleRef,
-	bindingName string,
-	clusterScoped bool,
-) error {
-	labels := common.CommonLabels()
-	subject := rbacv1.Subject{Kind: "User", Name: obj.Status.Subject, APIGroup: "rbac.authorization.k8s.io"}
-	if clusterScoped {
-		if roleRef.Kind != common.RoleKindCluster {
-			return fmt.Errorf("can not bind a Role via ClusterRoleBinding")
-		}
-		rb := &rbacv1.ClusterRoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Labels: labels},
-			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: roleRef.Name},
-		}
-		return r.Create(ctx, rb)
-	} else {
-		rb := &rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.Status.Namespace, Labels: labels},
-			Subjects:   []rbacv1.Subject{subject},
-			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleRef.Kind, Name: roleRef.Name},
-		}
-
-		if err := controllerutil.SetControllerReference(obj, rb, r.Scheme); err != nil {
-			return fmt.Errorf("failed to set owner reference on RoleBinding %s: %w", bindingName, err)
-		}
-
-		return r.Create(ctx, rb)
-	}
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&accessv1alpha1.ClusterAccessGrant{}).
+		Named("grant-reconciler-cluster").
+		Complete(r)
 }
 
 func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
@@ -395,6 +97,378 @@ func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.AccessGrant{}).
-		Named("grant-reconciler").
+		Named("grant-reconciler-namespaced").
 		Complete(r)
+}
+
+func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	if req.Namespace == "" {
+		var clusterObj accessv1alpha1.ClusterAccessGrant
+		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+			return ctrl.Result{}, err
+		}
+		return r.reconcileGrant(ctx, &clusterObj)
+	}
+
+	var nsObj accessv1alpha1.AccessGrant
+	err := r.Get(ctx, req.NamespacedName, &nsObj)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
+	return r.reconcileGrant(ctx, &nsObj)
+}
+
+func (r *GrantReconciler) reconcileGrant(ctx context.Context, obj common.AccessGrantObject) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+	objStatus := obj.GetStatus()
+
+	originalStatus := *objStatus.DeepCopy()
+	status := objStatus.DeepCopy()
+
+	base := obj.DeepCopyObject().(client.Object)
+
+	// Ensure status is persisted at the end of reconciliation
+	defer func() {
+		if obj.GetDeletionTimestamp().IsZero() {
+			if !equality.Semantic.DeepEqual(originalStatus, *status) {
+				obj.SetStatus(status)
+
+				if err := r.Status().Patch(ctx, obj, client.MergeFrom(base)); err != nil {
+					log.Error(err, "failed to persist status with patch")
+				}
+			}
+		}
+	}()
+
+	// Add finalizer
+	if obj.GetDeletionTimestamp().IsZero() {
+		if !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+			patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
+			controllerutil.AddFinalizer(obj, common.JITFinalizer)
+			log.Info("Adding finalizer to grant", "name", obj.GetName())
+			if err := r.Patch(ctx, obj, patch); err != nil {
+				return ctrl.Result{}, err
+			}
+			log.Info("Added finalizer to grant", "name", obj.GetName())
+		}
+	}
+
+	// Handle deletion
+	if !obj.GetDeletionTimestamp().IsZero() {
+		if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+			log.Info("Cleaning up resources for grant", "name", obj.GetName())
+			if err := r.cleanupResources(ctx, obj); err != nil {
+				log.Error(err, "an error occurred running cleanup for the grant", "name", obj.GetName())
+				return ctrl.Result{}, err
+			}
+			log.Info("Successfully cleaned up resources for grant", "name", obj.GetName())
+
+			log.Info("Removing finalizer for grant", "name", obj.GetName())
+			if err := r.removeFinalizer(ctx, obj, common.JITFinalizer); err != nil {
+				log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
+				return ctrl.Result{}, err
+			}
+			log.Info("Removed finalizer for grant", "name", obj.GetName())
+		}
+		return ctrl.Result{}, nil
+	}
+
+	// If the RequestId is not set, the grant has only just been created.
+	// Nothing to do until the status is populated.
+	if status.RequestId == "" {
+		return ctrl.Result{}, nil
+	}
+
+	// If the grant has expired, call handleExpired which cleans up the resources
+	if status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time) {
+		return r.handleExpired(ctx, obj)
+	}
+
+	return r.handleApproved(ctx, obj, status)
+}
+
+func (r *GrantReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+	if controllerutil.ContainsFinalizer(obj, finalizer) {
+		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
+		controllerutil.RemoveFinalizer(obj, finalizer)
+		if err := r.Patch(ctx, obj, patch); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *GrantReconciler) handleApproved(
+	ctx context.Context,
+	obj common.AccessGrantObject,
+	status *accessv1alpha1.AccessGrantStatus,
+) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	scope := obj.GetScope()
+
+	// Handle pre-defined role or adhoc permissions
+	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster
+
+	// Pre-defined Role/ClusterRole
+	if status.Role.Name != "" && !status.RoleBindingCreated {
+		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
+
+		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName); err != nil && !k8serrors.IsAlreadyExists(err) {
+			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
+			return ctrl.Result{}, err
+		}
+		status.RoleBindingCreated = true
+		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
+	}
+
+	// Adhoc permissions
+	if len(status.Permissions) > 0 && (!status.AdhocRoleCreated || !status.AdhocRoleBindingCreated) {
+		adhocName := fmt.Sprintf("jit-access-adhoc-%s", status.RequestId)
+
+		if !status.AdhocRoleCreated {
+			if err := r.createRole(ctx, obj, adhocName, status.Permissions); err != nil && !k8serrors.IsAlreadyExists(err) {
+				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+				return ctrl.Result{}, err
+			}
+			status.AdhocRoleCreated = true
+			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+		}
+
+		if !status.AdhocRoleBindingCreated {
+			roleKind := common.RoleKindRole
+
+			if isClusterScoped {
+				roleKind = common.RoleKindCluster
+			}
+
+			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName); err != nil && !k8serrors.IsAlreadyExists(err) {
+				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+				return ctrl.Result{}, err
+			}
+			status.AdhocRoleBindingCreated = true
+			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+		}
+	}
+
+	// default duration fallback if not set
+	durationStr := status.Duration
+	if durationStr == "" {
+		durationStr = "10m"
+	}
+
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		log.Error(err, "failed to parse duration string", "namespace", obj.GetNamespace(), "name", obj.GetName(), "duration", durationStr)
+		return ctrl.Result{}, fmt.Errorf("failed to parse duration string: %w", err)
+	}
+
+	// Set expire time if not set
+	if status.AccessExpiresAt == nil {
+		expireTime := metav1.NewTime(time.Now().Add(duration))
+		status.AccessExpiresAt = &expireTime
+
+		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
+			"Just-in-time access granted to %s for request %s",
+			status.Subject, status.Request)
+	}
+
+	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
+}
+
+func (r *GrantReconciler) handleExpired(
+	ctx context.Context,
+	obj common.AccessGrantObject,
+) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+	status := obj.GetStatus()
+
+	// Clean up any resources created for this grant
+	// Also cleans up the parent AccessRequest/ClusterAccessRequest object
+	if err := r.cleanupResources(ctx, obj); err != nil {
+		log.Error(err, "an error occurred running cleanup for the expired grant", "name", obj.GetName())
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+	}
+
+	// Delete the grant object itself
+	log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
+	if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
+		log.Error(err, "failed to delete expired grant", "name", obj.GetName())
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+	}
+
+	// Record an event about the revocation of access
+	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
+		"Just-in-time access revoked from %s for request %s",
+		status.Subject, status.Request)
+
+	return ctrl.Result{}, nil
+}
+
+func (r *GrantReconciler) cleanupResources(ctx context.Context, obj common.AccessGrantObject) error {
+	log := logf.FromContext(ctx)
+	status := obj.GetStatus()
+	scope := obj.GetScope()
+	requestId := status.RequestId
+
+	var errs []error
+
+	deleteResource := func(key client.ObjectKey, obj client.Object, description string) {
+		if err := r.Get(ctx, key, obj); err == nil {
+			if err := r.Delete(ctx, obj); err != nil {
+				errs = append(errs, fmt.Errorf("failed to delete %s %s: %w", description, key.Name, err))
+			} else {
+				log.Info("Deleted "+description, "name", key.Name)
+			}
+		} else if !k8serrors.IsNotFound(err) {
+			errs = append(errs, fmt.Errorf("failed to get %s %s: %w", description, key.Name, err))
+		}
+	}
+
+	// Regular RoleBinding / ClusterRoleBinding
+	if status.RoleBindingCreated {
+		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-%s", requestId)}
+		var rb client.Object
+		var desc string
+		if scope == accessv1alpha1.RequestScopeCluster {
+			rb = &rbacv1.ClusterRoleBinding{}
+			desc = "ClusterRoleBinding"
+		} else {
+			rb = &rbacv1.RoleBinding{}
+			key.Namespace = obj.GetNamespace()
+			desc = "RoleBinding"
+		}
+		deleteResource(key, rb, desc)
+	}
+
+	// Adhoc RoleBinding / ClusterRoleBinding
+	if status.AdhocRoleBindingCreated {
+		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
+		var rb client.Object
+		var desc string
+		if scope == accessv1alpha1.RequestScopeCluster {
+			rb = &rbacv1.ClusterRoleBinding{}
+			desc = "ClusterRoleBinding"
+		} else {
+			rb = &rbacv1.RoleBinding{}
+			key.Namespace = obj.GetNamespace()
+			desc = "RoleBinding"
+		}
+		deleteResource(key, rb, fmt.Sprintf("Adhoc %s", desc))
+	}
+
+	// Adhoc Role / ClusterRole
+	if status.AdhocRoleCreated {
+		key := client.ObjectKey{Name: fmt.Sprintf("jit-access-adhoc-%s", requestId)}
+		var roleObj client.Object
+		var desc string
+		if scope == accessv1alpha1.RequestScopeCluster {
+			roleObj = &rbacv1.ClusterRole{}
+			desc = common.RoleKindCluster
+		} else {
+			roleObj = &rbacv1.Role{}
+			key.Namespace = obj.GetNamespace()
+			desc = common.RoleKindRole
+		}
+		deleteResource(key, roleObj, fmt.Sprintf("Adhoc %s", desc))
+	}
+
+	// Delete the Request object
+	reqKey := client.ObjectKey{Name: status.Request}
+	var reqObj client.Object
+	var reqType string
+	if scope == accessv1alpha1.RequestScopeCluster {
+		reqObj = &accessv1alpha1.ClusterAccessRequest{}
+		reqType = "ClusterAccessRequest"
+	} else {
+		reqObj = &accessv1alpha1.AccessRequest{}
+		reqKey.Namespace = obj.GetNamespace()
+		reqType = "AccessRequest"
+	}
+	deleteResource(reqKey, reqObj, reqType)
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	return nil
+}
+
+func (r *GrantReconciler) createRole(
+	ctx context.Context,
+	obj common.AccessGrantObject,
+	name string,
+	rules []rbacv1.PolicyRule,
+) error {
+	scope := obj.GetScope()
+	ns := obj.GetNamespace()
+	labels := common.CommonLabels()
+
+	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster && ns == ""
+	var role client.Object
+
+	if isClusterScoped {
+		role = &rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Labels: labels},
+			Rules:      rules,
+		}
+	} else {
+		role = &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: obj.GetNamespace(), Labels: labels},
+			Rules:      rules,
+		}
+	}
+
+	if err := controllerutil.SetControllerReference(obj, role.(metav1.Object), r.Scheme); err != nil {
+		return fmt.Errorf("failed to set owner reference on Role %s: %w", name, err)
+	}
+
+	return r.Create(ctx, role)
+}
+
+func (r *GrantReconciler) createRoleBinding(
+	ctx context.Context,
+	obj common.AccessGrantObject,
+	roleRef rbacv1.RoleRef,
+	bindingName string,
+) error {
+	scope := obj.GetScope()
+	ns := obj.GetNamespace()
+	status := obj.GetStatus()
+	labels := common.CommonLabels()
+
+	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster && ns == ""
+	subject := rbacv1.Subject{Kind: "User", Name: status.Subject, APIGroup: "rbac.authorization.k8s.io"}
+
+	var roleBinding client.Object
+
+	if isClusterScoped {
+		if roleRef.Kind != common.RoleKindCluster {
+			return fmt.Errorf("can not bind a Role via ClusterRoleBinding")
+		}
+		roleBinding = &rbacv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Labels: labels},
+			Subjects:   []rbacv1.Subject{subject},
+			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: roleRef.Name},
+		}
+	} else {
+		roleBinding = &rbacv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{Name: bindingName, Namespace: obj.GetNamespace(), Labels: labels},
+			Subjects:   []rbacv1.Subject{subject},
+			RoleRef:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleRef.Kind, Name: roleRef.Name},
+		}
+	}
+
+	if err := controllerutil.SetControllerReference(obj, roleBinding, r.Scheme); err != nil {
+		return fmt.Errorf("failed to set owner reference on RoleBinding %s: %w", bindingName, err)
+	}
+
+	return r.Create(ctx, roleBinding)
 }

@@ -19,16 +19,20 @@ import (
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-accessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=accessresponses,verbs=create;update,versions=v1alpha1,name=vaccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
 type AccessResponseValidator struct {
-	decoder admission.Decoder
-	client  client.Client
+	decoder        admission.Decoder
+	client         client.Client
+	namespace      string
+	serviceAccount string
 }
 
-func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager) {
+func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-accessresponse",
 		&admission.Webhook{Handler: &AccessResponseValidator{
-			decoder: admission.NewDecoder(mgr.GetScheme()),
-			client:  mgr.GetClient(),
+			decoder:        admission.NewDecoder(mgr.GetScheme()),
+			client:         mgr.GetClient(),
+			namespace:      namespace,
+			serviceAccount: serviceAccount,
 		}},
 	)
 }
@@ -40,8 +44,18 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if obj.Spec.Approver != req.UserInfo.Username {
-		return admission.Denied("The approver must be the same as the user creating the approval.")
+	if req.Operation == admissionv1.Delete {
+		return admission.Allowed("deletion is allowed")
+	}
+
+	if req.Operation == admissionv1.Update {
+		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
+			return admission.Allowed("kairos-controller-manager is allowed to update access requests")
+		}
+	}
+
+	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
+		return admission.Denied("The approver must be the user creating the approval.")
 	}
 
 	request := &accessv1alpha1.AccessRequest{}

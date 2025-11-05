@@ -1,28 +1,37 @@
 package common
 
 import (
-	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
+	"antware.xyz/kairos/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const JITFinalizer = "access.antware.xyz/finalizer"
 
+type AccessGrantObject interface {
+	client.Object
+	GetStatus() *v1alpha1.AccessGrantStatus
+	SetStatus(status *v1alpha1.AccessGrantStatus)
+	GetScope() v1alpha1.RequestScope
+	GetName() string
+}
+
 type AccessRequestObject interface {
 	client.Object
-	GetSpec() *accessv1alpha1.AccessRequestBaseSpec
-	GetStatus() *accessv1alpha1.AccessRequestStatus
-	SetStatus(status *accessv1alpha1.AccessRequestStatus)
-	GetScope() string
+	GetSpec() *v1alpha1.AccessRequestBaseSpec
+	GetStatus() *v1alpha1.AccessRequestStatus
+	SetStatus(status *v1alpha1.AccessRequestStatus)
+	GetScope() v1alpha1.RequestScope
 	GetNamespace() string
 	GetName() string
+	GetSubject() string
 }
 
 type AccessResponseObject interface {
 	client.Object
-	GetResponse() accessv1alpha1.ResponseState
+	GetResponse() v1alpha1.ResponseState
 	GetApprover() string
 }
 
 type AccessPolicyListInterface interface {
-	GetPolicy() accessv1alpha1.SubjectPolicy
+	GetPolicy() v1alpha1.SubjectPolicy
 }

@@ -10,12 +10,15 @@ const (
 
 type AccessResponseSpec struct {
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="RequestRef cannot be changed after creation"
+	// +required
 	RequestRef string `json:"requestRef"`
 
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Approver cannot be changed after creation"
+	// +required
 	Approver string `json:"approver"`
 
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Response cannot be changed after creation"
+	// +required
 	Response ResponseState `json:"response"`
 }
 

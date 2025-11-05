@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"antware.xyz/kairos/api/v1alpha1"
+	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -32,7 +33,10 @@ func (m *ClusterAccessRequestMutator) Handle(ctx context.Context, req admission.
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	obj.Spec.Subject = req.UserInfo.Username
+	if req.Operation == admissionv1.Create {
+		obj.Spec.Subject = req.UserInfo.Username
+		obj.Spec.Groups = req.UserInfo.Groups
+	}
 
 	marshaled, err := json.Marshal(obj)
 	if err != nil {

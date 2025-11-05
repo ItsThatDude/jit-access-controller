@@ -46,9 +46,8 @@ var _ = Describe("KairosReconciler with envtest", func() {
 		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.AccessPolicy{})
 
 		reconciler = &RequestReconciler{
-			Client:          mgr.GetClient(),
-			Scheme:          scheme.Scheme,
-			SystemNamespace: "default",
+			Client: mgr.GetClient(),
+			Scheme: scheme.Scheme,
 		}
 	})
 
@@ -129,7 +128,7 @@ var _ = Describe("KairosReconciler with envtest", func() {
 		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 
 		// Wait for the Grant to be created
-		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: reconciler.SystemNamespace, Name: requestObj.Name}, &v1alpha1.AccessGrant{})
+		waitForCreated(ctx, k8sClient, client.ObjectKey{Namespace: requestObj.Namespace, Name: requestObj.Name}, &v1alpha1.AccessGrant{})
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())

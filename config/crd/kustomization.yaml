@@ -9,6 +9,7 @@ resources:
 - bases/access.antware.xyz_accessresponses.yaml
 - bases/access.antware.xyz_clusteraccessresponses.yaml
 - bases/access.antware.xyz_accessgrants.yaml
+- bases/access.antware.xyz_clusteraccessgrants.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches: []

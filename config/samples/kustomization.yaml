@@ -7,4 +7,5 @@ resources:
 - access_v1alpha1_accessresponse.yaml
 - access_v1alpha1_clusteraccessresponse.yaml
 - access_v1alpha1_accessgrant.yaml
+- access_v1alpha1_clusteraccessgrant.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

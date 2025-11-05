@@ -25,10 +25,9 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 		ctx = context.Background()
 
 		reconciler = &GrantReconciler{
-			Client:          mgr.GetClient(),
-			Scheme:          scheme.Scheme,
-			Recorder:        mgr.GetEventRecorderFor("accessgrant-controller"),
-			SystemNamespace: "default",
+			Client:   mgr.GetClient(),
+			Scheme:   scheme.Scheme,
+			Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
 		}
 	})
 
@@ -39,18 +38,15 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 	It("should create ClusterRoleBinding for approved cluster scoped AccessGrant", func() {
 		grantName := fmt.Sprintf("test-grant-%d", time.Now().UnixNano())
 
-		grantObj := &v1alpha1.AccessGrant{
+		grantObj := &v1alpha1.ClusterAccessGrant{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: reconciler.SystemNamespace,
-				Name:      grantName,
+				Name: grantName,
 			},
-			Spec: v1alpha1.AccessGrantSpec{},
 		}
 
 		Expect(k8sClient.Create(ctx, grantObj)).To(Succeed())
 		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), grantObj)
 
-		grantObj.Status.Scope = v1alpha1.GrantScopeCluster
 		grantObj.Status.ApprovedBy = []string{"admin"}
 		grantObj.Status.RequestId = "test-request"
 		grantObj.Status.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}
@@ -83,7 +79,6 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 			}, nil
 		}, 5*time.Second, 500*time.Millisecond).Should(SatisfyAll(
 			WithTransform(func(rs grantStatus) string { return rs.ID }, Not(BeEmpty())),
-			WithTransform(func(rs grantStatus) []string { return rs.Finalizers }, ContainElement(common.JITFinalizer)),
 		))
 
 		// Wait for the RoleBindingCreated status to be set
@@ -100,12 +95,9 @@ var _ = Describe("JITGrantReconciler with envtest", func() {
 
 		// Delete the object (simulate user deletion)
 		Expect(k8sClient.Delete(ctx, grantObj)).To(Succeed())
-		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})
-
-		// Reconcile to handle finalizer cleanup
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 		// Wait until fully deleted
 		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})
+		waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: grantObj.Name}, &rbacv1.ClusterRoleBinding{})
 	})
 })

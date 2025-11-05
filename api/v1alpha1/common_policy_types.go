@@ -7,6 +7,7 @@ import (
 // SubjectPolicy defines access rules for a single subject (user/serviceaccount).
 type SubjectPolicy struct {
 	// Subject is the identity (email or K8s username) of the requester.
+	// +required
 	Subjects []string `json:"subjects"`
 
 	// AllowedRoles is a list of roles the subject is allowed to request.
@@ -17,6 +18,7 @@ type SubjectPolicy struct {
 
 	// Duration specifies the maximum amount of time the access can last (e.g. "5s", "10m", "2h45m").
 	// +kubebuilder:validation:Pattern=`^(\d+(ns|us|µs|ms|s|m|h))+$`
+	// +required
 	MaxDuration string `json:"maxDuration"`
 
 	// The minimum number of approvals required to grant the request
@@ -25,8 +27,10 @@ type SubjectPolicy struct {
 	RequiredApprovals int `json:"requiredApprovals"`
 
 	// Approvers
+	// +listType=set
 	Approvers []string `json:"approvers,omitempty"`
 
 	// Approver Groups
+	// +listType=set
 	ApproverGroups []string `json:"approverGroups,omitempty"`
 }

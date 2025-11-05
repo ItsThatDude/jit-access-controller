@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"antware.xyz/kairos/api/v1alpha1"
+	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -32,8 +33,9 @@ func (m *ClusterAccessResponseMutator) Handle(ctx context.Context, req admission
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	// Set the approver to the current user
-	obj.Spec.Approver = req.UserInfo.Username
+	if req.Operation == admissionv1.Create {
+		obj.Spec.Approver = req.UserInfo.Username
+	}
 
 	marshaled, err := json.Marshal(obj)
 	if err != nil {

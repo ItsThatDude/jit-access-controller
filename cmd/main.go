@@ -40,6 +40,7 @@ import (
 
 	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
 	"antware.xyz/kairos/internal/controller"
+	"antware.xyz/kairos/internal/metrics"
 	webhookv1alpha1 "antware.xyz/kairos/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
@@ -98,6 +99,20 @@ func main() {
 	}
 
 	setupLog.Info("Controller is starting", "version", Version)
+
+	namespace, err := getSystemNamespace()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get system namespace from environment variable")
+		os.Exit(1)
+	}
+
+	serviceAccount, err := getServiceAccountName()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get service account name")
+		os.Exit(1)
+	}
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -188,6 +203,8 @@ func main() {
 		})
 	}
 
+	metrics.RegisterMetrics(Version)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
@@ -212,35 +229,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	systemNamespace, err := getSystemNamespace()
-	if err != nil {
-		setupLog.Error(err, "unable to find SYSTEM_NAMESPACE env variable")
-		os.Exit(1)
-	}
-
 	if err := (&controller.RequestReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		SystemNamespace: systemNamespace,
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManagerCluster(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.RequestReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		SystemNamespace: systemNamespace,
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.GrantReconciler{
-		Client:          mgr.GetClient(),
-		Scheme:          mgr.GetScheme(),
-		Recorder:        mgr.GetEventRecorderFor("accessgrant-controller"),
-		SystemNamespace: systemNamespace,
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+	}).SetupWithManagerCluster(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
+		os.Exit(1)
+	}
+
+	if err := (&controller.GrantReconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
 	}).SetupWithManagerNamespaced(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
 		os.Exit(1)
@@ -249,14 +266,14 @@ func main() {
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
 	}
 	// +kubebuilder:scaffold:builder
 
@@ -303,4 +320,14 @@ func getSystemNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", systemNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+func getServiceAccountName() (string, error) {
+	var serviceAccountEnvVar = "SERVICE_ACCOUNT_NAME"
+
+	sa, found := os.LookupEnv(serviceAccountEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", serviceAccountEnvVar)
+	}
+	return sa, nil
 }

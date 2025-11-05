@@ -20,44 +20,45 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *AccessGrant) GetStatus() *AccessGrantStatus {
+func (r *ClusterAccessGrant) GetStatus() *AccessGrantStatus {
 	return &r.Status
 }
-func (r *AccessGrant) SetStatus(status *AccessGrantStatus) {
+func (r *ClusterAccessGrant) SetStatus(status *AccessGrantStatus) {
 	r.Status = *status
 }
-func (r *AccessGrant) GetScope() RequestScope {
-	return RequestScopeNamespace
+func (r *ClusterAccessGrant) GetScope() RequestScope {
+	return RequestScopeCluster
 }
-func (r *AccessGrant) GetName() string {
+func (r *ClusterAccessGrant) GetName() string {
 	return r.Name
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 
-// AccessGrant is the Schema for the accessgrants API
-type AccessGrant struct {
+// ClusterAccessGrant is the Schema for the clusteraccessgrants API
+type ClusterAccessGrant struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
 
-	// status defines the observed state of AccessGrant
+	// status defines the observed state of ClusterAccessGrant
 	// +optional
 	Status AccessGrantStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
 
-// AccessGrantList contains a list of AccessGrant
-type AccessGrantList struct {
+// ClusterAccessGrantList contains a list of ClusterAccessGrant
+type ClusterAccessGrantList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AccessGrant `json:"items"`
+	Items           []ClusterAccessGrant `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AccessGrant{}, &AccessGrantList{})
+	SchemeBuilder.Register(&ClusterAccessGrant{}, &ClusterAccessGrantList{})
 }
