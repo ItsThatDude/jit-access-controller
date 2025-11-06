@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Kairos',
+  title: 'JITAccess',
   tagline: 'Just-in-time Access Controller',
   favicon: 'img/favicon.ico',
 
@@ -18,12 +18,12 @@ const config: Config = {
   url: 'https://itsthatdude.github-pages.com/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/kairos/',
+  baseUrl: '/jitaccess/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'itsthatdude', // Usually your GitHub org/user name.
-  projectName: 'kairos', // Usually your repo name.
+  projectName: 'jitaccess', // Usually your repo name.
   trailingSlash: false,
 
   onBrokenLinks: 'throw',
@@ -45,7 +45,7 @@ const config: Config = {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl:
-            'https://github.com/itsthatdude/kairos/tree/main/docs/',
+            'https://github.com/itsthatdude/jitaccess/tree/main/docs/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -61,9 +61,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Kairos',
+      title: 'JITAccess',
       logo: {
-        alt: 'Kairos',
+        alt: 'JITAccess',
         src: 'img/logo.svg',
       },
       items: [
@@ -74,7 +74,7 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://github.com/itsthatdude/kairos',
+          href: 'https://github.com/itsthatdude/jitaccess',
           label: 'GitHub',
           position: 'right',
         },
@@ -82,7 +82,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} Kairos, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} JITAccess, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

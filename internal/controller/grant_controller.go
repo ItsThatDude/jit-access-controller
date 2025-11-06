@@ -34,8 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
-	common "antware.xyz/kairos/internal/common"
+	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	common "github.com/itsthatdude/jitaccess-controller/internal/common"
 )
 
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants,verbs=get;list;watch;create;update;patch;delete

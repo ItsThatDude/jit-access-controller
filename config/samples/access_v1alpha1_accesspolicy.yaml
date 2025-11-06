@@ -2,7 +2,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: AccessPolicy
 metadata:
   labels:
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     app.kubernetes.io/managed-by: kustomize
   name: accesspolicy-sample-alice
 spec:
@@ -28,7 +28,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: AccessPolicy
 metadata:
   labels:
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     app.kubernetes.io/managed-by: kustomize
   name: accesspolicy-sample-bob
 spec:

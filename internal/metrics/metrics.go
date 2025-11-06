@@ -6,7 +6,7 @@ import (
 	k8smetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-const metricNamespace string = "kairos_controller"
+const metricNamespace string = "jitaccess_controller"
 
 var (
 	BuildInfo prometheus.Gauge
@@ -15,7 +15,7 @@ var (
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
 			Name:      "test_counter",
-			Help:      "A test counter for kairos metrics",
+			Help:      "A test counter for jitaccess metrics",
 		},
 	)
 

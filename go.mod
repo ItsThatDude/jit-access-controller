@@ -1,4 +1,4 @@
-module antware.xyz/kairos
+module github.com/itsthatdude/jitaccess-controller
 
 go 1.24.0
 

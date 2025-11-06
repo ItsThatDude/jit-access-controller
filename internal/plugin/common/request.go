@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"antware.xyz/kairos/api/v1alpha1"
-	internal "antware.xyz/kairos/internal/common"
+	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	internal "github.com/itsthatdude/jitaccess-controller/internal/common"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

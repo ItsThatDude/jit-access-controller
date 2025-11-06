@@ -38,10 +38,10 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
-	"antware.xyz/kairos/internal/controller"
-	"antware.xyz/kairos/internal/metrics"
-	webhookv1alpha1 "antware.xyz/kairos/internal/webhook/v1alpha1"
+	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	"github.com/itsthatdude/jitaccess-controller/internal/controller"
+	"github.com/itsthatdude/jitaccess-controller/internal/metrics"
+	webhookv1alpha1 "github.com/itsthatdude/jitaccess-controller/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"slices"
 
-	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
-	"antware.xyz/kairos/internal/policy"
-	"antware.xyz/kairos/internal/utils"
+	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	"github.com/itsthatdude/jitaccess-controller/internal/policy"
+	"github.com/itsthatdude/jitaccess-controller/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -51,7 +51,7 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 
 	if req.Operation == admissionv1.Update {
 		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
-			return admission.Allowed("kairos-controller-manager is allowed to update access requests")
+			return admission.Allowed("jitaccess-controller-manager is allowed to update access requests")
 		}
 	}
 

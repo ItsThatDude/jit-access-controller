@@ -26,9 +26,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	accessv1alpha1 "antware.xyz/kairos/api/v1alpha1"
-	"antware.xyz/kairos/internal/policy"
-	"antware.xyz/kairos/internal/utils"
+	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	"github.com/itsthatdude/jitaccess-controller/internal/policy"
+	"github.com/itsthatdude/jitaccess-controller/internal/utils"
 )
 
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessrequest,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessrequests,verbs=create;update,versions=v1alpha1,name=vclusteraccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
@@ -65,7 +65,7 @@ func (v *ClusterAccessRequestValidator) Handle(ctx context.Context, req admissio
 
 	if req.Operation == admissionv1.Update {
 		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
-			return admission.Allowed("kairos-controller-manager is allowed to update access requests")
+			return admission.Allowed("jitaccess-controller-manager is allowed to update access requests")
 		}
 	}
 

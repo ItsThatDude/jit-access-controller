@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
-  name: kairos-leader-election-role
+  name: jitaccess-leader-election-role
 rules:
 - apiGroups:
   - ""

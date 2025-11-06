@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"antware.xyz/kairos/api/v1alpha1"
-	common "antware.xyz/kairos/internal/common"
+	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	common "github.com/itsthatdude/jitaccess-controller/internal/common"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	rbacv1 "k8s.io/api/rbac/v1"

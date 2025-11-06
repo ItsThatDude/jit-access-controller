@@ -1,16 +1,16 @@
-# Kairos Just-in-time Access Controller
+# JITAccess Just-in-time Access Controller
 
-[![Lint](https://github.com/ItsThatDude/kairos/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/kairos/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/kairos/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/kairos/actions/workflows/test-chart.yml)
+[![Lint](https://github.com/ItsThatDude/jitaccess/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/jitaccess/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/jitaccess/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/jitaccess/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/jitaccess/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/jitaccess/actions/workflows/test-chart.yml)
 
-**Kairos** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+**JITAccess** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 ## Description
 
-The Kairos controller provides a mechanism for requesting and granting temporary, on-demand access to resources in Kubernetes clusters.
+The JITAccess controller provides a mechanism for requesting and granting temporary, on-demand access to resources in Kubernetes clusters.
 
 ## Getting Started
 
-To get started with Kairos, add the helm repository and install the chart.
+To get started with JITAccess, add the helm repository and install the chart.
 
 Install helm repository:
 
@@ -21,8 +21,8 @@ helm repo add itsthatdude https://itsthatdude.github.io/helm-charts/`
 Install the chart
 
 ```sh
-kubectl create namespace kairos-system
-helm install kairos itsthatdude/kairos -n kairos-system
+kubectl create namespace jitaccess-system
+helm install jitaccess itsthatdude/jitaccess -n jitaccess-system
 ```
 
 See the Getting Started guide for more information
@@ -41,7 +41,7 @@ See the Getting Started guide for more information
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/kairos:tag
+make docker-build docker-push IMG=<some-registry>/jitaccess:tag
 ```
 
 **NOTE:** This image ought to be published in the personal registry you specified.
@@ -57,7 +57,7 @@ make install
 **Deploy the Manager to the cluster with the image specified by `IMG`:**
 
 ```sh
-make deploy IMG=<some-registry>/kairos:tag
+make deploy IMG=<some-registry>/jitaccess:tag
 ```
 
 > **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
@@ -101,7 +101,7 @@ Following the options to release and provide this solution to the users.
 #### Build the installer for the image built and published in the registry
 
   ```sh
-  make build-installer IMG=<some-registry>/kairos:tag
+  make build-installer IMG=<some-registry>/jitaccess:tag
   ```
 
   > **NOTE:** The makefile target mentioned above generates an 'install.yaml'
@@ -116,7 +116,7 @@ Following the options to release and provide this solution to the users.
   the project, i.e.:
 
   ```sh
-  kubectl apply -f https://raw.githubusercontent.com/<org>/kairos/<tag or branch>/dist/install.yaml
+  kubectl apply -f https://raw.githubusercontent.com/<org>/jitaccess/<tag or branch>/dist/install.yaml
   ```
 
 ### By providing a Helm Chart

@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: kairos-metrics-auth-role
+  name: jitaccess-metrics-auth-role
 rules:
 - apiGroups:
   - authentication.k8s.io

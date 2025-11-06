@@ -4,9 +4,9 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
-  name: kairos-system
+  name: jitaccess-system
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -972,18 +972,18 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-controller-manager
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-leader-election-role
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-leader-election-role
+  namespace: jitaccess-system
 rules:
 - apiGroups:
   - ""
@@ -1022,8 +1022,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessgrant-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessgrant-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1045,8 +1045,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accesspolicy-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1066,8 +1066,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accesspolicy-editor-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-editor-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1093,8 +1093,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accesspolicy-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accesspolicy-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1116,8 +1116,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessrequest-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1137,8 +1137,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessrequest-requester-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-requester-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1161,8 +1161,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessrequest-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessrequest-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1184,8 +1184,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessresponse-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1205,8 +1205,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessresponse-approver-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-approver-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1229,8 +1229,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessresponse-editor-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-editor-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1256,8 +1256,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-accessresponse-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-accessresponse-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1279,8 +1279,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccesspolicy-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1300,8 +1300,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccesspolicy-editor-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-editor-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1327,8 +1327,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccesspolicy-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccesspolicy-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1350,8 +1350,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessrequest-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1371,8 +1371,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessrequest-requester-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-requester-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1395,8 +1395,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessrequest-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessrequest-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1418,8 +1418,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessresponse-admin-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-admin-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1439,8 +1439,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessresponse-approver-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-approver-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1463,8 +1463,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessresponse-editor-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-editor-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1490,8 +1490,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-clusteraccessresponse-viewer-role
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-clusteraccessresponse-viewer-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1511,7 +1511,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kairos-manager-role
+  name: jitaccess-manager-role
 rules:
 - apiGroups:
   - access.antware.xyz
@@ -1585,7 +1585,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kairos-metrics-auth-role
+  name: jitaccess-metrics-auth-role
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -1603,7 +1603,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kairos-metrics-reader
+  name: jitaccess-metrics-reader
 rules:
 - nonResourceURLs:
   - /metrics
@@ -1615,56 +1615,56 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-leader-election-rolebinding
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-leader-election-rolebinding
+  namespace: jitaccess-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: kairos-leader-election-role
+  name: jitaccess-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: kairos-controller-manager
-  namespace: kairos-system
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-manager-rolebinding
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kairos-manager-role
+  name: jitaccess-manager-role
 subjects:
 - kind: ServiceAccount
-  name: kairos-controller-manager
-  namespace: kairos-system
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kairos-metrics-auth-rolebinding
+  name: jitaccess-metrics-auth-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kairos-metrics-auth-role
+  name: jitaccess-metrics-auth-role
 subjects:
 - kind: ServiceAccount
-  name: kairos-controller-manager
-  namespace: kairos-system
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
-  name: kairos-controller-manager-metrics-service
-  namespace: kairos-system
+  name: jitaccess-controller-manager-metrics-service
+  namespace: jitaccess-system
 spec:
   ports:
   - name: https
@@ -1672,7 +1672,7 @@ spec:
     protocol: TCP
     targetPort: 8443
   selector:
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
 ---
 apiVersion: v1
@@ -1681,9 +1681,9 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-webhook-service
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-webhook-service
+  namespace: jitaccess-system
 spec:
   ports:
   - port: 443
@@ -1691,7 +1691,7 @@ spec:
     targetPort: 9443
   selector:
     app.kubernetes.io/component: controller
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
 ---
 apiVersion: apps/v1
@@ -1700,16 +1700,16 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
-  name: kairos-controller-manager
-  namespace: kairos-system
+  name: jitaccess-controller-manager
+  namespace: jitaccess-system
 spec:
   replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/component: controller
-      app.kubernetes.io/name: kairos
+      app.kubernetes.io/name: jitaccess
       control-plane: controller-manager
   template:
     metadata:
@@ -1717,7 +1717,7 @@ spec:
         kubectl.kubernetes.io/default-container: manager
       labels:
         app.kubernetes.io/component: controller
-        app.kubernetes.io/name: kairos
+        app.kubernetes.io/name: jitaccess
         control-plane: controller-manager
     spec:
       containers:
@@ -1733,7 +1733,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: itsthatdood/kairos-controller:latest
+        image: itsthatdood/jitaccess-controller:latest
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1772,7 +1772,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: kairos-controller-manager
+      serviceAccountName: jitaccess-controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
       - name: webhook-certs
@@ -1784,16 +1784,16 @@ kind: Certificate
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-metrics-certs
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-metrics-certs
+  namespace: jitaccess-system
 spec:
   dnsNames:
   - SERVICE_NAME.SERVICE_NAMESPACE.svc
   - SERVICE_NAME.SERVICE_NAMESPACE.svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: kairos-selfsigned-issuer
+    name: jitaccess-selfsigned-issuer
   secretName: metrics-server-cert
 ---
 apiVersion: cert-manager.io/v1
@@ -1801,16 +1801,16 @@ kind: Certificate
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-serving-cert
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-serving-cert
+  namespace: jitaccess-system
 spec:
   dnsNames:
-  - kairos-webhook-service.kairos-system.svc
-  - kairos-webhook-service.kairos-system.svc.cluster.local
+  - jitaccess-webhook-service.jitaccess-system.svc
+  - jitaccess-webhook-service.jitaccess-system.svc.cluster.local
   issuerRef:
     kind: Issuer
-    name: kairos-selfsigned-issuer
+    name: jitaccess-selfsigned-issuer
   secretName: webhook-server-cert
 ---
 apiVersion: cert-manager.io/v1
@@ -1818,9 +1818,9 @@ kind: Issuer
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kairos
-  name: kairos-selfsigned-issuer
-  namespace: kairos-system
+    app.kubernetes.io/name: jitaccess
+  name: jitaccess-selfsigned-issuer
+  namespace: jitaccess-system
 spec:
   selfSigned: {}
 ---
@@ -1828,15 +1828,15 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: kairos-system/kairos-serving-cert
-  name: kairos-mutating-webhook-configuration
+    cert-manager.io/inject-ca-from: jitaccess-system/jitaccess-serving-cert
+  name: jitaccess-mutating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /mutate-access-antware-xyz-v1alpha1-accessrequest
   failurePolicy: Fail
   name: maccessrequest-v1alpha1.kb.io
@@ -1855,8 +1855,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /mutate-access-antware-xyz-v1alpha1-accessresponse
   failurePolicy: Fail
   name: maccessresponse-v1alpha1.kb.io
@@ -1875,8 +1875,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
   failurePolicy: Fail
   name: mclusteraccessrequest-v1alpha1.kb.io
@@ -1895,8 +1895,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
   failurePolicy: Fail
   name: mclusteraccessresponse-v1alpha1.kb.io
@@ -1916,15 +1916,15 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: kairos-system/kairos-serving-cert
-  name: kairos-validating-webhook-configuration
+    cert-manager.io/inject-ca-from: jitaccess-system/jitaccess-serving-cert
+  name: jitaccess-validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /validate-access-antware-xyz-v1alpha1-accessrequest
   failurePolicy: Fail
   name: vaccessrequest-v1alpha1.kb.io
@@ -1943,8 +1943,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /validate-access-antware-xyz-v1alpha1-accessresponse
   failurePolicy: Fail
   name: vaccessresponse-v1alpha1.kb.io
@@ -1963,8 +1963,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
   failurePolicy: Fail
   name: vclusteraccessrequest-v1alpha1.kb.io
@@ -1983,8 +1983,8 @@ webhooks:
   - v1
   clientConfig:
     service:
-      name: kairos-webhook-service
-      namespace: kairos-system
+      name: jitaccess-webhook-service
+      namespace: jitaccess-system
       path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
   failurePolicy: Fail
   name: vclusteraccessresponse-v1alpha1.kb.io

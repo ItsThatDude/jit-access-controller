@@ -2,7 +2,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessRequest
 metadata:
   labels:
-    app.kubernetes.io/name: kairos
+    app.kubernetes.io/name: jitaccess
     app.kubernetes.io/managed-by: kustomize
   name: clusteraccessrequest-sample
 spec:
