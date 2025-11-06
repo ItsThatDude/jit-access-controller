@@ -1,14 +1,14 @@
 apiVersion: v2
 name: jitaccess
 description: Helm chart for the jitaccess controller
-home: https://https://github.com/ItsThatDude/jitaccess
+home: https://github.com/ItsThatDude/jitaccess-controller
 keywords:
   - just-in-time
   - jit
   - access
   - rbac
 type: application
-version: 0.1.2
-appVersion: "0.1.1"
+version: 0.1.0
+appVersion: "0.1.0"
 sources:
-  - https://https://github.com/ItsThatDude/jitaccess
+  - https://github.com/ItsThatDude/jitaccess-controller
