@@ -124,6 +124,7 @@ var _ = Describe("AccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 			// Wait until fully deleted
 			waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})

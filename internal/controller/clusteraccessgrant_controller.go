@@ -44,6 +44,8 @@ type ClusterAccessGrantReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/finalizers,verbs=update
 
+// +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
+
 func (r *ClusterAccessGrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 

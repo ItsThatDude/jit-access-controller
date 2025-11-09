@@ -123,6 +123,7 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 			// Wait until fully deleted
 			waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: roleBindingName}, &rbacv1.ClusterRoleBinding{})

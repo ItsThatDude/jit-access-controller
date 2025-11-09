@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -165,7 +166,16 @@ func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, 
 func reconcileOnce(ctx context.Context, r reconcile.TypedReconciler[reconcile.Request], key client.ObjectKey) AsyncAssertion {
 	req := ctrl.Request{NamespacedName: key}
 	return Eventually(func() error {
-		_, err := r.Reconcile(ctx, req)
-		return err
+		result, err := r.Reconcile(ctx, req)
+
+		if err != nil {
+			return err
+		}
+
+		if result.RequeueAfter > 0 && result.RequeueAfter < 1*time.Minute {
+			return fmt.Errorf("reconcile requested requeue after %s", result.RequeueAfter.String())
+		}
+
+		return nil
 	}, 5*time.Second, 100*time.Millisecond)
 }
