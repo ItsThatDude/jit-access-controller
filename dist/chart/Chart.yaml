@@ -1,5 +1,5 @@
 apiVersion: v2
-name: jitaccess
+name: jit-access
 description: Helm chart for the jitaccess controller
 home: https://github.com/ItsThatDude/jit-access-controller
 keywords:
