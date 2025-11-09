@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG_NAME ?= itsthatdood/jit-access-controller
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -18,6 +18,25 @@ CONTAINER_TOOL ?= docker
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
+
+COMMIT = $(shell git rev-parse HEAD)
+TAG = $(shell git describe --exact-match --abbrev=0 --tags '$(COMMIT)' 2> /dev/null || true)
+DIRTY = $(shell git diff --shortstat 2> /dev/null | tail -n1)
+
+# Use a tag if set, otherwise use the commit hash
+ifeq ($(TAG),)
+VERSION := $(COMMIT)
+else
+VERSION := $(TAG)
+endif
+
+# Check for changed files
+ifneq ($(DIRTY),)
+VERSION := $(VERSION)-dirty
+endif
+
+IMG ?= $(IMG_NAME):latest
+IMG_TAGGED ?= $(IMG_NAME):$(VERSION)
 
 .PHONY: all
 all: build
@@ -59,13 +78,13 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate fmt vet setup-envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test -v $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 # TODO(user): To use a different vendor for e2e tests, modify the setup under 'tests/e2e'.
 # The default setup assumes Kind is pre-installed and builds/loads the Manager Docker image locally.
 # CertManager is installed by default; skip with:
 # - CERT_MANAGER_INSTALL_SKIP=true
-KIND_CLUSTER ?= jitaccess-controller-test-e2e
+KIND_CLUSTER ?= jit-access-test-e2e
 
 .PHONY: setup-test-e2e
 setup-test-e2e: ## Set up a Kind cluster for e2e tests if it does not exist
@@ -104,9 +123,20 @@ lint-config: golangci-lint ## Verify golangci-lint linter configuration
 
 ##@ Build
 
+.PHONY: build-plugin
+build-plugin: build-plugin-linux build-plugin-win
+
+.PHONY: build-plugin-linux
+build-plugin-linux:
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access-linux-amd64 cmd/kubectl-access/main.go
+
+.PHONY: build-plugin-win
+build-plugin-win:
+	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.Version=${VERSION}" -o bin/kubectl-access-windows-amd64.exe cmd/kubectl-access/main.go
+
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager cmd/main.go
+	go build -ldflags "-X main.Version=${VERSION}" -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -117,27 +147,31 @@ run: manifests generate fmt vet ## Run a controller from your host.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build -t ${IMG} .
+	$(CONTAINER_TOOL) build --build-arg VERSION=${VERSION} -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
+	if [ -n "$(TAG)" ]; then \
+		$(CONTAINER_TOOL) tag $(IMG) $(IMG_TAGGED); \
+		$(CONTAINER_TOOL) push $(IMG_TAGGED); \
+	fi
 	$(CONTAINER_TOOL) push ${IMG}
 
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
-# architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
+# architectures. (i.e. make docker-buildx IMG=myregistry/jit-access-controller:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
 # - have enabled BuildKit. More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-# - be able to push the image to your registry (i.e. if you do not set a valid value via IMG=<myregistry/image:<tag>> then the export will fail)
+# - be able to push the image to your registry (i.e. if you do not set a valid value via IMG=<myregistry/jit-access-controller:<tag>> then the export will fail)
 # To adequately provide solutions that are compatible with multiple platforms, you should consider using this option.
 PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 .PHONY: docker-buildx
 docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- $(CONTAINER_TOOL) buildx create --name jitaccess-controller-builder
-	$(CONTAINER_TOOL) buildx use jitaccess-controller-builder
+	- $(CONTAINER_TOOL) buildx create --name jit-access-builder
+	$(CONTAINER_TOOL) buildx use jit-access-builder
 	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_TOOL) buildx rm jitaccess-controller-builder
+	- $(CONTAINER_TOOL) buildx rm jit-access-builder
 	rm Dockerfile.cross
 
 .PHONY: build-installer

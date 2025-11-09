@@ -21,16 +21,20 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -45,6 +49,7 @@ var (
 	testEnv   *envtest.Environment
 	cfg       *rest.Config
 	k8sClient client.Client
+	mgr       ctrl.Manager
 )
 
 func TestControllers(t *testing.T) {
@@ -59,6 +64,9 @@ var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.TODO())
 
 	var err error
+	err = accessv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
 	err = accessv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -80,9 +88,33 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
-	Expect(err).NotTo(HaveOccurred())
-	Expect(k8sClient).NotTo(BeNil())
+	mgr, err = ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.AccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if r, ok := obj.(*accessv1alpha1.AccessResponse); ok {
+				return []string{r.Spec.RequestRef}
+			}
+			return nil
+		})).To(Succeed())
+
+	Expect(mgr.GetFieldIndexer().IndexField(ctx, &accessv1alpha1.ClusterAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if r, ok := obj.(*accessv1alpha1.ClusterAccessResponse); ok {
+				return []string{r.Spec.RequestRef}
+			}
+			return nil
+		})).To(Succeed())
+
+	go func() {
+		Expect(mgr.Start(ctx)).To(Succeed())
+	}()
+
+	cacheReady := mgr.GetCache().WaitForCacheSync(ctx)
+	Expect(cacheReady).To(BeTrue())
+
+	k8sClient = mgr.GetClient()
 })
 
 var _ = AfterSuite(func() {
@@ -113,4 +145,27 @@ func getFirstFoundEnvTestBinaryDir() string {
 		}
 	}
 	return ""
+}
+
+func waitForCreated(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) {
+	Eventually(func() error { return c.Get(ctx, key, obj) }, 5*time.Second, 100*time.Millisecond).Should(Succeed())
+}
+
+func waitForDeletionTimestamp(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) {
+	Eventually(func() bool {
+		err := c.Get(ctx, key, obj)
+		return err == nil && obj.GetDeletionTimestamp() != nil
+	}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
+}
+
+func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) {
+	Eventually(func() bool { return errors.IsNotFound(c.Get(ctx, key, obj)) }, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
+}
+
+func reconcileOnce(ctx context.Context, r reconcile.TypedReconciler[reconcile.Request], key client.ObjectKey) AsyncAssertion {
+	req := ctrl.Request{NamespacedName: key}
+	return Eventually(func() error {
+		_, err := r.Reconcile(ctx, req)
+		return err
+	}, 5*time.Second, 100*time.Millisecond)
 }

@@ -39,10 +39,37 @@ spec:
           spec:
             description: spec defines the desired state of AccessResponse
             properties:
-              foo:
-                description: foo is an example field of AccessResponse. Edit accessresponse_types.go
-                  to remove/update
+              approver:
                 type: string
+                x-kubernetes-validations:
+                - message: Approver cannot be changed after creation
+                  rule: self == oldSelf
+              groups:
+                description: Groups are the groups the approver belongs to
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+                x-kubernetes-validations:
+                - message: Groups cannot be changed after creation
+                  rule: self == oldSelf
+              requestRef:
+                type: string
+                x-kubernetes-validations:
+                - message: RequestRef cannot be changed after creation
+                  rule: self == oldSelf
+              response:
+                enum:
+                - Approved
+                - Denied
+                type: string
+                x-kubernetes-validations:
+                - message: Response cannot be changed after creation
+                  rule: self == oldSelf
+            required:
+            - approver
+            - requestRef
+            - response
             type: object
           status:
             description: status defines the observed state of AccessResponse

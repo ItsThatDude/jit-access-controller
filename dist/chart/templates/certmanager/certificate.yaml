@@ -25,9 +25,9 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
   dnsNames:
-    - jitaccess-controller.{{ .Release.Namespace }}.svc
-    - jitaccess-controller.{{ .Release.Namespace }}.svc.cluster.local
-    - jitaccess-controller-webhook-service.{{ .Release.Namespace }}.svc
+    - jit-access.{{ .Release.Namespace }}.svc
+    - jit-access.{{ .Release.Namespace }}.svc.cluster.local
+    - jit-access-webhook-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
@@ -49,9 +49,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   dnsNames:
-    - jitaccess-controller.{{ .Release.Namespace }}.svc
-    - jitaccess-controller.{{ .Release.Namespace }}.svc.cluster.local
-    - jitaccess-controller-metrics-service.{{ .Release.Namespace }}.svc
+    - jit-access.{{ .Release.Namespace }}.svc
+    - jit-access.{{ .Release.Namespace }}.svc.cluster.local
+    - jit-access-metrics-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer

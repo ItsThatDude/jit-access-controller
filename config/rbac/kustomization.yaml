@@ -20,22 +20,15 @@ resources:
 - metrics_reader_role.yaml
 # For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
 # default, aiding admins in cluster management. Those roles are
-# not used by the jitaccess-controller itself. You can comment the following lines
+# not used by the jit-access itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
-- clusteraccessgrant_admin_role.yaml
-- clusteraccessgrant_editor_role.yaml
-- clusteraccessgrant_viewer_role.yaml
-- accessgrant_admin_role.yaml
-- accessgrant_editor_role.yaml
 - accessgrant_viewer_role.yaml
-- clusteraccessresponse_admin_role.yaml
-- clusteraccessresponse_editor_role.yaml
+- clusteraccessgrant_viewer_role.yaml
+- clusteraccessresponse_approver_role.yaml
 - clusteraccessresponse_viewer_role.yaml
-- accessresponse_admin_role.yaml
-- accessresponse_editor_role.yaml
+- accessresponse_approver_role.yaml
 - accessresponse_viewer_role.yaml
-- clusteraccessrequest_admin_role.yaml
-- clusteraccessrequest_editor_role.yaml
+- clusteraccessrequest_requester_role.yaml
 - clusteraccessrequest_viewer_role.yaml
 - clusteraccesspolicy_admin_role.yaml
 - clusteraccesspolicy_editor_role.yaml
@@ -43,7 +36,6 @@ resources:
 - accesspolicy_admin_role.yaml
 - accesspolicy_editor_role.yaml
 - accesspolicy_viewer_role.yaml
-- accessrequest_admin_role.yaml
-- accessrequest_editor_role.yaml
+- accessrequest_requester_role.yaml
 - accessrequest_viewer_role.yaml
 
