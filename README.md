@@ -1,6 +1,6 @@
 # Jit-access Just-in-time Access Controller
 
-[![Lint](https://github.com/ItsThatDude/jit-access/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/jit-access/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/jit-access/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/jit-access/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/jit-access/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/jit-access/actions/workflows/test-chart.yml)
+[![Lint](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml)
 
 **Jit-access** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
