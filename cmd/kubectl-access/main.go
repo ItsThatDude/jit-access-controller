@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/itsthatdude/jitaccess-controller/internal/plugin"
+	"github.com/itsthatdude/jit-access-controller/internal/plugin"
 )
 
 var Version string

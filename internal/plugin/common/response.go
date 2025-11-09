@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -9,7 +9,7 @@ layout:
 plugins:
   helm.kubebuilder.io/v1-alpha: {}
 projectName: jitaccess
-repo: github.com/itsthatdude/jitaccess-controller
+repo: github.com/itsthatdude/jit-access-controller
 resources:
 - api:
     crdVersion: v1
@@ -18,7 +18,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessRequest
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
@@ -30,14 +30,14 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessPolicy
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
   domain: antware.xyz
   group: access
   kind: ClusterAccessPolicy
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -45,7 +45,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: ClusterAccessRequest
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
@@ -57,7 +57,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessResponse
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
@@ -68,7 +68,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: ClusterAccessResponse
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
@@ -80,7 +80,7 @@ resources:
   domain: antware.xyz
   group: access
   kind: AccessGrant
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
@@ -88,6 +88,6 @@ resources:
   domain: antware.xyz
   group: access
   kind: ClusterAccessGrant
-  path: github.com/itsthatdude/jitaccess-controller/api/v1alpha1
+  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
 version: "3"

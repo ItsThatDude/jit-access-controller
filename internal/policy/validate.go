@@ -4,9 +4,9 @@ import (
 	"slices"
 	"time"
 
-	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
-	common "github.com/itsthatdude/jitaccess-controller/internal/common"
-	"github.com/itsthatdude/jitaccess-controller/internal/utils"
+	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	common "github.com/itsthatdude/jit-access-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 )

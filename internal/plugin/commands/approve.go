@@ -3,8 +3,8 @@ package commands
 import (
 	"fmt"
 
-	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
-	"github.com/itsthatdude/jitaccess-controller/internal/plugin/common"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/plugin/common"
 	"github.com/spf13/cobra"
 )
 

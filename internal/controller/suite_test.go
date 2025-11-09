@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	accessv1alpha1 "github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

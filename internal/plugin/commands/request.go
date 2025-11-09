@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
-	"github.com/itsthatdude/jitaccess-controller/internal/common"
-	plugin "github.com/itsthatdude/jitaccess-controller/internal/plugin/common"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/common"
+	plugin "github.com/itsthatdude/jit-access-controller/internal/plugin/common"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

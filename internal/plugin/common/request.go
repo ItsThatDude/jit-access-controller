@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
-	internal "github.com/itsthatdude/jitaccess-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	internal "github.com/itsthatdude/jit-access-controller/internal/common"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

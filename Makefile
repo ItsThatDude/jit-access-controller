@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG_NAME ?= itsthatdood/jitaccess-controller
+IMG_NAME ?= itsthatdood/jit-access-controller
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -158,10 +158,10 @@ docker-push: ## Push docker image with the manager.
 	$(CONTAINER_TOOL) push ${IMG}
 
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
-# architectures. (i.e. make docker-buildx IMG=myregistry/jitaccess-controller:0.0.1). To use this option you need to:
+# architectures. (i.e. make docker-buildx IMG=myregistry/jit-access-controller:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
 # - have enabled BuildKit. More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-# - be able to push the image to your registry (i.e. if you do not set a valid value via IMG=<myregistry/jitaccess-controller:<tag>> then the export will fail)
+# - be able to push the image to your registry (i.e. if you do not set a valid value via IMG=<myregistry/jit-access-controller:<tag>> then the export will fail)
 # To adequately provide solutions that are compatible with multiple platforms, you should consider using this option.
 PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 .PHONY: docker-buildx

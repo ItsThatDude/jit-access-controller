@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/itsthatdude/jitaccess-controller/test/utils"
+	"github.com/itsthatdude/jit-access-controller/test/utils"
 )
 
 var (
@@ -39,7 +39,7 @@ var (
 
 	// projectImage is the name of the image which will be build and loaded
 	// with the code source changes to be tested.
-	projectImage = "itsthatdood/jitaccess-controller:v0.0.1"
+	projectImage = "itsthatdood/jit-access-controller:v0.0.1"
 )
 
 // TestE2E runs the end-to-end (e2e) test suite for the project. These tests execute in an isolated,

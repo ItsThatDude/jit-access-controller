@@ -1,7 +1,7 @@
 apiVersion: v2
 name: jitaccess
 description: Helm chart for the jitaccess controller
-home: https://github.com/ItsThatDude/jitaccess-controller
+home: https://github.com/ItsThatDude/jit-access-controller
 keywords:
   - just-in-time
   - jit
@@ -11,4 +11,4 @@ type: application
 version: 0.1.0
 appVersion: "0.1.0"
 sources:
-  - https://github.com/ItsThatDude/jitaccess-controller
+  - https://github.com/ItsThatDude/jit-access-controller

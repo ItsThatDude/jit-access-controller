@@ -3,7 +3,7 @@ package plugin
 import (
 	"os"
 
-	"github.com/itsthatdude/jitaccess-controller/internal/plugin/commands"
+	"github.com/itsthatdude/jit-access-controller/internal/plugin/commands"
 	"github.com/spf13/cobra"
 )
 

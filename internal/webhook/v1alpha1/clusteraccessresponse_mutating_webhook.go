@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/itsthatdude/jitaccess-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"

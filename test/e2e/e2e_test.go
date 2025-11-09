@@ -27,17 +27,17 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/itsthatdude/jitaccess-controller/test/utils"
+	"github.com/itsthatdude/jit-access-controller/test/utils"
 )
 
 // namespace where the project is deployed in
 const namespace = "jitaccess-system"
 
 // serviceAccountName created for the project
-const serviceAccountName = "jitaccess-controller-manager"
+const serviceAccountName = "jit-access-controller-manager"
 
 // metricsServiceName is the name of the metrics service of the project
-const metricsServiceName = "jitaccess-controller-manager-metrics-service"
+const metricsServiceName = "jit-access-controller-manager-metrics-service"
 
 // metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data
 const metricsRoleBindingName = "jitaccess-metrics-binding"

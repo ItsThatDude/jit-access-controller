@@ -1,4 +1,4 @@
-module github.com/itsthatdude/jitaccess-controller
+module github.com/itsthatdude/jit-access-controller
 
 go 1.24.0
 

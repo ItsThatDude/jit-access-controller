@@ -42,8 +42,8 @@ jobs:
       - name: Prepare jitaccess
         run: |
           go mod tidy
-          make docker-build IMG=jitaccess-controller:v0.1.0
-          kind load docker-image jitaccess-controller:v0.1.0
+          make docker-build IMG=jit-access-controller:v0.1.0
+          kind load docker-image jit-access-controller:v0.1.0
 
       - name: Install Helm
         run: |
@@ -95,9 +95,9 @@ jobs:
 
       - name: Wait for controller to be ready
         run: |
-          kubectl wait --namespace jitaccess-system --for=condition=available --timeout=300s deployment/jitaccess-controller-manager
+          kubectl wait --namespace jitaccess-system --for=condition=available --timeout=300s deployment/jit-access-controller-manager
 
 # TODO: Uncomment if prometheus.enabled is set to true to confirm that the ServiceMonitor gets created
 #      - name: Check Presence of ServiceMonitor
 #        run: |
-#          kubectl wait --namespace jitaccess-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jitaccess-controller-manager-metrics-monitor
+#          kubectl wait --namespace jitaccess-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jit-access-controller-manager-metrics-monitor

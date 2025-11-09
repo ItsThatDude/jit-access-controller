@@ -973,7 +973,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: jitaccess
-  name: jitaccess-controller-manager
+  name: jit-access-controller-manager
   namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1624,7 +1624,7 @@ roleRef:
   name: jitaccess-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: jitaccess-controller-manager
+  name: jit-access-controller-manager
   namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1640,7 +1640,7 @@ roleRef:
   name: jitaccess-manager-role
 subjects:
 - kind: ServiceAccount
-  name: jitaccess-controller-manager
+  name: jit-access-controller-manager
   namespace: jitaccess-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1653,7 +1653,7 @@ roleRef:
   name: jitaccess-metrics-auth-role
 subjects:
 - kind: ServiceAccount
-  name: jitaccess-controller-manager
+  name: jit-access-controller-manager
   namespace: jitaccess-system
 ---
 apiVersion: v1
@@ -1663,7 +1663,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
-  name: jitaccess-controller-manager-metrics-service
+  name: jit-access-controller-manager-metrics-service
   namespace: jitaccess-system
 spec:
   ports:
@@ -1702,7 +1702,7 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: jitaccess
     control-plane: controller-manager
-  name: jitaccess-controller-manager
+  name: jit-access-controller-manager
   namespace: jitaccess-system
 spec:
   replicas: 1
@@ -1733,7 +1733,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        image: itsthatdood/jitaccess-controller:latest
+        image: itsthatdood/jit-access-controller:latest
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1772,7 +1772,7 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
-      serviceAccountName: jitaccess-controller-manager
+      serviceAccountName: jit-access-controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
       - name: webhook-certs
