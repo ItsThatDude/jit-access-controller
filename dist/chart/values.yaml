@@ -3,7 +3,7 @@ controllerManager:
   replicas: 1
   container:
     image:
-      repository: controller
+      repository: itsthatdood/jit-access-controller
       tag: latest
     args:
       - "--leader-elect"
@@ -16,6 +16,7 @@ controllerManager:
       requests:
         cpu: 10m
         memory: 64Mi
+    env: []
     livenessProbe:
       initialDelaySeconds: 15
       periodSeconds: 20
@@ -38,7 +39,7 @@ controllerManager:
     seccompProfile:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
-  serviceAccountName: jitaccess-controller-controller-manager
+  serviceAccountName: jit-access-controller-manager
 
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:

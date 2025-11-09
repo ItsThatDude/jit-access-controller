@@ -20,29 +20,36 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *AccessRequest) GetSpec() *AccessRequestBaseSpec {
+	return &r.Spec.AccessRequestBaseSpec
+}
+func (r *AccessRequest) GetStatus() *AccessRequestStatus {
+	return &r.Status
+}
+func (r *AccessRequest) SetStatus(status *AccessRequestStatus) {
+	r.Status = *status
+}
+func (r *AccessRequest) GetScope() RequestScope {
+	return RequestScopeNamespace
+}
+func (r *AccessRequest) GetNamespace() string {
+	return r.Namespace
+}
+func (r *AccessRequest) GetName() string {
+	return r.Name
+}
+func (r *AccessRequest) GetSubject() string {
+	return r.Spec.Subject
+}
 
 // AccessRequestSpec defines the desired state of AccessRequest
 type AccessRequestSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of AccessRequest. Edit accessrequest_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
-}
-
-// AccessRequestStatus defines the observed state of AccessRequest.
-type AccessRequestStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	AccessRequestBaseSpec `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // AccessRequest is the Schema for the accessrequests API
 type AccessRequest struct {

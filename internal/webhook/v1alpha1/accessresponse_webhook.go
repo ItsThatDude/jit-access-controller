@@ -1,98 +1,116 @@
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package v1alpha1
 
 import (
 	"context"
 	"fmt"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"net/http"
+	"slices"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
+	"github.com/itsthatdude/jit-access-controller/internal/utils"
+	admissionv1 "k8s.io/api/admission/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// nolint:unused
-// log is for logging in this package.
-var accessresponselog = logf.Log.WithName("accessresponse-resource")
-
-// SetupAccessResponseWebhookWithManager registers the webhook for AccessResponse in the manager.
-func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.AccessResponse{}).
-		WithValidator(&AccessResponseCustomValidator{}).
-		Complete()
-}
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
-// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-accessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=accessresponses,verbs=create;update,versions=v1alpha1,name=vaccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// AccessResponseCustomValidator struct is responsible for validating the AccessResponse resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type AccessResponseCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
+type AccessResponseValidator struct {
+	decoder        admission.Decoder
+	client         client.Client
+	namespace      string
+	serviceAccount string
 }
 
-var _ webhook.CustomValidator = &AccessResponseCustomValidator{}
-
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := obj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object but got %T", obj)
-	}
-	accessresponselog.Info("Validation for AccessResponse upon creation", "name", accessresponse.GetName())
-
-	// TODO(user): fill in your validation logic upon object creation.
-
-	return nil, nil
+func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
+	mgr.GetWebhookServer().Register(
+		"/validate-access-antware-xyz-v1alpha1-accessresponse",
+		&admission.Webhook{Handler: &AccessResponseValidator{
+			decoder:        admission.NewDecoder(mgr.GetScheme()),
+			client:         mgr.GetClient(),
+			namespace:      namespace,
+			serviceAccount: serviceAccount,
+		}},
+	)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := newObj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object for the newObj but got %T", newObj)
+func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	obj := &accessv1alpha1.AccessResponse{}
+
+	if err := v.decoder.Decode(req, obj); err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
 	}
-	accessresponselog.Info("Validation for AccessResponse upon update", "name", accessresponse.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
-
-	return nil, nil
-}
-
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := obj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object but got %T", obj)
+	if req.Operation == admissionv1.Delete {
+		return admission.Allowed("deletion is allowed")
 	}
-	accessresponselog.Info("Validation for AccessResponse upon deletion", "name", accessresponse.GetName())
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	if req.Operation == admissionv1.Update {
+		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
+			return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
+		}
+	}
 
-	return nil, nil
+	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
+		return admission.Denied("The approver must be the user creating the approval.")
+	}
+
+	request := &accessv1alpha1.AccessRequest{}
+	if err := v.client.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: obj.Spec.RequestRef}, request); err != nil {
+		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced AccessRequest: %s", err))
+	}
+
+	if request.Spec.Subject == obj.Spec.Approver {
+		return admission.Denied("The approver can not be the same as the subject of the request.")
+	}
+
+	policies := &accessv1alpha1.AccessPolicyList{}
+	if err := v.client.List(ctx, policies, client.InNamespace(req.Namespace)); err != nil {
+		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies in namespace '%s': %s", req.Namespace, err))
+	}
+
+	isRequestValid, matched_policy := policy.IsRequestValid(request, policies.Items)
+
+	if !isRequestValid || matched_policy == nil {
+		return admission.Denied(fmt.Sprintf("the request %s does not match an access policy in namespace '%s'", req.Name, req.Namespace))
+	}
+
+	switch req.Operation {
+	case admissionv1.Create:
+		if obj.Spec.Approver != req.UserInfo.Username {
+			return admission.Denied(fmt.Sprintf("cannot specify an approver other than yourself (%s vs %s)", obj.Spec.Approver, req.UserInfo.Username))
+		}
+
+		userNames := []string{}
+		groupNames := []string{}
+		for _, approver := range matched_policy.Approvers {
+			switch approver.Kind {
+			case rbacv1.UserKind:
+				userNames = append(userNames, approver.Name)
+			case rbacv1.GroupKind:
+				groupNames = append(groupNames, approver.Name)
+			}
+		}
+
+		group_matched := utils.SliceOverlaps(groupNames, req.UserInfo.Groups)
+		user_matched := slices.Contains(userNames, req.UserInfo.Username)
+
+		if !group_matched && !user_matched {
+			return admission.Denied(fmt.Sprintf("user %s is not in the list of approvers for the matched policy", req.UserInfo.Username))
+		}
+
+	case admissionv1.Update:
+		oldObj := &accessv1alpha1.AccessResponse{}
+		if err := v.decoder.DecodeRaw(req.OldObject, oldObj); err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+	case admissionv1.Delete:
+	}
+
+	return admission.Allowed("valid")
 }

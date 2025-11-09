@@ -20,25 +20,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// AccessGrantSpec defines the desired state of AccessGrant
-type AccessGrantSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of AccessGrant. Edit accessgrant_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+func (r *AccessGrant) GetStatus() *AccessGrantStatus {
+	return &r.Status
 }
-
-// AccessGrantStatus defines the observed state of AccessGrant.
-type AccessGrantStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+func (r *AccessGrant) SetStatus(status *AccessGrantStatus) {
+	r.Status = *status
+}
+func (r *AccessGrant) GetScope() RequestScope {
+	return RequestScopeNamespace
+}
+func (r *AccessGrant) GetName() string {
+	return r.Name
 }
 
 // +kubebuilder:object:root=true
@@ -51,10 +43,6 @@ type AccessGrant struct {
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
-
-	// spec defines the desired state of AccessGrant
-	// +required
-	Spec AccessGrantSpec `json:"spec"`
 
 	// status defines the observed state of AccessGrant
 	// +optional

@@ -20,29 +20,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// ClusterAccessResponseSpec defines the desired state of ClusterAccessResponse
-type ClusterAccessResponseSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of ClusterAccessResponse. Edit clusteraccessresponse_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+func (r *ClusterAccessResponse) GetResponse() ResponseState {
+	return r.Spec.Response
 }
 
-// ClusterAccessResponseStatus defines the observed state of ClusterAccessResponse.
-type ClusterAccessResponseStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+func (r *ClusterAccessResponse) GetApprover() string {
+	return r.Spec.Approver
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 
 // ClusterAccessResponse is the Schema for the clusteraccessresponses API
 type ClusterAccessResponse struct {
@@ -54,11 +42,11 @@ type ClusterAccessResponse struct {
 
 	// spec defines the desired state of ClusterAccessResponse
 	// +required
-	Spec ClusterAccessResponseSpec `json:"spec"`
+	Spec AccessResponseSpec `json:"spec"`
 
 	// status defines the observed state of ClusterAccessResponse
 	// +optional
-	Status ClusterAccessResponseStatus `json:"status,omitempty,omitzero"`
+	Status AccessResponseStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
