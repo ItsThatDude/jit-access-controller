@@ -2,10 +2,8 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: AccessResponse
 metadata:
   labels:
-    app.kubernetes.io/name: jit-access
+    app.kubernetes.io/name: jitaccess-controller
     app.kubernetes.io/managed-by: kustomize
   name: accessresponse-sample
 spec:
-  requestRef: accessrequest-sample
-  approver: admin
-  response: Approved
+  # TODO(user): Add fields here

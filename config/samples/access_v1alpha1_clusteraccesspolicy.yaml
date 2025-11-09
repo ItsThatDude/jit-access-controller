@@ -2,44 +2,8 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessPolicy
 metadata:
   labels:
-    app.kubernetes.io/name: jit-access
+    app.kubernetes.io/name: jitaccess-controller
     app.kubernetes.io/managed-by: kustomize
-  name: clusteraccesspolicy-sample-alice
+  name: clusteraccesspolicy-sample
 spec:
-  subjects:
-    - alice@example.com
-  allowedPermissions:
-    - apiGroups: [""]
-      resources: ["pods"]
-      verbs: ["get", "list", "watch"]
-  allowedRoles:
-    - apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: view
-    - apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: dev-debug
-  maxDuration: "60m"
-  requiredApprovals: 1
-  approvers:
-    - admin
----
-apiVersion: access.antware.xyz/v1alpha1
-kind: ClusterAccessPolicy
-metadata:
-  labels:
-    app.kubernetes.io/name: jit-access
-    app.kubernetes.io/managed-by: kustomize
-  name: clusteraccesspolicy-sample-bob
-spec:
-  subjects:
-    - bob@example.com
-  allowedRoles:
-    - apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: readonly
-  maxDuration: "60m"
-  requiredApprovals: 2
-  approvers:
-    - admin
-    - alice@example.com
+  # TODO(user): Add fields here

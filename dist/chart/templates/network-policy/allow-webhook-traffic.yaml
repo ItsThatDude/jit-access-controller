@@ -13,7 +13,7 @@ spec:
   podSelector:
     matchLabels:
       control-plane: controller-manager
-      app.kubernetes.io/name: jit-access
+      app.kubernetes.io/name: jitaccess-controller
   policyTypes:
     - Ingress
   ingress:

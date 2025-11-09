@@ -20,17 +20,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *ClusterAccessGrant) GetStatus() *AccessGrantStatus {
-	return &r.Status
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// ClusterAccessGrantSpec defines the desired state of ClusterAccessGrant
+type ClusterAccessGrantSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+	// The following markers will use OpenAPI v3 schema to validate the value
+	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+
+	// foo is an example field of ClusterAccessGrant. Edit clusteraccessgrant_types.go to remove/update
+	// +optional
+	Foo *string `json:"foo,omitempty"`
 }
-func (r *ClusterAccessGrant) SetStatus(status *AccessGrantStatus) {
-	r.Status = *status
-}
-func (r *ClusterAccessGrant) GetScope() RequestScope {
-	return RequestScopeCluster
-}
-func (r *ClusterAccessGrant) GetName() string {
-	return r.Name
+
+// ClusterAccessGrantStatus defines the observed state of ClusterAccessGrant.
+type ClusterAccessGrantStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
@@ -45,9 +53,13 @@ type ClusterAccessGrant struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
 
+	// spec defines the desired state of ClusterAccessGrant
+	// +required
+	Spec ClusterAccessGrantSpec `json:"spec"`
+
 	// status defines the observed state of ClusterAccessGrant
 	// +optional
-	Status AccessGrantStatus `json:"status,omitempty,omitzero"`
+	Status ClusterAccessGrantStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

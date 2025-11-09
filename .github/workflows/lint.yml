@@ -2,27 +2,7 @@ name: Lint
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - 'v*'
-    paths:
-      - api/**
-      - cmd/**
-      - internal/**
-      - go.mod
-      - go.sum
-      - Dockerfile
   pull_request:
-    branches:
-      - main
-    paths:
-      - api/**
-      - cmd/**
-      - internal/**
-      - go.mod
-      - go.sum
-      - Dockerfile
 
 jobs:
   lint:

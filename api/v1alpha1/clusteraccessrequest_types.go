@@ -20,37 +20,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *ClusterAccessRequest) GetSpec() *AccessRequestBaseSpec {
-	return &r.Spec.AccessRequestBaseSpec
-}
-func (r *ClusterAccessRequest) GetStatus() *AccessRequestStatus {
-	return &r.Status
-}
-func (r *ClusterAccessRequest) SetStatus(status *AccessRequestStatus) {
-	r.Status = *status
-}
-func (r *ClusterAccessRequest) GetScope() RequestScope {
-	return RequestScopeCluster
-}
-func (r *ClusterAccessRequest) GetNamespace() string {
-	return ""
-}
-func (r *ClusterAccessRequest) GetName() string {
-	return r.Name
-}
-func (r *ClusterAccessRequest) GetSubject() string {
-	return r.Spec.Subject
-}
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ClusterAccessRequestSpec defines the desired state of ClusterAccessRequest
 type ClusterAccessRequestSpec struct {
-	AccessRequestBaseSpec `json:",inline"`
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+	// The following markers will use OpenAPI v3 schema to validate the value
+	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+
+	// foo is an example field of ClusterAccessRequest. Edit clusteraccessrequest_types.go to remove/update
+	// +optional
+	Foo *string `json:"foo,omitempty"`
+}
+
+// ClusterAccessRequestStatus defines the observed state of ClusterAccessRequest.
+type ClusterAccessRequestStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // ClusterAccessRequest is the Schema for the clusteraccessrequests API
 type ClusterAccessRequest struct {
@@ -66,7 +59,7 @@ type ClusterAccessRequest struct {
 
 	// status defines the observed state of ClusterAccessRequest
 	// +optional
-	Status AccessRequestStatus `json:"status,omitempty,omitzero"`
+	Status ClusterAccessRequestStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

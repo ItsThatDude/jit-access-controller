@@ -20,13 +20,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r ClusterAccessPolicy) GetPolicy() SubjectPolicy {
-	return r.Spec.SubjectPolicy
-}
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // ClusterAccessPolicySpec defines the desired state of ClusterAccessPolicy
 type ClusterAccessPolicySpec struct {
-	SubjectPolicy `json:",inline"`
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+	// The following markers will use OpenAPI v3 schema to validate the value
+	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+
+	// foo is an example field of ClusterAccessPolicy. Edit clusteraccesspolicy_types.go to remove/update
+	// +optional
+	Foo *string `json:"foo,omitempty"`
+}
+
+// ClusterAccessPolicyStatus defines the observed state of ClusterAccessPolicy.
+type ClusterAccessPolicyStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
@@ -47,7 +59,7 @@ type ClusterAccessPolicy struct {
 
 	// status defines the observed state of ClusterAccessPolicy
 	// +optional
-	Status AccessPolicyStatus `json:"status,omitempty,omitzero"`
+	Status ClusterAccessPolicyStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
