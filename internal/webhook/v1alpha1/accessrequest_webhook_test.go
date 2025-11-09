@@ -28,16 +28,16 @@ var _ = Describe("AccessRequest Webhook", func() {
 	var (
 		obj       *accessv1alpha1.AccessRequest
 		oldObj    *accessv1alpha1.AccessRequest
-		validator AccessRequestCustomValidator
-		defaulter AccessRequestCustomDefaulter
+		validator AccessRequestValidator
+		defaulter AccessRequestMutator
 	)
 
 	BeforeEach(func() {
 		obj = &accessv1alpha1.AccessRequest{}
 		oldObj = &accessv1alpha1.AccessRequest{}
-		validator = AccessRequestCustomValidator{}
+		validator = AccessRequestValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
-		defaulter = AccessRequestCustomDefaulter{}
+		defaulter = AccessRequestMutator{}
 		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
 		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
 		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")

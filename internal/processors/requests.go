@@ -1,4 +1,4 @@
-package controller
+package processors
 
 import (
 	"context"
@@ -15,200 +15,19 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	set "k8s.io/apimachinery/pkg/util/sets"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
-
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
-
-type RequestReconciler struct {
+type RequestProcessor struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-func (r *RequestReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
-	ctx := context.Background()
-	indexer := mgr.GetFieldIndexer()
-
-	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessRequest{}, "status.requestId",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.ClusterAccessRequest); ok {
-				if myObj.Status.RequestId == "" {
-					return nil
-				}
-				return []string{myObj.Status.RequestId}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestId: %w", err)
-	}
-
-	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.requestRef",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
-				if myObj.Spec.RequestRef == "" {
-					return nil
-				}
-				return []string{myObj.Spec.RequestRef}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestRef: %w", err)
-	}
-
-	eventFilter := predicate.Funcs{
-		CreateFunc: func(e event.CreateEvent) bool {
-			return true
-		},
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			return false
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
-		},
-	}
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.ClusterAccessRequest{}).
-		Watches(
-			&v1alpha1.ClusterAccessResponse{},
-			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				resp := obj.(*v1alpha1.ClusterAccessResponse)
-				return []reconcile.Request{{
-					NamespacedName: types.NamespacedName{
-						Name: resp.Spec.RequestRef,
-					},
-				}}
-			}),
-			builder.WithPredicates(eventFilter),
-		).
-		Named("request-reconciler-cluster").
-		Complete(r)
-}
-
-func (r *RequestReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
-	ctx := context.Background()
-	indexer := mgr.GetFieldIndexer()
-
-	if err := indexer.IndexField(ctx, &v1alpha1.AccessRequest{}, "status.requestId",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.AccessRequest); ok {
-				if myObj.Status.RequestId == "" {
-					return nil
-				}
-				return []string{myObj.Status.RequestId}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestId: %w", err)
-	}
-
-	if err := indexer.IndexField(ctx, &v1alpha1.AccessResponse{}, "spec.requestRef",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*v1alpha1.AccessResponse); ok {
-				if myObj.Spec.RequestRef == "" {
-					return nil
-				}
-				return []string{myObj.Spec.RequestRef}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestRef: %w", err)
-	}
-
-	eventFilter := predicate.Funcs{
-		CreateFunc: func(e event.CreateEvent) bool {
-			return true
-		},
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			return false
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			return false
-		},
-	}
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.AccessRequest{}).
-		Watches(
-			&v1alpha1.AccessResponse{},
-			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
-				resp := obj.(*v1alpha1.AccessResponse)
-				return []reconcile.Request{{
-					NamespacedName: types.NamespacedName{
-						Namespace: resp.Namespace,
-						Name:      resp.Spec.RequestRef,
-					},
-				}}
-			}),
-			builder.WithPredicates(eventFilter),
-		).
-		Named("request-reconciler-namespaced").
-		Complete(r)
-}
-
-func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	if req.Namespace == "" {
-		var clusterObj v1alpha1.ClusterAccessRequest
-		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
-		if err != nil {
-			if k8serrors.IsNotFound(err) {
-				return ctrl.Result{}, nil
-			}
-			return ctrl.Result{}, err
-		}
-		return r.reconcileRequest(ctx, &clusterObj)
-	}
-
-	var nsObj v1alpha1.AccessRequest
-	err := r.Get(ctx, req.NamespacedName, &nsObj)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
-	}
-	return r.reconcileRequest(ctx, &nsObj)
-}
-
-func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.AccessRequestObject) (ctrl.Result, error) {
+func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.AccessRequestObject) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	originalStatus := *obj.GetStatus().DeepCopy()
@@ -326,7 +145,7 @@ func (r *RequestReconciler) reconcileRequest(ctx context.Context, obj common.Acc
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestReconciler) handleApproved(
+func (r *RequestProcessor) handleApproved(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 	status *v1alpha1.AccessRequestStatus,
@@ -384,7 +203,7 @@ func (r *RequestReconciler) handleApproved(
 	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
 }
 
-func (r *RequestReconciler) handlePending(
+func (r *RequestProcessor) handlePending(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 	matchedPolicy *v1alpha1.SubjectPolicy,
@@ -454,7 +273,7 @@ func (r *RequestReconciler) handlePending(
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestReconciler) handleExpired(
+func (r *RequestProcessor) handleExpired(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 ) (ctrl.Result, error) {
@@ -471,7 +290,7 @@ func (r *RequestReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.AccessRequestObject) error {
+func (r *RequestProcessor) cleanupResources(ctx context.Context, obj common.AccessRequestObject) error {
 	log := logf.FromContext(ctx)
 	scope := obj.GetScope()
 	ns := obj.GetNamespace()
@@ -515,7 +334,7 @@ func (r *RequestReconciler) cleanupResources(ctx context.Context, obj common.Acc
 	return nil
 }
 
-func (r *RequestReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
+func (r *RequestProcessor) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
 	if controllerutil.ContainsFinalizer(obj, finalizer) {
 		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
 		controllerutil.RemoveFinalizer(obj, finalizer)
@@ -526,7 +345,7 @@ func (r *RequestReconciler) removeFinalizer(ctx context.Context, obj client.Obje
 	return nil
 }
 
-func (r *RequestReconciler) createGrant(
+func (r *RequestProcessor) createGrant(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 	approvers []string,

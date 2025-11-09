@@ -205,37 +205,37 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.RequestReconciler{
+	if err := (&controller.ClusterAccessRequestReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManagerCluster(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
-	if err := (&controller.RequestReconciler{
+	if err := (&controller.AccessRequestReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManagerNamespaced(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
 
-	if err := (&controller.GrantReconciler{
+	if err := (&controller.AccessGrantReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
-	}).SetupWithManagerCluster(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
 		os.Exit(1)
 	}
 
-	if err := (&controller.GrantReconciler{
+	if err := (&controller.ClusterAccessGrantReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
-	}).SetupWithManagerNamespaced(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
 		os.Exit(1)
 	}
 
