@@ -2,7 +2,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessPolicy
 metadata:
   labels:
-    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/name: jit-access
     app.kubernetes.io/managed-by: kustomize
   name: clusteraccesspolicy-sample-alice
 spec:
@@ -28,7 +28,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessPolicy
 metadata:
   labels:
-    app.kubernetes.io/name: jitaccess
+    app.kubernetes.io/name: jit-access
     app.kubernetes.io/managed-by: kustomize
   name: clusteraccesspolicy-sample-bob
 spec:

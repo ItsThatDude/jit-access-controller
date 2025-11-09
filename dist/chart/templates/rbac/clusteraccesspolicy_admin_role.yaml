@@ -1,5 +1,5 @@
 {{- if .Values.rbac.enable }}
-# This rule is not used by the project jitaccess itself.
+# This rule is not used by the project jit-access itself.
 # It is provided to allow the cluster admin to help manage permissions for users.
 #
 # Grants full permissions ('*') over access.antware.xyz.

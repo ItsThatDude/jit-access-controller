@@ -1,6 +1,6 @@
 apiVersion: v2
 name: jit-access
-description: Helm chart for the jitaccess controller
+description: Helm chart for the jit-access controller
 home: https://github.com/ItsThatDude/jit-access-controller
 keywords:
   - just-in-time

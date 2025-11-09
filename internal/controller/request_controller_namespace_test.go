@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("JITAccessReconciler with envtest", func() {
+var _ = Describe("Jit-accessReconciler with envtest", func() {
 	var (
 		ctx        context.Context
 		reconciler *RequestReconciler

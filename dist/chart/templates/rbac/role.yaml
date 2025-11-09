@@ -5,7 +5,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: jitaccess-manager-role
+  name: jit-access-manager-role
 rules:
 - apiGroups:
   - ""

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-description: Installing JITAccess via Helm
+description: Installing Jit-access via Helm
 ---
 
 # Install via Helm
@@ -16,6 +16,6 @@ helm repo add itsthatdude https://itsthatdude.github.io/helm-charts/
 Install the helm chart:
 
 ```sh
-kubectl create namespace jitaccess-system
-helm install jitaccess itsthatdude/jitaccess -n jitaccess-system
+kubectl create namespace jit-access-system
+helm install jit-access itsthatdude/jit-access -n jit-access-system
 ```

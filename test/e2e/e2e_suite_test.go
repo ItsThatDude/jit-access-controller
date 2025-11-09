@@ -48,7 +48,7 @@ var (
 // CertManager.
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jitaccess integration test suite\n")
+	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jit-access integration test suite\n")
 	RunSpecs(t, "e2e suite")
 }
 

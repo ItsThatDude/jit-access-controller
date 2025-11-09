@@ -8,7 +8,7 @@ layout:
 - go.kubebuilder.io/v4
 plugins:
   helm.kubebuilder.io/v1-alpha: {}
-projectName: jitaccess
+projectName: jit-access
 repo: github.com/itsthatdude/jit-access-controller
 resources:
 - api:

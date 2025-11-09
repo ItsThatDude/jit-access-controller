@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## Overview
 
-**JITAccess** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+**Jit-access** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 Users submit either a:
 
