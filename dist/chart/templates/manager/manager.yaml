@@ -37,7 +37,6 @@ spec:
           {{- if .Values.controllerManager.container.imagePullPolicy }}
           imagePullPolicy: {{ .Values.controllerManager.container.imagePullPolicy }}
           {{- end }}
-          {{- if .Values.controllerManager.container.env }}
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
