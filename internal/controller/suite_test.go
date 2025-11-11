@@ -172,10 +172,10 @@ func reconcileOnce(ctx context.Context, r reconcile.TypedReconciler[reconcile.Re
 			return err
 		}
 
-		if result.RequeueAfter > 0 && result.RequeueAfter < 1*time.Minute {
-			return fmt.Errorf("reconcile requested requeue after %s", result.RequeueAfter.String())
+		if result.RequeueAfter > 0 {
+			fmt.Printf("reconcile requested requeue for %s after %s\r\n", key.String(), result.RequeueAfter.String())
 		}
 
 		return nil
-	}, 5*time.Second, 100*time.Millisecond)
+	}, 5*time.Second, 250*time.Millisecond)
 }

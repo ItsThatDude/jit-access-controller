@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -45,11 +46,12 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 				Client:   mgr.GetClient(),
 				Scheme:   scheme.Scheme,
 				Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
-				Processor: &processors.GrantProcessor{
-					Client:   mgr.GetClient(),
-					Scheme:   scheme.Scheme,
-					Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
-				},
+			}
+
+			reconciler.Processor = &processors.GrantProcessor{
+				Client:   reconciler.Client,
+				Scheme:   reconciler.Scheme,
+				Recorder: reconciler.Recorder,
 			}
 		})
 
@@ -70,7 +72,7 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 			waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), grantObj)
 
 			grantObj.Status.ApprovedBy = []string{"admin"}
-			grantObj.Status.RequestId = "test-request"
+			grantObj.Status.RequestId = grantName
 			grantObj.Status.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}
 			grantObj.Status.Subject = "user1"
 			// nolint:goconst
@@ -123,11 +125,27 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
-			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+
+			Eventually(func() bool {
+				rb := &rbacv1.ClusterRoleBinding{}
+				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName}, rb)
+				fmt.Printf("CRB: %v\r\n", rb)
+				return k8serrors.IsNotFound(err)
+			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
+
+			Eventually(func() bool {
+				grant := &v1alpha1.ClusterAccessGrant{}
+				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grant)
+				fmt.Printf("grant: %v\r\n", grant)
+				return k8serrors.IsNotFound(err)
+			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
 
 			// Wait until fully deleted
-			waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: roleBindingName}, &rbacv1.ClusterRoleBinding{})
-			waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.ClusterAccessGrant{})
+			//waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: roleBindingName}, &rbacv1.ClusterRoleBinding{})
+
+			//reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+
+			//waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.ClusterAccessGrant{})
 		})
 	})
 })

@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"context"
 	"slices"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func fieldAllows(requested, allowed []string) bool {
@@ -51,10 +53,11 @@ func AllRequestedPolicyRulesAllowed(requestedRules, allowedRules []rbacv1.Policy
 	return true
 }
 
-func IsRequestValid[T common.AccessPolicyListInterface](
+func IsRequestValid[T common.AccessPolicyObject](
 	req common.AccessRequestObject,
 	policies []T,
 ) (bool, *accessv1alpha1.SubjectPolicy) {
+	log := logf.FromContext(context.Background())
 	for _, p := range policies {
 		policy := p.GetPolicy()
 		spec := req.GetSpec()
@@ -81,11 +84,13 @@ func IsRequestValid[T common.AccessPolicyListInterface](
 		// Duration must be within policy threshold
 		specDuration, err := time.ParseDuration(spec.Duration)
 		if err != nil {
+			log.Error(err, "failed to parse spec duration")
 			continue
 		}
 
 		maxDuration, err := time.ParseDuration(policy.MaxDuration)
 		if err != nil {
+			log.Error(err, "failed to parse policy MaxDuration")
 			continue
 		}
 

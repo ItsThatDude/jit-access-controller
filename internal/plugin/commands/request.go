@@ -33,7 +33,7 @@ func NewRequestCmd() *cobra.Command {
 					},
 					Spec: v1alpha1.ClusterAccessRequestSpec{
 						AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKindStr, Name: role},
+							Role:          rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: role},
 							Permissions:   rules,
 							Duration:      duration,
 							Justification: justification,

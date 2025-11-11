@@ -5,7 +5,7 @@ controllerManager:
     image:
       repository: itsthatdood/jit-access-controller
       tag: latest
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
     args:
       - "--leader-elect"
       - "--metrics-bind-address=:8443"

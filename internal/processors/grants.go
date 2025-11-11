@@ -60,6 +60,7 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 
 	// Handle deletion
 	if !obj.GetDeletionTimestamp().IsZero() {
+		log.Info("handling deletion of grant", "name", obj.GetName())
 		return r.handleExpired(ctx, obj)
 	}
 
@@ -322,11 +323,10 @@ func (r *GrantProcessor) createRoleBinding(
 	bindingName string,
 ) error {
 	scope := obj.GetScope()
-	ns := obj.GetNamespace()
 	status := obj.GetStatus()
 	labels := common.CommonLabels()
 
-	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster && ns == ""
+	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster
 	subject := rbacv1.Subject{Kind: "User", Name: status.Subject, APIGroup: "rbac.authorization.k8s.io"}
 
 	var roleBinding client.Object
