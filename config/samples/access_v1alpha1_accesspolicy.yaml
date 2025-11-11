@@ -6,8 +6,9 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: accesspolicy-sample-alice
 spec:
-  subjects:
-    - alice@example.com
+  requesters:
+    - kind: User
+      name: alice@example.com
   allowedRoles:
     - apiGroup: rbac.authorization.k8s.io
       kind: Role
@@ -22,7 +23,10 @@ spec:
   maxDuration: "60m"
   requiredApprovals: 1
   approvers:
-    - admin
+    - kind: User
+      name: admin
+    - kind: Group
+      name: ClusterAdmins
 ---
 apiVersion: access.antware.xyz/v1alpha1
 kind: AccessPolicy
@@ -32,8 +36,9 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: accesspolicy-sample-bob
 spec:
-  subjects:
-    - bob@example.com
+  requesters:
+    - kind: User
+      name: bob@example.com
   allowedRoles:
     - apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
@@ -41,5 +46,7 @@ spec:
   maxDuration: "60m"
   requiredApprovals: 2
   approvers:
-    - admin
-    - alice@example.com
+    - kind: User
+      name: admin
+    - kind: Group
+      name: ClusterAdmins
