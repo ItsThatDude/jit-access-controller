@@ -136,16 +136,8 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 			Eventually(func() bool {
 				grant := &v1alpha1.ClusterAccessGrant{}
 				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grant)
-				fmt.Printf("grant: %v\r\n", grant)
 				return k8serrors.IsNotFound(err)
 			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
-
-			// Wait until fully deleted
-			//waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: roleBindingName}, &rbacv1.ClusterRoleBinding{})
-
-			//reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
-
-			//waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.ClusterAccessGrant{})
 		})
 	})
 })

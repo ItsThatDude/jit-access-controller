@@ -128,16 +128,15 @@ var _ = Describe("AccessGrant Controller", func() {
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName, Namespace: grantObj.Namespace}, &rbacv1.ClusterRoleBinding{})
+				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName, Namespace: grantObj.Namespace}, &rbacv1.RoleBinding{})
 				return k8serrors.IsNotFound(err)
 			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
 
-			// Wait until fully deleted
-			//waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), &v1alpha1.AccessGrant{})
-
-			//reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
-
-			//waitForDeleted(ctx, k8sClient, client.ObjectKey{Name: roleBindingName, Namespace: grantObj.Namespace}, &rbacv1.RoleBinding{})
+			Eventually(func() bool {
+				grant := &v1alpha1.AccessGrant{}
+				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grant)
+				return k8serrors.IsNotFound(err)
+			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
 		})
 	})
 })
