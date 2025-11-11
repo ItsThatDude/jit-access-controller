@@ -35,7 +35,8 @@ const (
 	defaultKindCluster = "kind"
 
 	prometheusOperatorVersion = "0.51"
-	prometheusOperatorURL     = "https://raw.githubusercontent.com/prometheus-operator/" + "prometheus-operator/release-%s/bundle.yaml"
+	// nolint
+	prometheusOperatorURL = "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-%s/bundle.yaml"
 )
 
 func warnError(err error) {
