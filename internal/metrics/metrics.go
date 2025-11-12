@@ -6,7 +6,7 @@ import (
 	k8smetrics "sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-const metricNamespace string = "jit-access_controller"
+const metricNamespace string = "jitaccess"
 
 var (
 	BuildInfo prometheus.Gauge
