@@ -63,14 +63,10 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() {
-		if !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-			patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-			controllerutil.AddFinalizer(obj, common.JITFinalizer)
-			log.Info("Adding finalizer to request", "name", obj.GetName())
-			if err := r.Patch(ctx, obj, patch); err != nil {
-				return ctrl.Result{}, err
-			}
-			log.Info("Added finalizer to request", "name", obj.GetName())
+		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
+		if err != nil {
+			log.Error(err, "an error occurred adding the finalizer to the grant", "name", obj.GetName())
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -85,7 +81,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 			log.Info("Successfully cleaned up resources for request", "name", obj.GetName())
 
 			log.Info("Removing finalizer for request", "name", obj.GetName())
-			if err := r.removeFinalizer(ctx, obj, common.JITFinalizer); err != nil {
+			if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
 				log.Error(err, "an error occurred removing the request finalizer", "name", obj.GetName())
 				return ctrl.Result{}, err
 			}
@@ -331,17 +327,6 @@ func (r *RequestProcessor) cleanupResources(ctx context.Context, obj common.Acce
 		return errors.Join(errs...)
 	}
 
-	return nil
-}
-
-func (r *RequestProcessor) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
-	if controllerutil.ContainsFinalizer(obj, finalizer) {
-		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-		controllerutil.RemoveFinalizer(obj, finalizer)
-		if err := r.Patch(ctx, obj, patch); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
