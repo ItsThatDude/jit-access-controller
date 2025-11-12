@@ -74,7 +74,7 @@ webhook:
 
 # [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
 prometheus:
-  enable: false
+  enable: true
 
 # [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
 certmanager:
