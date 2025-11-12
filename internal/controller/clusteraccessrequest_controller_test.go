@@ -65,10 +65,11 @@ var _ = Describe("ClusterAccessRequest Controller", func() {
 		reconciler = &ClusterAccessRequestReconciler{
 			Client: mgr.GetClient(),
 			Scheme: scheme.Scheme,
-			Processor: &processors.RequestProcessor{
-				Client: mgr.GetClient(),
-				Scheme: scheme.Scheme,
-			},
+		}
+
+		reconciler.Processor = &processors.RequestProcessor{
+			Client: reconciler.Client,
+			Scheme: reconciler.Scheme,
 		}
 	})
 
