@@ -98,4 +98,4 @@ jobs:
 
       - name: Check Presence of ServiceMonitor
         run: |
-          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jit-access-controller-manager-metrics-monitor
+          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jit-access-metrics-monitor

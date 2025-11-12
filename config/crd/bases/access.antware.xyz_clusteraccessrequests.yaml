@@ -16,10 +16,10 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.approvalsRequired
-      name: ApprovalsRequired
+      name: Approvals-Required
       type: integer
     - jsonPath: .status.requestExpiresAt
-      name: RequestExpiresAt
+      name: Request-Expires-At
       type: date
     - jsonPath: .status.state
       name: State

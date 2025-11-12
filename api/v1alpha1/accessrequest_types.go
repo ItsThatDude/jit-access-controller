@@ -52,8 +52,8 @@ type AccessRequestSpec struct {
 // +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // AccessRequest is the Schema for the accessrequests API
-// +kubebuilder:printcolumn:name="ApprovalsRequired",type=integer,JSONPath=`.status.approvalsRequired`
-// +kubebuilder:printcolumn:name="RequestExpiresAt",type=date,JSONPath=`.status.requestExpiresAt`
+// +kubebuilder:printcolumn:name="Approvals-Required",type=integer,JSONPath=`.status.approvalsRequired`
+// +kubebuilder:printcolumn:name="Request-Expires-At",type=date,JSONPath=`.status.requestExpiresAt`
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 type AccessRequest struct {
 	metav1.TypeMeta `json:",inline"`

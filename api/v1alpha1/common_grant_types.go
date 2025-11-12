@@ -16,8 +16,8 @@ type AccessGrantStatus struct {
 	Permissions []rbacv1.PolicyRule `json:"permissions,omitempty"`
 	Duration    string              `json:"duration"`
 
-	AccessExpiresAt         *metav1.Time `json:"accessExpiresAt,omitempty"`
-	RoleBindingCreated      bool         `json:"roleBindingCreated,omitempty"`
-	AdhocRoleCreated        bool         `json:"adhocRoleCreated,omitempty"`
-	AdhocRoleBindingCreated bool         `json:"adhocRoleBindingCreated,omitempty"`
+	AccessExpiresAt         metav1.Time `json:"accessExpiresAt,omitempty"`
+	RoleBindingCreated      bool        `json:"roleBindingCreated,omitempty"`
+	AdhocRoleCreated        bool        `json:"adhocRoleCreated,omitempty"`
+	AdhocRoleBindingCreated bool        `json:"adhocRoleBindingCreated,omitempty"`
 }

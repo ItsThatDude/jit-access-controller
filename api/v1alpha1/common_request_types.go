@@ -61,7 +61,7 @@ type AccessRequestStatus struct {
 	State             RequestState `json:"state,omitempty"`
 	ApprovalsRequired int          `json:"approvalsRequired,omitempty"`
 	ApprovalsReceived int          `json:"approvalsReceived,omitempty"`
-	RequestExpiresAt  *metav1.Time `json:"requestExpiresAt,omitempty"`
+	RequestExpiresAt  metav1.Time  `json:"requestExpiresAt,omitempty"`
 
 	GrantCreated bool `json:"grantCreated,omitempty"`
 }

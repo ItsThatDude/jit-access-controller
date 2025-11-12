@@ -56,9 +56,8 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	}
 
 	// Set request expire time if not set
-	if status.RequestExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(time.Duration(60) * time.Minute))
-		status.RequestExpiresAt = &expireTime
+	if status.RequestExpiresAt.IsZero() {
+		status.RequestExpiresAt = metav1.NewTime(time.Now().Add(time.Duration(60) * time.Minute))
 	}
 
 	// Add finalizer
@@ -91,7 +90,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	}
 
 	if status.State != v1alpha1.RequestStateApproved &&
-		status.RequestExpiresAt != nil && time.Now().After(status.RequestExpiresAt.Time) {
+		!status.RequestExpiresAt.IsZero() && time.Now().After(status.RequestExpiresAt.Time) {
 		status.State = v1alpha1.RequestStateExpired
 	}
 
@@ -262,7 +261,7 @@ func (r *RequestProcessor) handlePending(
 		return r.handleApproved(ctx, obj, status, approved.UnsortedList())
 	}
 
-	if status.RequestExpiresAt != nil {
+	if !status.RequestExpiresAt.IsZero() {
 		return ctrl.Result{RequeueAfter: time.Until(status.RequestExpiresAt.Time)}, nil
 	}
 

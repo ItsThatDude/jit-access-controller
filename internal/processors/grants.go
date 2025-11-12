@@ -71,7 +71,7 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 	}
 
 	// If the grant has expired, call handleExpired which cleans up the resources
-	if status.AccessExpiresAt != nil && time.Now().After(status.AccessExpiresAt.Time) {
+	if !status.AccessExpiresAt.IsZero() && time.Now().After(status.AccessExpiresAt.Time) {
 		return r.handleExpired(ctx, obj)
 	}
 
@@ -145,9 +145,8 @@ func (r *GrantProcessor) handleApproved(
 	}
 
 	// Set expire time if not set
-	if status.AccessExpiresAt == nil {
-		expireTime := metav1.NewTime(time.Now().Add(duration))
-		status.AccessExpiresAt = &expireTime
+	if status.AccessExpiresAt.IsZero() {
+		status.AccessExpiresAt = metav1.NewTime(time.Now().Add(duration))
 
 		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
 			"Just-in-time access granted to %s for request %s",
