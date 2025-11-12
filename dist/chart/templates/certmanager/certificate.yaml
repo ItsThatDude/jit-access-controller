@@ -27,7 +27,7 @@ spec:
   dnsNames:
     - jit-access-controller-manager.{{ .Release.Namespace }}.svc
     - jit-access-controller-manager.{{ .Release.Namespace }}.svc.cluster.local
-    - jit-access-controller-manager-webhook-service.{{ .Release.Namespace }}.svc
+    - jit-access-webhook-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
@@ -51,7 +51,7 @@ spec:
   dnsNames:
     - jit-access-controller-manager.{{ .Release.Namespace }}.svc
     - jit-access-controller-manager.{{ .Release.Namespace }}.svc.cluster.local
-    - jit-access-controller-manager-metrics-service.{{ .Release.Namespace }}.svc
+    - jit-access-metrics-service.{{ .Release.Namespace }}.svc
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer

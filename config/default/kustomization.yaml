@@ -62,7 +62,7 @@ replacements:
 - source: # Uncomment the following block to enable certificates for metrics
     kind: Service
     version: v1
-    name: controller-manager-metrics-service
+    name: metrics-service
     fieldPath: metadata.name
   targets:
     - select:
@@ -92,7 +92,7 @@ replacements:
 - source:
     kind: Service
     version: v1
-    name: controller-manager-metrics-service
+    name: metrics-service
     fieldPath: metadata.namespace
   targets:
     - select:
