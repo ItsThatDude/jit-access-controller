@@ -11,14 +11,6 @@ const metricNamespace string = "jitaccess"
 var (
 	BuildInfo prometheus.Gauge
 
-	CounterTest = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Namespace: metricNamespace,
-			Name:      "test_counter",
-			Help:      "A test counter for jit-access metrics",
-		},
-	)
-
 	RequestsCreated = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
@@ -73,5 +65,4 @@ func RegisterMetrics(version string) {
 	k8smetrics.Registry.MustRegister(RequestsApproved)
 	k8smetrics.Registry.MustRegister(RolesGranted)
 	k8smetrics.Registry.MustRegister(PermissionsGranted)
-	k8smetrics.Registry.MustRegister(CounterTest)
 }
