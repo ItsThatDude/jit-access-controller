@@ -25,7 +25,7 @@ spec:
       name: Subject
       type: string
     - jsonPath: .status.accessExpiresAt
-      name: AccessExpiresAt
+      name: Access-Expires-At
       type: date
     name: v1alpha1
     schema:
