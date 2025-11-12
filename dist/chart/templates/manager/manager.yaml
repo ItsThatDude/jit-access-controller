@@ -28,6 +28,12 @@ spec:
       containers:
         - name: manager
           args:
+            {{- if and .Values.webhook.enable .Values.certmanager.enable }}
+            - "--webhook-cert-path=/tmp/k8s-webhook-server/serving-certs"
+            {{- end }}
+            {{- if and .Values.metrics.enable .Values.certmanager.enable }}
+            - "--metrics-cert-path=/tmp/k8s-metrics-server/metrics-certs"
+            {{- end }}
             {{- range .Values.controllerManager.container.args }}
             - {{ . }}
             {{- end }}

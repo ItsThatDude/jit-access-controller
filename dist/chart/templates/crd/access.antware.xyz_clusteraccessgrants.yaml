@@ -20,7 +20,14 @@ spec:
     singular: clusteraccessgrant
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.subject
+      name: Subject
+      type: string
+    - jsonPath: .status.accessExpiresAt
+      name: AccessExpiresAt
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: ClusterAccessGrant is the Schema for the clusteraccessgrants

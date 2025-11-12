@@ -8,7 +8,7 @@ keywords:
   - access
   - rbac
 type: application
-version: 0.1.2
+version: 0.1.3
 appVersion: "0.1.1"
 sources:
   - https://github.com/ItsThatDude/jit-access-controller
