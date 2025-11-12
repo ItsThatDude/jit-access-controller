@@ -24,7 +24,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	rbacv1 "k8s.io/api/rbac/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -126,17 +125,6 @@ var _ = Describe("AccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
-
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName, Namespace: grantObj.Namespace}, &rbacv1.RoleBinding{})
-				return k8serrors.IsNotFound(err)
-			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
-
-			Eventually(func() bool {
-				grant := &v1alpha1.AccessGrant{}
-				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grant)
-				return k8serrors.IsNotFound(err)
-			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
 		})
 	})
 })

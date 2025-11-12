@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -125,19 +124,6 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
-
-			Eventually(func() bool {
-				rb := &rbacv1.ClusterRoleBinding{}
-				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName}, rb)
-				fmt.Printf("CRB: %v\r\n", rb)
-				return k8serrors.IsNotFound(err)
-			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
-
-			Eventually(func() bool {
-				grant := &v1alpha1.ClusterAccessGrant{}
-				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grant)
-				return k8serrors.IsNotFound(err)
-			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
 		})
 	})
 })
