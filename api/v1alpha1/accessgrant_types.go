@@ -37,6 +37,8 @@ func (r *AccessGrant) GetName() string {
 // +kubebuilder:subresource:status
 
 // AccessGrant is the Schema for the accessgrants API
+// +kubebuilder:printcolumn:name="Subject",type=string,JSONPath=`.status.subject`
+// +kubebuilder:printcolumn:name="AccessExpiresAt",type=date,JSONPath=`.status.accessExpiresAt`
 type AccessGrant struct {
 	metav1.TypeMeta `json:",inline"`
 

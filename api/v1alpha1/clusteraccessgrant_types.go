@@ -38,6 +38,8 @@ func (r *ClusterAccessGrant) GetName() string {
 // +kubebuilder:resource:scope=Cluster
 
 // ClusterAccessGrant is the Schema for the clusteraccessgrants API
+// +kubebuilder:printcolumn:name="Subject",type=string,JSONPath=`.status.subject`
+// +kubebuilder:printcolumn:name="AccessExpiresAt",type=date,JSONPath=`.status.accessExpiresAt`
 type ClusterAccessGrant struct {
 	metav1.TypeMeta `json:",inline"`
 

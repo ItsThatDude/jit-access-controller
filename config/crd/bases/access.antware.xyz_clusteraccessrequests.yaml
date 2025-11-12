@@ -14,7 +14,17 @@ spec:
     singular: clusteraccessrequest
   scope: Cluster
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.approvalsRequired
+      name: ApprovalsRequired
+      type: integer
+    - jsonPath: .status.requestExpiresAt
+      name: RequestExpiresAt
+      type: date
+    - jsonPath: .status.state
+      name: State
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: ClusterAccessRequest is the Schema for the clusteraccessrequests
