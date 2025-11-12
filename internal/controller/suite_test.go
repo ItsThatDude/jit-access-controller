@@ -166,6 +166,11 @@ func reconcileOnce(ctx context.Context, r reconcile.TypedReconciler[reconcile.Re
 	req := ctrl.Request{NamespacedName: key}
 	return Eventually(func() error {
 		_, err := r.Reconcile(ctx, req)
-		return err
-	}, 5*time.Second, 100*time.Millisecond)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, 5*time.Second, 250*time.Millisecond)
 }

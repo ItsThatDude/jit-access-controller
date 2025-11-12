@@ -32,6 +32,7 @@ type AccessResponseObject interface {
 	GetApprover() string
 }
 
-type AccessPolicyListInterface interface {
+type AccessPolicyObject interface {
+	GetName() string
 	GetPolicy() v1alpha1.SubjectPolicy
 }

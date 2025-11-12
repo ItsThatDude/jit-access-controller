@@ -33,7 +33,10 @@ spec:
             {{- end }}
           command:
             - /manager
-          image: {{ .Values.controllerManager.container.image.repository }}:{{ .Values.controllerManager.container.image.tag | default .Chart.AppVersion }}
+          image: {{ .Values.controllerManager.container.image.repository }}:{{ .Values.controllerManager.container.image.tag }}
+          {{- if .Values.controllerManager.container.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.controllerManager.container.imagePullPolicy }}
+          {{- end }}
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:

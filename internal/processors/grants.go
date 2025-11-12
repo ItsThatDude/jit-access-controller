@@ -1,20 +1,4 @@
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package controller
+package processors
 
 import (
 	"context"
@@ -27,7 +11,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,94 +21,13 @@ import (
 	common "github.com/itsthatdude/jit-access-controller/internal/common"
 )
 
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessgrants/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
-
-// +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
-
-// GrantReconciler reconciles a AccessGrant object
-type GrantReconciler struct {
+type GrantProcessor struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
 
-func (r *GrantReconciler) SetupWithManagerCluster(mgr ctrl.Manager) error {
-	ctx := context.Background()
-	indexer := mgr.GetFieldIndexer()
-
-	if err := indexer.IndexField(ctx, &accessv1alpha1.ClusterAccessGrant{}, "status.requestId",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*accessv1alpha1.ClusterAccessGrant); ok {
-				if myObj.Status.RequestId == "" {
-					return nil
-				}
-				return []string{myObj.Status.RequestId}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestId: %w", err)
-	}
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&accessv1alpha1.ClusterAccessGrant{}).
-		Named("grant-reconciler-cluster").
-		Complete(r)
-}
-
-func (r *GrantReconciler) SetupWithManagerNamespaced(mgr ctrl.Manager) error {
-	ctx := context.Background()
-	indexer := mgr.GetFieldIndexer()
-
-	if err := indexer.IndexField(ctx, &accessv1alpha1.AccessGrant{}, "status.requestId",
-		func(obj client.Object) []string {
-			if myObj, ok := obj.(*accessv1alpha1.AccessGrant); ok {
-				if myObj.Status.RequestId == "" {
-					return nil
-				}
-				return []string{myObj.Status.RequestId}
-			}
-			return nil
-		}); err != nil {
-		return fmt.Errorf("failed to add index for requestId: %w", err)
-	}
-
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&accessv1alpha1.AccessGrant{}).
-		Named("grant-reconciler-namespaced").
-		Complete(r)
-}
-
-func (r *GrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	if req.Namespace == "" {
-		var clusterObj accessv1alpha1.ClusterAccessGrant
-		err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &clusterObj)
-		if err != nil {
-			if k8serrors.IsNotFound(err) {
-				return ctrl.Result{}, nil
-			}
-			return ctrl.Result{}, err
-		}
-		return r.reconcileGrant(ctx, &clusterObj)
-	}
-
-	var nsObj accessv1alpha1.AccessGrant
-	err := r.Get(ctx, req.NamespacedName, &nsObj)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, err
-	}
-	return r.reconcileGrant(ctx, &nsObj)
-}
-
-func (r *GrantReconciler) reconcileGrant(ctx context.Context, obj common.AccessGrantObject) (ctrl.Result, error) {
+func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGrantObject) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	objStatus := obj.GetStatus()
 
@@ -149,35 +51,17 @@ func (r *GrantReconciler) reconcileGrant(ctx context.Context, obj common.AccessG
 
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() {
-		if !controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-			patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-			controllerutil.AddFinalizer(obj, common.JITFinalizer)
-			log.Info("Adding finalizer to grant", "name", obj.GetName())
-			if err := r.Patch(ctx, obj, patch); err != nil {
-				return ctrl.Result{}, err
-			}
-			log.Info("Added finalizer to grant", "name", obj.GetName())
+		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
+		if err != nil {
+			log.Error(err, "an error occurred adding the finalizer to the grant", "name", obj.GetName())
+			return ctrl.Result{}, err
 		}
 	}
 
 	// Handle deletion
 	if !obj.GetDeletionTimestamp().IsZero() {
-		if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-			log.Info("Cleaning up resources for grant", "name", obj.GetName())
-			if err := r.cleanupResources(ctx, obj); err != nil {
-				log.Error(err, "an error occurred running cleanup for the grant", "name", obj.GetName())
-				return ctrl.Result{}, err
-			}
-			log.Info("Successfully cleaned up resources for grant", "name", obj.GetName())
-
-			log.Info("Removing finalizer for grant", "name", obj.GetName())
-			if err := r.removeFinalizer(ctx, obj, common.JITFinalizer); err != nil {
-				log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
-				return ctrl.Result{}, err
-			}
-			log.Info("Removed finalizer for grant", "name", obj.GetName())
-		}
-		return ctrl.Result{}, nil
+		log.Info("handling deletion of grant", "name", obj.GetName())
+		return r.handleExpired(ctx, obj)
 	}
 
 	// If the RequestId is not set, the grant has only just been created.
@@ -194,18 +78,7 @@ func (r *GrantReconciler) reconcileGrant(ctx context.Context, obj common.AccessG
 	return r.handleApproved(ctx, obj, status)
 }
 
-func (r *GrantReconciler) removeFinalizer(ctx context.Context, obj client.Object, finalizer string) error {
-	if controllerutil.ContainsFinalizer(obj, finalizer) {
-		patch := client.MergeFrom(obj.DeepCopyObject().(client.Object))
-		controllerutil.RemoveFinalizer(obj, finalizer)
-		if err := r.Patch(ctx, obj, patch); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *GrantReconciler) handleApproved(
+func (r *GrantProcessor) handleApproved(
 	ctx context.Context,
 	obj common.AccessGrantObject,
 	status *accessv1alpha1.AccessGrantStatus,
@@ -284,7 +157,7 @@ func (r *GrantReconciler) handleApproved(
 	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
 }
 
-func (r *GrantReconciler) handleExpired(
+func (r *GrantProcessor) handleExpired(
 	ctx context.Context,
 	obj common.AccessGrantObject,
 ) (ctrl.Result, error) {
@@ -305,6 +178,15 @@ func (r *GrantReconciler) handleExpired(
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 	}
 
+	// Remove the finalizer if it exists to allow deletion to complete
+	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
+			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
+			return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+		}
+		log.Info("Removed finalizer for grant", "name", obj.GetName())
+	}
+
 	// Record an event about the revocation of access
 	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
 		"Just-in-time access revoked from %s for request %s",
@@ -313,7 +195,7 @@ func (r *GrantReconciler) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *GrantReconciler) cleanupResources(ctx context.Context, obj common.AccessGrantObject) error {
+func (r *GrantProcessor) cleanupResources(ctx context.Context, obj common.AccessGrantObject) error {
 	log := logf.FromContext(ctx)
 	status := obj.GetStatus()
 	scope := obj.GetScope()
@@ -402,7 +284,7 @@ func (r *GrantReconciler) cleanupResources(ctx context.Context, obj common.Acces
 	return nil
 }
 
-func (r *GrantReconciler) createRole(
+func (r *GrantProcessor) createRole(
 	ctx context.Context,
 	obj common.AccessGrantObject,
 	name string,
@@ -434,18 +316,17 @@ func (r *GrantReconciler) createRole(
 	return r.Create(ctx, role)
 }
 
-func (r *GrantReconciler) createRoleBinding(
+func (r *GrantProcessor) createRoleBinding(
 	ctx context.Context,
 	obj common.AccessGrantObject,
 	roleRef rbacv1.RoleRef,
 	bindingName string,
 ) error {
 	scope := obj.GetScope()
-	ns := obj.GetNamespace()
 	status := obj.GetStatus()
 	labels := common.CommonLabels()
 
-	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster && ns == ""
+	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster
 	subject := rbacv1.Subject{Kind: "User", Name: status.Subject, APIGroup: "rbac.authorization.k8s.io"}
 
 	var roleBinding client.Object

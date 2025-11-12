@@ -1,3 +1,19 @@
+/*
+Copyright 2025.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package controller
 
 import (
@@ -7,18 +23,20 @@ import (
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	common "github.com/itsthatdude/jit-access-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/internal/processors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Jit-accessReconciler with envtest", func() {
+var _ = Describe("AccessRequest Controller", func() {
 	var (
 		ctx        context.Context
-		reconciler *RequestReconciler
+		reconciler *AccessRequestReconciler
 		policyObj  *v1alpha1.AccessPolicy
 	)
 
@@ -45,9 +63,14 @@ var _ = Describe("Jit-accessReconciler with envtest", func() {
 		Expect(k8sClient.Create(ctx, policyObj)).To(Succeed())
 		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.AccessPolicy{})
 
-		reconciler = &RequestReconciler{
+		reconciler = &AccessRequestReconciler{
 			Client: mgr.GetClient(),
 			Scheme: scheme.Scheme,
+		}
+
+		reconciler.Processor = &processors.RequestProcessor{
+			Client: reconciler.Client,
+			Scheme: reconciler.Scheme,
 		}
 	})
 

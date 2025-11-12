@@ -20,6 +20,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+func (r AccessPolicy) GetName() string {
+	return r.Name
+}
+
 func (r AccessPolicy) GetPolicy() SubjectPolicy {
 	return r.Spec.SubjectPolicy
 }

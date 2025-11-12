@@ -28,12 +28,15 @@ import (
 )
 
 const (
-	prometheusOperatorVersion = "v0.77.1"
-	prometheusOperatorURL     = "https://github.com/prometheus-operator/prometheus-operator/" +
-		"releases/download/%s/bundle.yaml"
-
-	certmanagerVersion = "v1.16.3"
+	certmanagerVersion = "v1.18.2"
 	certmanagerURLTmpl = "https://github.com/cert-manager/cert-manager/releases/download/%s/cert-manager.yaml"
+
+	defaultKindBinary  = "kind"
+	defaultKindCluster = "kind"
+
+	prometheusOperatorVersion = "0.51"
+	// nolint
+	prometheusOperatorURL = "https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/release-%s/bundle.yaml"
 )
 
 func warnError(err error) {
@@ -63,7 +66,7 @@ func Run(cmd *exec.Cmd) (string, error) {
 // InstallPrometheusOperator installs the prometheus Operator to be used to export the enabled metrics.
 func InstallPrometheusOperator() error {
 	url := fmt.Sprintf(prometheusOperatorURL, prometheusOperatorVersion)
-	cmd := exec.Command("kubectl", "create", "-f", url)
+	cmd := exec.Command("kubectl", "apply", "-f", url)
 	_, err := Run(cmd)
 	return err
 }
@@ -80,20 +83,22 @@ func UninstallPrometheusOperator() {
 // IsPrometheusCRDsInstalled checks if any Prometheus CRDs are installed
 // by verifying the existence of key CRDs related to Prometheus.
 func IsPrometheusCRDsInstalled() bool {
-	// List of common Prometheus CRDs
-	prometheusCRDs := []string{
-		"prometheuses.monitoring.coreos.com",
-		"prometheusrules.monitoring.coreos.com",
-		"prometheusagents.monitoring.coreos.com",
+	// List of common Cert Manager CRDs
+	promCRDs := []string{
+		"podmonitors.monitoring.coreos.com",
+		"servicemonitors.monitoring.coreos.com",
 	}
 
-	cmd := exec.Command("kubectl", "get", "crds", "-o", "custom-columns=NAME:.metadata.name")
+	// Execute the kubectl command to get all CRDs
+	cmd := exec.Command("kubectl", "get", "crds")
 	output, err := Run(cmd)
 	if err != nil {
 		return false
 	}
+
+	// Check if any of the Cert Manager CRDs are present
 	crdList := GetNonEmptyLines(output)
-	for _, crd := range prometheusCRDs {
+	for _, crd := range promCRDs {
 		for _, line := range crdList {
 			if strings.Contains(line, crd) {
 				return true
@@ -180,12 +185,16 @@ func IsCertManagerCRDsInstalled() bool {
 
 // LoadImageToKindClusterWithName loads a local docker image to the kind cluster
 func LoadImageToKindClusterWithName(name string) error {
-	cluster := "kind"
+	cluster := defaultKindCluster
 	if v, ok := os.LookupEnv("KIND_CLUSTER"); ok {
 		cluster = v
 	}
 	kindOptions := []string{"load", "docker-image", name, "--name", cluster}
-	cmd := exec.Command("kind", kindOptions...)
+	kindBinary := defaultKindBinary
+	if v, ok := os.LookupEnv("KIND"); ok {
+		kindBinary = v
+	}
+	cmd := exec.Command(kindBinary, kindOptions...)
 	_, err := Run(cmd)
 	return err
 }
