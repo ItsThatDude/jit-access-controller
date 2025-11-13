@@ -7,11 +7,13 @@ on:
     tags:
       - 'v*'
     paths:
+      - .github/workflows/test-chart.yml
       - dist/chart/**
   pull_request:
     branches:
       - main
     paths:
+      - .github/workflows/test-chart.yml
       - dist/chart/**
 
 jobs:
@@ -98,4 +100,4 @@ jobs:
 
       - name: Check Presence of ServiceMonitor
         run: |
-          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/controller-manager-metrics-monitor
+          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jit-access-controller-manager-metrics-monitor
