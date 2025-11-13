@@ -7,9 +7,11 @@ on:
     tags:
       - 'v*'
     paths:
+      - .github/workflows/test.yml
       - api/**
       - cmd/**
       - internal/**
+      - test/**
       - go.mod
       - go.sum
       - Dockerfile
@@ -17,9 +19,11 @@ on:
     branches:
       - main
     paths:
+      - .github/workflows/test.yml
       - api/**
       - cmd/**
       - internal/**
+      - test/**
       - go.mod
       - go.sum
       - Dockerfile
