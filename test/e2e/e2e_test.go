@@ -40,7 +40,7 @@ const namespace = "jit-access-system"
 const serviceAccountName = "jit-access-controller-manager"
 
 // metricsServiceName is the name of the metrics service of the project
-const metricsServiceName = "jit-access-controller-manager-metrics-service"
+const metricsServiceName = "jit-access-metrics-service"
 
 // metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data
 const metricsRoleBindingName = "jit-access-metrics-binding"
