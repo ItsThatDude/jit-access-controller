@@ -1,4 +1,0 @@
-~/repos/jitaccess-controller/bin/kubectl-access-linux-amd64 approve --scope cluster
-kubectl config use-context admin@homelab
-~/repos/jitaccess-controller/bin/kubectl-access-linux-amd64 request --role view --roleKind ClusterRole --scope cluster --duration 1m
-kubectl config use-context oidc@homelab
