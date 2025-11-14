@@ -1,16 +1,16 @@
-# Jit-access Just-in-time Access Controller
+# Just-in-time Access Controller
 
 [![Lint](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/lint.yml)  [![Tests](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test.yml)  [![Chart](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml/badge.svg)](https://github.com/ItsThatDude/jit-access-controller/actions/workflows/test-chart.yml)
 
-**Jit-access** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+**Just-in-time Access Controller** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 ## Description
 
-The Jit-access controller provides a mechanism for requesting and granting temporary, on-demand access to resources in Kubernetes clusters.
+The JIT Access Controller provides a mechanism for requesting and granting temporary, on-demand access to resources in Kubernetes clusters.
 
 ## Getting Started
 
-To get started with Jit-access, add the helm repository and install the chart.
+To get started, add the helm repository and install the chart.
 
 Install helm repository:
 
