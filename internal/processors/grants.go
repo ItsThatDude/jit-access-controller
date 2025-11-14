@@ -53,6 +53,10 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 	if obj.GetDeletionTimestamp().IsZero() {
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
 		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				return ctrl.Result{}, nil
+			}
+
 			log.Error(err, "an error occurred adding the finalizer to the grant", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
@@ -170,13 +174,6 @@ func (r *GrantProcessor) handleExpired(
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 	}
 
-	// Delete the grant object itself
-	log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
-	if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
-		log.Error(err, "failed to delete expired grant", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
-	}
-
 	// Remove the finalizer if it exists to allow deletion to complete
 	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
 		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
@@ -184,6 +181,15 @@ func (r *GrantProcessor) handleExpired(
 			return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 		}
 		log.Info("Removed finalizer for grant", "name", obj.GetName())
+	}
+
+	// Delete the grant object itself
+	if obj.GetDeletionTimestamp().IsZero() {
+		log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
+		if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
+			log.Error(err, "failed to delete expired grant", "name", obj.GetName())
+			return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+		}
 	}
 
 	// Record an event about the revocation of access
@@ -200,11 +206,13 @@ func (r *GrantProcessor) cleanupResources(ctx context.Context, obj common.Access
 	scope := obj.GetScope()
 	requestId := status.RequestId
 
+	log.Info("Cleaning up resources for grant", "name", obj.GetName(), "requestId", requestId)
+
 	var errs []error
 
 	deleteResource := func(key client.ObjectKey, obj client.Object, description string) {
 		if err := r.Get(ctx, key, obj); err == nil {
-			if err := r.Delete(ctx, obj); err != nil {
+			if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
 				errs = append(errs, fmt.Errorf("failed to delete %s %s: %w", description, key.Name, err))
 			} else {
 				log.Info("Deleted "+description, "name", key.Name)
@@ -279,6 +287,8 @@ func (r *GrantProcessor) cleanupResources(ctx context.Context, obj common.Access
 	if len(errs) > 0 {
 		return errors.Join(errs...)
 	}
+
+	log.Info("Resource cleanup complete for grant", "name", obj.GetName(), "requestId", requestId)
 
 	return nil
 }

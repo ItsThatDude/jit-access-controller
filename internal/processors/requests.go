@@ -64,7 +64,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	if obj.GetDeletionTimestamp().IsZero() {
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
 		if err != nil {
-			log.Error(err, "an error occurred adding the finalizer to the grant", "name", obj.GetName())
+			log.Error(err, "an error occurred adding the finalizer to the request", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
 	}
@@ -73,7 +73,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	if !obj.GetDeletionTimestamp().IsZero() {
 		if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
 			log.Info("Cleaning up resources for request", "name", obj.GetName())
-			if err := r.cleanupResources(ctx, obj); err != nil {
+			if err := r.cleanupResponses(ctx, obj); err != nil {
 				log.Error(err, "an error occurred running cleanup for the request", "name", obj.GetName())
 				return ctrl.Result{}, err
 			}
@@ -274,7 +274,7 @@ func (r *RequestProcessor) handleExpired(
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
-	if err := r.cleanupResources(ctx, obj); err != nil {
+	if err := r.cleanupResponses(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
 		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
 	}
@@ -285,7 +285,7 @@ func (r *RequestProcessor) handleExpired(
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestProcessor) cleanupResources(ctx context.Context, obj common.AccessRequestObject) error {
+func (r *RequestProcessor) cleanupResponses(ctx context.Context, obj common.AccessRequestObject) error {
 	log := logf.FromContext(ctx)
 	scope := obj.GetScope()
 	ns := obj.GetNamespace()
