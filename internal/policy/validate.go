@@ -13,6 +13,28 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+func normalizeAPIGroup(s string) string {
+	if s == "" {
+		return "rbac.authorization.k8s.io"
+	}
+	return s
+}
+
+func roleRefEquals(a, b rbacv1.RoleRef) bool {
+	return normalizeAPIGroup(a.APIGroup) == normalizeAPIGroup(b.APIGroup) &&
+		a.Kind == b.Kind &&
+		a.Name == b.Name
+}
+
+func roleRefSliceContains(slice []rbacv1.RoleRef, r rbacv1.RoleRef) bool {
+	for _, ref := range slice {
+		if roleRefEquals(ref, r) {
+			return true
+		}
+	}
+	return false
+}
+
 func fieldAllows(requested, allowed []string) bool {
 	if hasWildcard(allowed) {
 		return true
@@ -29,7 +51,7 @@ func hasWildcard(slice []string) bool {
 	return false
 }
 
-func ruleIsSubsetWithWildcard(requested, allowed rbacv1.PolicyRule) bool {
+func RuleIsSubsetWithWildcard(requested, allowed rbacv1.PolicyRule) bool {
 	return fieldAllows(requested.APIGroups, allowed.APIGroups) &&
 		fieldAllows(requested.Resources, allowed.Resources) &&
 		fieldAllows(requested.ResourceNames, allowed.ResourceNames) &&
@@ -41,7 +63,7 @@ func AllRequestedPolicyRulesAllowed(requestedRules, allowedRules []rbacv1.Policy
 	for _, reqRule := range requestedRules {
 		matched := false
 		for _, allowRule := range allowedRules {
-			if ruleIsSubsetWithWildcard(reqRule, allowRule) {
+			if RuleIsSubsetWithWildcard(reqRule, allowRule) {
 				matched = true
 				break
 			}
@@ -104,7 +126,7 @@ func IsRequestValid[T common.AccessPolicyObject](
 
 		// Role check (empty role means "no role requested", so skip check)
 		roleAllowed := spec.Role.Name == "" ||
-			slices.Contains(policy.AllowedRoles, spec.Role)
+			roleRefSliceContains(policy.AllowedRoles, spec.Role)
 
 		if permissionsAllowed && roleAllowed {
 			return true, &policy
