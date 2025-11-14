@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -20,7 +21,7 @@ func ParsePermissions(perms []string) []rbacv1.PolicyRule {
 	for _, p := range perms {
 		parts := strings.Split(p, ":")
 		if len(parts) != 2 {
-			fmt.Printf("invalid permission format: %s (expected verbs:resources)\n", p)
+			log.Printf("invalid permission format: %s (expected verbs:resources)\n", p)
 			continue
 		}
 

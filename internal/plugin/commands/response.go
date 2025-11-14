@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewApproveCmd() *cobra.Command {
+func newResponseCommand(action string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "approve [<request_name>]",
-		Short: "Approve an access request",
+		Use:   action + " [<request_name>]",
+		Short: fmt.Sprintf("%s an access request", action),
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				fmt.Println("Please select a request to approve:")
+				fmt.Printf("Please select a request to %s:\n", action)
 				selection, err := common.HandleRequestSelection(scope, namespace)
 				if err != nil {
 					return fmt.Errorf("an error occurred while requesting a selection: %s", err)
@@ -35,4 +35,12 @@ func NewApproveCmd() *cobra.Command {
 	cmd.Flags().StringVar(&scope, "scope", "namespace", "Scope of the request (namespace|cluster)")
 
 	return cmd
+}
+
+func NewApproveCmd() *cobra.Command {
+	return newResponseCommand("approve")
+}
+
+func NewRejectCmd() *cobra.Command {
+	return newResponseCommand("reject")
 }

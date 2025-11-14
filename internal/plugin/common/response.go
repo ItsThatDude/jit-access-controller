@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,7 +29,7 @@ func CreateResponse(scope string, namespace string, requestName string, state v1
 		if err := cli.Create(ctx, resp); err != nil {
 			return err
 		}
-		fmt.Printf("ClusterAccessResponse created for request %s\n", requestName)
+		log.Printf("ClusterAccessResponse created for request %s\n", requestName)
 	} else {
 		resp := &v1alpha1.AccessResponse{
 			ObjectMeta: metav1.ObjectMeta{
@@ -44,7 +44,7 @@ func CreateResponse(scope string, namespace string, requestName string, state v1
 		if err := cli.Create(ctx, resp); err != nil {
 			return err
 		}
-		fmt.Printf("AccessResponse created for request %s/%s\n", namespace, requestName)
+		log.Printf("AccessResponse created for request %s/%s\n", namespace, requestName)
 	}
 	return nil
 }

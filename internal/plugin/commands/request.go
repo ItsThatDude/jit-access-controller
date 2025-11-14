@@ -2,7 +2,7 @@ package commands
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/common"
@@ -44,7 +44,7 @@ func NewRequestCmd() *cobra.Command {
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
-				fmt.Printf("ClusterAccessRequest created: %s\n", req.Name)
+				log.Printf("ClusterAccessRequest created: %s\n", req.Name)
 			} else {
 				req := &v1alpha1.AccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
@@ -64,7 +64,7 @@ func NewRequestCmd() *cobra.Command {
 				if err := cli.Create(ctx, req); err != nil {
 					return err
 				}
-				fmt.Printf("AccessRequest created: %s/%s\n", namespace, req.Name)
+				log.Printf("AccessRequest created: %s/%s\n", namespace, req.Name)
 			}
 			return nil
 		},

@@ -29,10 +29,23 @@ func NewListCmd() *cobra.Command {
 				if err := cli.List(ctx, reqList); err != nil {
 					return err
 				}
+
+				if len(reqList.Items) == 0 {
+					fmt.Println("No Access Requests are pending.")
+					return nil
+				}
+
 				fmt.Printf("ClusterAccessRequests:\n")
 				for _, r := range reqList.Items {
 					state := r.Status.State
-					fmt.Printf("- %s : %s\n", r.Name, state)
+
+					fmt.Printf("  - Name: %s\n", r.Name)
+					fmt.Printf("    Subject: %s\n", r.Spec.Subject)
+					fmt.Printf("    State: %s\n", r.Status.State)
+					if state != v1alpha1.RequestStateApproved {
+						fmt.Printf("    Expires: %s\n", r.Status.RequestExpiresAt.String())
+					}
+					fmt.Printf("    Justification: %s\n", r.Spec.Justification)
 				}
 			} else {
 				reqList := &v1alpha1.AccessRequestList{}
@@ -40,20 +53,22 @@ func NewListCmd() *cobra.Command {
 				if err := cli.List(ctx, reqList, listOpts); err != nil {
 					return err
 				}
+
+				if len(reqList.Items) == 0 {
+					fmt.Println("No Access Requests are pending.")
+					return nil
+				}
+
 				fmt.Printf("AccessRequests in namespace %s:\n", listNamespace)
 				for _, r := range reqList.Items {
 					state := r.Status.State
 
-					expires := ""
-
-					if state != v1alpha1.RequestStateApproved {
-						expires = r.Status.RequestExpiresAt.String()
-					}
-
 					fmt.Printf("  - Name: %s\n", r.Name)
 					fmt.Printf("    Subject: %s\n", r.Spec.Subject)
 					fmt.Printf("    State: %s\n", r.Status.State)
-					fmt.Printf("    Expires: %s\n", expires)
+					if state != v1alpha1.RequestStateApproved {
+						fmt.Printf("    Expires: %s\n", r.Status.RequestExpiresAt.String())
+					}
 					fmt.Printf("    Justification: %s\n", r.Spec.Justification)
 				}
 			}
