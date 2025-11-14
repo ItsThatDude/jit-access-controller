@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## Overview
 
-**Jit-access** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
+The **Just-in-time Access Controller** enables users to request **just-in-time (JIT) access** to Kubernetes resources.
 
 Users submit either a:
 

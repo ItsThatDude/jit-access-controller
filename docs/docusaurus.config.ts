@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Jit-access',
+  title: 'JIT Access Controller',
   tagline: 'Just-in-time Access Controller',
   favicon: 'img/favicon.ico',
 
@@ -61,9 +61,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Jit-access',
+      title: 'JIT Access',
       logo: {
-        alt: 'Jit-access',
+        alt: 'JIT Access',
         src: 'img/logo.svg',
       },
       items: [
@@ -82,7 +82,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      copyright: `Copyright © ${new Date().getFullYear()} Jit-access, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} antware, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
