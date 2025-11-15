@@ -46,6 +46,15 @@ var (
 		},
 		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb"},
 	)
+
+	GrantDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: metricNamespace,
+			Name:      "grant_duration_seconds",
+			Help:      "Duration of grants in seconds",
+		},
+		[]string{"scope", "target_namespace", "subject"},
+	)
 )
 
 func RegisterMetrics(version string) {
@@ -65,4 +74,6 @@ func RegisterMetrics(version string) {
 	k8smetrics.Registry.MustRegister(RequestsApproved)
 	k8smetrics.Registry.MustRegister(RolesGranted)
 	k8smetrics.Registry.MustRegister(PermissionsGranted)
+
+	k8smetrics.Registry.MustRegister(GrantDuration)
 }

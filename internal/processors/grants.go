@@ -19,6 +19,7 @@ import (
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	common "github.com/itsthatdude/jit-access-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/internal/metrics"
 )
 
 type GrantProcessor struct {
@@ -54,6 +55,7 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
 		if err != nil {
 			if k8serrors.IsNotFound(err) {
+				log.Info("grant not found when adding finalizer, it may have been deleted", "name", obj.GetName())
 				return ctrl.Result{}, nil
 			}
 
@@ -196,6 +198,12 @@ func (r *GrantProcessor) handleExpired(
 	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
 		"Just-in-time access revoked from %s for request %s",
 		status.Subject, status.Request)
+
+	metrics.GrantDuration.WithLabelValues(
+		string(obj.GetScope()),
+		obj.GetNamespace(),
+		status.Subject,
+	).Observe(time.Since(obj.GetCreationTimestamp().Time).Seconds())
 
 	return ctrl.Result{}, nil
 }
