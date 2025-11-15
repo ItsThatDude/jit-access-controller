@@ -171,14 +171,14 @@ func (r *GrantProcessor) handleExpired(
 	// Also cleans up the parent AccessRequest/ClusterAccessRequest object
 	if err := r.cleanupResources(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired grant", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+		return ctrl.Result{}, err
 	}
 
 	// Remove the finalizer if it exists to allow deletion to complete
 	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
 		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
 			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
-			return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+			return ctrl.Result{}, err
 		}
 		log.Info("Removed finalizer for grant", "name", obj.GetName())
 	}
@@ -188,7 +188,7 @@ func (r *GrantProcessor) handleExpired(
 		log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
 		if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
 			log.Error(err, "failed to delete expired grant", "name", obj.GetName())
-			return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+			return ctrl.Result{}, err
 		}
 	}
 

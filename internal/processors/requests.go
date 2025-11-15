@@ -276,7 +276,7 @@ func (r *RequestProcessor) handleExpired(
 
 	if err := r.cleanupResponses(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
-		return ctrl.Result{RequeueAfter: 10 * time.Second}, err
+		return ctrl.Result{}, err
 	}
 
 	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
