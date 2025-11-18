@@ -50,6 +50,12 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 		}
 	}()
 
+	// Handle deletion
+	if !obj.GetDeletionTimestamp().IsZero() {
+		log.Info("handling deletion of grant", "name", obj.GetName())
+		return r.handleExpired(ctx, obj, false)
+	}
+
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() {
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
@@ -64,12 +70,6 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 		}
 	}
 
-	// Handle deletion
-	if !obj.GetDeletionTimestamp().IsZero() {
-		log.Info("handling deletion of grant", "name", obj.GetName())
-		return r.handleExpired(ctx, obj)
-	}
-
 	// If the RequestId is not set, the grant has only just been created.
 	// Nothing to do until the status is populated.
 	if status.RequestId == "" {
@@ -78,7 +78,7 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 
 	// If the grant has expired, call handleExpired which cleans up the resources
 	if !status.AccessExpiresAt.IsZero() && time.Now().After(status.AccessExpiresAt.Time) {
-		return r.handleExpired(ctx, obj)
+		return r.handleExpired(ctx, obj, true)
 	}
 
 	return r.handleApproved(ctx, obj, status)
@@ -165,6 +165,7 @@ func (r *GrantProcessor) handleApproved(
 func (r *GrantProcessor) handleExpired(
 	ctx context.Context,
 	obj common.AccessGrantObject,
+	deleteGrant bool,
 ) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 	status := obj.GetStatus()
@@ -186,7 +187,7 @@ func (r *GrantProcessor) handleExpired(
 	}
 
 	// Delete the grant object itself
-	if obj.GetDeletionTimestamp().IsZero() {
+	if deleteGrant && obj.GetDeletionTimestamp().IsZero() {
 		log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
 		if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
 			log.Error(err, "failed to delete expired grant", "name", obj.GetName())

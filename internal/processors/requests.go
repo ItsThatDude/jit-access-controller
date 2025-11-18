@@ -11,6 +11,7 @@ import (
 	"github.com/itsthatdude/jit-access-controller/internal/metrics"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,15 +61,6 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 		status.RequestExpiresAt = metav1.NewTime(time.Now().Add(time.Duration(60) * time.Minute))
 	}
 
-	// Add finalizer
-	if obj.GetDeletionTimestamp().IsZero() {
-		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
-		if err != nil {
-			log.Error(err, "an error occurred adding the finalizer to the request", "name", obj.GetName())
-			return ctrl.Result{}, err
-		}
-	}
-
 	// Handle deletion
 	if !obj.GetDeletionTimestamp().IsZero() {
 		if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
@@ -79,6 +71,14 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 			}
 			log.Info("Successfully cleaned up resources for request", "name", obj.GetName())
 
+			metrics.RequestStatus.Delete(
+				prometheus.Labels{
+					"scope":            string(obj.GetScope()),
+					"target_namespace": obj.GetNamespace(),
+					"request":          obj.GetName(),
+				},
+			)
+
 			log.Info("Removing finalizer for request", "name", obj.GetName())
 			if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
 				log.Error(err, "an error occurred removing the request finalizer", "name", obj.GetName())
@@ -87,6 +87,15 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 			log.Info("Removed finalizer for request", "name", obj.GetName())
 		}
 		return ctrl.Result{}, nil
+	}
+
+	// Add finalizer
+	if obj.GetDeletionTimestamp().IsZero() {
+		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
+		if err != nil {
+			log.Error(err, "an error occurred adding the finalizer to the request", "name", obj.GetName())
+			return ctrl.Result{}, err
+		}
 	}
 
 	if status.State != v1alpha1.RequestStateApproved &&
@@ -173,6 +182,12 @@ func (r *RequestProcessor) handleApproved(
 	if spec.Role.Name != "" {
 		metrics.RolesGranted.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject(), spec.Role.Kind, spec.Role.Name).Inc()
 	}
+
+	metrics.RequestStatus.WithLabelValues(
+		string(obj.GetScope()),
+		obj.GetNamespace(),
+		obj.GetName(),
+	).Set(1) // Approved
 
 	// this may need to be revisited
 	if len(spec.Permissions) > 0 {
@@ -261,6 +276,20 @@ func (r *RequestProcessor) handlePending(
 		return r.handleApproved(ctx, obj, status, approved.UnsortedList())
 	}
 
+	if status.State == v1alpha1.RequestStateDenied {
+		metrics.RequestStatus.WithLabelValues(
+			string(obj.GetScope()),
+			obj.GetNamespace(),
+			obj.GetName(),
+		).Set(2) // Denied
+	} else {
+		metrics.RequestStatus.WithLabelValues(
+			string(obj.GetScope()),
+			obj.GetNamespace(),
+			obj.GetName(),
+		).Set(0) // Pending
+	}
+
 	if !status.RequestExpiresAt.IsZero() {
 		return ctrl.Result{RequeueAfter: time.Until(status.RequestExpiresAt.Time)}, nil
 	}
@@ -278,6 +307,14 @@ func (r *RequestProcessor) handleExpired(
 		log.Error(err, "an error occurred running cleanup for the expired request", "name", obj.GetName())
 		return ctrl.Result{}, err
 	}
+
+	metrics.RequestStatus.Delete(
+		prometheus.Labels{
+			"scope":            string(obj.GetScope()),
+			"target_namespace": obj.GetNamespace(),
+			"request":          obj.GetName(),
+		},
+	)
 
 	log.Info("resources cleaned up for expired request, deleting the request", "name", obj.GetName())
 	_ = r.Delete(ctx, obj)

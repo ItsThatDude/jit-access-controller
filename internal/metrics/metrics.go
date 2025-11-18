@@ -29,6 +29,15 @@ var (
 		[]string{"scope", "target_namespace", "subject"},
 	)
 
+	RequestStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: metricNamespace,
+			Name:      "request_status",
+			Help:      "Status of access requests (0: pending, 1: approved, 2: denied)",
+		},
+		[]string{"scope", "target_namespace", "request"},
+	)
+
 	RolesGranted = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
@@ -72,6 +81,7 @@ func RegisterMetrics(version string) {
 
 	k8smetrics.Registry.MustRegister(RequestsCreated)
 	k8smetrics.Registry.MustRegister(RequestsApproved)
+	k8smetrics.Registry.MustRegister(RequestStatus)
 	k8smetrics.Registry.MustRegister(RolesGranted)
 	k8smetrics.Registry.MustRegister(PermissionsGranted)
 
