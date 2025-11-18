@@ -5,6 +5,7 @@ import (
 )
 
 // SubjectPolicy defines access rules for a single subject (user/serviceaccount).
+// +kubebuilder:validation:XValidation:rule="self.requiredApprovals == 0 || self.approvers.size() >= 1",message="number of approvers must be greater than zero"
 type SubjectPolicy struct {
 	// The permitted users and groups that can request resources under this policy.
 	// +required
@@ -28,7 +29,5 @@ type SubjectPolicy struct {
 	RequiredApprovals int `json:"requiredApprovals"`
 
 	// The users and groups allowed to approve requests for this subject
-	// +required
-	// +kubebuilder:validation:MinItems=1
 	Approvers []rbacv1.Subject `json:"approvers,omitempty"`
 }

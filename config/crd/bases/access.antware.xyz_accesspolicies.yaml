@@ -145,7 +145,6 @@ spec:
                   - name
                   type: object
                   x-kubernetes-map-type: atomic
-                minItems: 1
                 type: array
               maxDuration:
                 description: Duration specifies the maximum amount of time the access
@@ -193,11 +192,13 @@ spec:
                 minimum: 0
                 type: integer
             required:
-            - approvers
             - maxDuration
             - requesters
             - requiredApprovals
             type: object
+            x-kubernetes-validations:
+            - message: number of approvers must be greater than zero
+              rule: self.requiredApprovals == 0 || self.approvers.size() >= 1
           status:
             description: status defines the observed state of AccessPolicy
             type: object
