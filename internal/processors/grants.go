@@ -53,7 +53,10 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 	// Handle deletion
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.Info("handling deletion of grant", "name", obj.GetName())
-		return r.handleExpired(ctx, obj, false)
+
+		err := r.handleExpired(ctx, obj, false)
+
+		return ctrl.Result{}, err
 	}
 
 	// Add finalizer
@@ -78,7 +81,8 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 
 	// If the grant has expired, call handleExpired which cleans up the resources
 	if !status.AccessExpiresAt.IsZero() && time.Now().After(status.AccessExpiresAt.Time) {
-		return r.handleExpired(ctx, obj, true)
+		err := r.handleExpired(ctx, obj, true)
+		return ctrl.Result{}, err
 	}
 
 	return r.handleApproved(ctx, obj, status)
@@ -166,7 +170,7 @@ func (r *GrantProcessor) handleExpired(
 	ctx context.Context,
 	obj common.AccessGrantObject,
 	deleteGrant bool,
-) (ctrl.Result, error) {
+) error {
 	log := logf.FromContext(ctx)
 	status := obj.GetStatus()
 
@@ -174,14 +178,14 @@ func (r *GrantProcessor) handleExpired(
 	// Also cleans up the parent AccessRequest/ClusterAccessRequest object
 	if err := r.cleanupResources(ctx, obj); err != nil {
 		log.Error(err, "an error occurred running cleanup for the expired grant", "name", obj.GetName())
-		return ctrl.Result{}, err
+		return err
 	}
 
 	// Remove the finalizer if it exists to allow deletion to complete
 	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
 		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
 			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
-			return ctrl.Result{}, err
+			return err
 		}
 		log.Info("Removed finalizer for grant", "name", obj.GetName())
 	}
@@ -191,7 +195,7 @@ func (r *GrantProcessor) handleExpired(
 		log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
 		if err := r.Delete(ctx, obj); err != nil && !k8serrors.IsNotFound(err) {
 			log.Error(err, "failed to delete expired grant", "name", obj.GetName())
-			return ctrl.Result{}, err
+			return err
 		}
 	}
 
@@ -206,7 +210,7 @@ func (r *GrantProcessor) handleExpired(
 		status.Subject,
 	).Observe(time.Since(obj.GetCreationTimestamp().Time).Seconds())
 
-	return ctrl.Result{}, nil
+	return nil
 }
 
 func (r *GrantProcessor) cleanupResources(ctx context.Context, obj common.AccessGrantObject) error {
