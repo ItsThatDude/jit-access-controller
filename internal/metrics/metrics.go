@@ -56,13 +56,13 @@ var (
 		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb"},
 	)
 
-	GrantDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
+	GrantDuration = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Name:      "grant_duration_seconds",
 			Help:      "Duration of grants in seconds",
 		},
-		[]string{"scope", "target_namespace", "subject"},
+		[]string{"scope", "target_namespace", "grant", "subject"},
 	)
 )
 

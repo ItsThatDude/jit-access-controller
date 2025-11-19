@@ -207,8 +207,9 @@ func (r *GrantProcessor) handleExpired(
 	metrics.GrantDuration.WithLabelValues(
 		string(obj.GetScope()),
 		obj.GetNamespace(),
+		obj.GetName(),
 		status.Subject,
-	).Observe(time.Since(obj.GetCreationTimestamp().Time).Seconds())
+	).Set(time.Since(obj.GetCreationTimestamp().Time).Seconds())
 
 	return nil
 }
