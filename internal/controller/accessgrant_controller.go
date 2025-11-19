@@ -86,6 +86,6 @@ func (r *AccessGrantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.AccessGrant{}).
-		Named("accessgrant").
+		Named("grant-controller").
 		Complete(r)
 }

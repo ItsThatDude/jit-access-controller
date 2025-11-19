@@ -87,6 +87,6 @@ func (r *ClusterAccessGrantReconciler) SetupWithManager(mgr ctrl.Manager) error 
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&accessv1alpha1.ClusterAccessGrant{}).
-		Named("clusteraccessgrant").
+		Named("clustergrant-controller").
 		Complete(r)
 }

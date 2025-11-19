@@ -136,6 +136,6 @@ func (r *AccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}),
 			builder.WithPredicates(eventFilter),
 		).
-		Named("accessrequest").
+		Named("request-controller").
 		Complete(r)
 }

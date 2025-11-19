@@ -135,6 +135,6 @@ func (r *ClusterAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			}),
 			builder.WithPredicates(eventFilter),
 		).
-		Named("clusteraccessrequest").
+		Named("clusterrequest-controller").
 		Complete(r)
 }
