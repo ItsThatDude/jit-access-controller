@@ -76,6 +76,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 					"scope":            string(obj.GetScope()),
 					"target_namespace": obj.GetNamespace(),
 					"request":          obj.GetName(),
+					"subject":          obj.GetSubject(),
 				},
 			)
 
@@ -188,6 +189,7 @@ func (r *RequestProcessor) handleApproved(
 		string(obj.GetScope()),
 		obj.GetNamespace(),
 		obj.GetName(),
+		obj.GetSubject(),
 	).Set(1) // Approved
 
 	// this may need to be revisited
@@ -282,12 +284,14 @@ func (r *RequestProcessor) handlePending(
 			string(obj.GetScope()),
 			obj.GetNamespace(),
 			obj.GetName(),
+			obj.GetSubject(),
 		).Set(2) // Denied
 	} else {
 		metrics.RequestStatus.WithLabelValues(
 			string(obj.GetScope()),
 			obj.GetNamespace(),
 			obj.GetName(),
+			obj.GetSubject(),
 		).Set(0) // Pending
 	}
 
@@ -314,6 +318,7 @@ func (r *RequestProcessor) handleExpired(
 			"scope":            string(obj.GetScope()),
 			"target_namespace": obj.GetNamespace(),
 			"request":          obj.GetName(),
+			"subject":          obj.GetSubject(),
 		},
 	)
 

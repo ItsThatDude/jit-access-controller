@@ -35,7 +35,7 @@ var (
 			Name:      "request_status",
 			Help:      "Status of access requests (0: pending, 1: approved, 2: denied)",
 		},
-		[]string{"scope", "target_namespace", "request"},
+		[]string{"scope", "target_namespace", "request", "subject"},
 	)
 
 	RolesGranted = prometheus.NewCounterVec(
@@ -56,8 +56,8 @@ var (
 		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb"},
 	)
 
-	GrantDuration = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	GrantDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
 			Namespace: metricNamespace,
 			Name:      "grant_duration_seconds",
 			Help:      "Duration of grants in seconds",
