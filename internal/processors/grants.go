@@ -61,6 +61,7 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() {
+		log.Info(fmt.Sprintf("%v", obj.DeepCopyObject()))
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
 		if err != nil {
 			if k8serrors.IsNotFound(err) {
@@ -181,15 +182,6 @@ func (r *GrantProcessor) handleExpired(
 		return err
 	}
 
-	// Remove the finalizer if it exists to allow deletion to complete
-	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
-			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
-			return err
-		}
-		log.Info("Removed finalizer for grant", "name", obj.GetName())
-	}
-
 	// Delete the grant object itself
 	if deleteGrant && obj.GetDeletionTimestamp().IsZero() {
 		log.Info("resources cleaned up for expired request, deleting the grant", "name", obj.GetName())
@@ -197,6 +189,15 @@ func (r *GrantProcessor) handleExpired(
 			log.Error(err, "failed to delete expired grant", "name", obj.GetName())
 			return err
 		}
+	}
+
+	// Remove the finalizer if it exists to allow deletion to complete
+	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
+		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
+			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
+			return err
+		}
+		log.Info("Removed finalizer for grant", "name", obj.GetName())
 	}
 
 	// Record an event about the revocation of access
