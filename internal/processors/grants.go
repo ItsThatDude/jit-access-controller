@@ -61,7 +61,6 @@ func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGr
 
 	// Add finalizer
 	if obj.GetDeletionTimestamp().IsZero() {
-		log.Info(fmt.Sprintf("%v", obj.DeepCopyObject()))
 		err := EnsureFinalizerExists(r.Client, ctx, obj, common.JITFinalizer)
 		if err != nil {
 			if k8serrors.IsNotFound(err) {
