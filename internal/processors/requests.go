@@ -185,12 +185,7 @@ func (r *RequestProcessor) handleApproved(
 		metrics.RolesGranted.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject(), spec.Role.Kind, spec.Role.Name).Inc()
 	}
 
-	metrics.RequestStatus.WithLabelValues(
-		string(obj.GetScope()),
-		obj.GetNamespace(),
-		obj.GetName(),
-		obj.GetSubject(),
-	).Set(1) // Approved
+	r.updateRequestStatusMetric(obj, v1alpha1.RequestStateApproved)
 
 	// this may need to be revisited
 	if len(spec.Permissions) > 0 {
@@ -279,21 +274,7 @@ func (r *RequestProcessor) handlePending(
 		return r.handleApproved(ctx, obj, status, approved.UnsortedList())
 	}
 
-	if status.State == v1alpha1.RequestStateDenied {
-		metrics.RequestStatus.WithLabelValues(
-			string(obj.GetScope()),
-			obj.GetNamespace(),
-			obj.GetName(),
-			obj.GetSubject(),
-		).Set(2) // Denied
-	} else {
-		metrics.RequestStatus.WithLabelValues(
-			string(obj.GetScope()),
-			obj.GetNamespace(),
-			obj.GetName(),
-			obj.GetSubject(),
-		).Set(0) // Pending
-	}
+	r.updateRequestStatusMetric(obj, status.State)
 
 	if !status.RequestExpiresAt.IsZero() {
 		return ctrl.Result{RequeueAfter: time.Until(status.RequestExpiresAt.Time)}, nil
@@ -431,4 +412,23 @@ func (r *RequestProcessor) createGrant(
 	}
 
 	return nil
+}
+
+func (r *RequestProcessor) updateRequestStatusMetric(obj common.AccessRequestObject, state v1alpha1.RequestState) {
+	var metricValue float64
+	switch state {
+	case v1alpha1.RequestStateApproved:
+		metricValue = metrics.MetricStateApproved
+	case v1alpha1.RequestStateDenied:
+		metricValue = metrics.MetricStateDenied
+	default:
+		metricValue = metrics.MetricStatePending
+	}
+
+	metrics.RequestStatus.WithLabelValues(
+		string(obj.GetScope()),
+		obj.GetNamespace(),
+		obj.GetName(),
+		obj.GetSubject(),
+	).Set(metricValue)
 }
