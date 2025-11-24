@@ -172,7 +172,7 @@ func (r *RequestProcessor) handleApproved(
 		return ctrl.Result{}, err
 	}
 
-	if err := r.createGrant(ctx, obj, approvers); err != nil && !k8serrors.IsAlreadyExists(err) {
+	if err := r.createGrant(ctx, obj, status, approvers); err != nil && !k8serrors.IsAlreadyExists(err) {
 		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, common.RoleKindRole, spec.Role)
 		return ctrl.Result{}, err
 	}
@@ -356,11 +356,11 @@ func (r *RequestProcessor) cleanupResponses(ctx context.Context, obj common.Acce
 func (r *RequestProcessor) createGrant(
 	ctx context.Context,
 	obj common.AccessRequestObject,
+	status *v1alpha1.AccessRequestStatus,
 	approvers []string,
 ) error {
 	reqName := obj.GetName()
 	spec := obj.GetSpec()
-	status := obj.GetStatus()
 	ns := obj.GetNamespace()
 
 	isClusterGrant := obj.GetScope() == v1alpha1.RequestScopeCluster
