@@ -53,7 +53,7 @@ var (
 			Name:      "permissions_granted",
 			Help:      "Number of permissions granted",
 		},
-		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb"},
+		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb", "resourceName"},
 	)
 
 	GrantDuration = prometheus.NewHistogramVec(

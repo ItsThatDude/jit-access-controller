@@ -12,6 +12,7 @@ import (
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	"github.com/prometheus/client_golang/prometheus"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -187,24 +188,8 @@ func (r *RequestProcessor) handleApproved(
 
 	r.updateRequestStatusMetric(obj, v1alpha1.RequestStateApproved)
 
-	// this may need to be revisited
 	if len(spec.Permissions) > 0 {
-		for _, perm := range spec.Permissions {
-			for _, apiGroup := range perm.APIGroups {
-				for _, resource := range perm.Resources {
-					for _, verb := range perm.Verbs {
-						metrics.PermissionsGranted.WithLabelValues(
-							string(obj.GetScope()),
-							obj.GetNamespace(),
-							obj.GetSubject(),
-							apiGroup,
-							resource,
-							verb,
-						).Inc()
-					}
-				}
-			}
-		}
+		r.recordPermissionMetrics(obj, spec.Permissions)
 	}
 
 	// Requeue just after access expiry to handle cleanup
@@ -431,4 +416,40 @@ func (r *RequestProcessor) updateRequestStatusMetric(obj common.AccessRequestObj
 		obj.GetName(),
 		obj.GetSubject(),
 	).Set(metricValue)
+}
+
+func (r *RequestProcessor) recordPermissionMetrics(obj common.AccessRequestObject, permissions []rbacv1.PolicyRule) {
+	scope := string(obj.GetScope())
+	namespace := obj.GetNamespace()
+	subject := obj.GetSubject()
+
+	for _, perm := range permissions {
+		apiGroups := perm.APIGroups
+		if len(apiGroups) == 0 {
+			apiGroups = []string{""}
+		}
+
+		resourceNames := perm.ResourceNames
+		if len(resourceNames) == 0 {
+			resourceNames = []string{""}
+		}
+
+		for _, apiGroup := range apiGroups {
+			for _, resource := range perm.Resources {
+				for _, verb := range perm.Verbs {
+					for _, resourceName := range resourceNames {
+						metrics.PermissionsGranted.WithLabelValues(
+							scope,
+							namespace,
+							subject,
+							apiGroup,
+							resource,
+							verb,
+							resourceName,
+						).Inc()
+					}
+				}
+			}
+		}
+	}
 }
