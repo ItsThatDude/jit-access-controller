@@ -192,7 +192,7 @@ func (r *GrantProcessor) handleExpired(
 
 	// Remove the finalizer if it exists to allow deletion to complete
 	if controllerutil.ContainsFinalizer(obj, common.JITFinalizer) {
-		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
+		if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil && !k8serrors.IsNotFound(err) {
 			log.Error(err, "an error occurred removing the grant finalizer", "name", obj.GetName())
 			return err
 		}
