@@ -53,7 +53,7 @@ type AccessRequestSpec struct {
 
 // AccessRequest is the Schema for the accessrequests API
 // +kubebuilder:printcolumn:name="Approvals-Required",type=integer,JSONPath=`.status.approvalsRequired`
-// +kubebuilder:printcolumn:name="Request-Expires-At",type=date,JSONPath=`.status.requestExpiresAt`
+// +kubebuilder:printcolumn:name="Request-Expires-At",type=string,JSONPath=`.status.requestExpiresAt`
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type AccessRequest struct {

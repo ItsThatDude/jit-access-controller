@@ -20,7 +20,7 @@ spec:
       type: integer
     - jsonPath: .status.requestExpiresAt
       name: Request-Expires-At
-      type: date
+      type: string
     - jsonPath: .status.state
       name: State
       type: string

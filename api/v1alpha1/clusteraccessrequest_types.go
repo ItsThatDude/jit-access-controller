@@ -54,7 +54,7 @@ type ClusterAccessRequestSpec struct {
 
 // ClusterAccessRequest is the Schema for the clusteraccessrequests API
 // +kubebuilder:printcolumn:name="Approvals-Required",type=integer,JSONPath=`.status.approvalsRequired`
-// +kubebuilder:printcolumn:name="Request-Expires-At",type=date,JSONPath=`.status.requestExpiresAt`
+// +kubebuilder:printcolumn:name="Request-Expires-At",type=string,JSONPath=`.status.requestExpiresAt`
 // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type ClusterAccessRequest struct {
