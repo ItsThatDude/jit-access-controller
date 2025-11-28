@@ -64,17 +64,7 @@ func ParsePermissions(perms []string) []rbacv1.PolicyRule {
 			Resources: resources,
 		}
 
-		// Only set API groups if at least one is non-empty
-		hasGroups := false
-		for _, g := range apiGroups {
-			if g != "" {
-				hasGroups = true
-				break
-			}
-		}
-		if hasGroups {
-			rule.APIGroups = apiGroups
-		}
+		rule.APIGroups = apiGroups
 
 		rules = append(rules, rule)
 	}
