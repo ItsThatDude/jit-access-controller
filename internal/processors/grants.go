@@ -209,7 +209,7 @@ func (r *GrantProcessor) handleExpired(
 		obj.GetNamespace(),
 		obj.GetName(),
 		status.Subject,
-	).Observe(time.Since(obj.GetCreationTimestamp().Time).Seconds())
+	).Set(time.Since(obj.GetCreationTimestamp().Time).Seconds())
 
 	return nil
 }
