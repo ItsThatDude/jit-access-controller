@@ -39,6 +39,7 @@ import (
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/controller"
 	"github.com/itsthatdude/jit-access-controller/internal/metrics"
+	"github.com/itsthatdude/jit-access-controller/internal/notifications"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	webhookv1alpha1 "github.com/itsthatdude/jit-access-controller/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
@@ -208,11 +209,12 @@ func main() {
 
 	clusterPolicyManager := policy.NewPolicyManager()
 	namespacedPolicyManager := policy.NewPolicyManager()
-	//notificationManager := notifications.NewNotificationManager()
+	notificationManager := notifications.NewNotificationManager()
 
 	if err := (&controller.NotificationConfigReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:  mgr.GetClient(),
+		Scheme:  mgr.GetScheme(),
+		Manager: notificationManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NotificationConfig")
 		os.Exit(1)

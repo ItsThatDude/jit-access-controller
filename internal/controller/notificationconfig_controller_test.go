@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/notifications"
 )
 
 var _ = Describe("NotificationConfig Controller", func() {
@@ -69,8 +70,9 @@ var _ = Describe("NotificationConfig Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &NotificationConfigReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
+				Client:  k8sClient,
+				Scheme:  k8sClient.Scheme(),
+				Manager: notifications.NewNotificationManager(),
 			}
 
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
