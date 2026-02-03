@@ -20,56 +20,43 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r AccessPolicy) GetName() string {
-	return r.Name
-}
-
-func (r AccessPolicy) GetScope() PolicyScope {
-	return "Namespace"
-}
-
-func (r AccessPolicy) GetPolicy() SubjectPolicy {
-	return r.Spec.SubjectPolicy
-}
-
-// AccessPolicySpec defines the desired state of AccessPolicy
-type AccessPolicySpec struct {
-	SubjectPolicy `json:",inline"`
-}
-
-// AccessPolicyStatus defines the observed state of AccessPolicy.
-type AccessPolicyStatus struct {
+// NotificationConfigStatus defines the observed state of NotificationConfig.
+type NotificationConfigStatus struct {
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// AccessPolicy is the Schema for the accesspolicies API
-type AccessPolicy struct {
+// NotificationConfig is the Schema for the notificationconfigs API
+type NotificationConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// metadata is a standard object metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
 
-	// spec defines the desired state of AccessPolicy
+	// spec defines the desired state of NotificationConfig
 	// +required
-	Spec AccessPolicySpec `json:"spec"`
+	Spec NotificationConfigSpec `json:"spec"`
 
-	// status defines the observed state of AccessPolicy
+	// status defines the observed state of NotificationConfig
 	// +optional
-	Status AccessPolicyStatus `json:"status,omitempty,omitzero"`
+	Status NotificationConfigStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
 
-// AccessPolicyList contains a list of AccessPolicy
-type AccessPolicyList struct {
+// NotificationConfigList contains a list of NotificationConfig
+type NotificationConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AccessPolicy `json:"items"`
+	Items           []NotificationConfig `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&AccessPolicy{}, &AccessPolicyList{})
+	SchemeBuilder.Register(&NotificationConfig{}, &NotificationConfigList{})
 }

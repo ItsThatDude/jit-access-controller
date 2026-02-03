@@ -26,7 +26,9 @@ import (
 
 type RequestProcessor struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme         *runtime.Scheme
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
 }
 
 func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.AccessRequestObject) (ctrl.Result, error) {
@@ -111,42 +113,26 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	}
 
 	// Match against policies
-	ns := obj.GetNamespace()
-	isValid := false
-	var matched *v1alpha1.SubjectPolicy
-	if ns == "" {
-		var clusterPolicies v1alpha1.ClusterAccessPolicyList
-		if err := r.List(ctx, &clusterPolicies); err != nil {
-			return ctrl.Result{}, err
-		}
+	var policies = r.PolicyManager.GetSnapshot()
 
-		isValid, matched = policy.IsRequestValid(obj, clusterPolicies.Items)
-		if !isValid {
-			return ctrl.Result{}, fmt.Errorf("the request does not match a cluster scoped access policy")
-		}
-	} else {
-		var nsPolicies v1alpha1.AccessPolicyList
-		listOpts := []client.ListOption{client.InNamespace(ns)}
-		if err := r.List(ctx, &nsPolicies, listOpts...); err != nil {
-			return ctrl.Result{}, err
-		}
-
-		isValid, matched = policy.IsRequestValid(obj, nsPolicies.Items)
-		if !isValid {
-			return ctrl.Result{}, fmt.Errorf("the request does not match a namespace scoped access policy")
-		}
+	policy := r.PolicyResolver.Resolve(obj, policies)
+	if policy == nil {
+		return ctrl.Result{}, fmt.Errorf("the request does not match an access policy")
 	}
 
-	if matched == nil {
-		return ctrl.Result{}, fmt.Errorf("the matched policy should not be nil")
+	policyName := policy.GetName()
+	policySpec := policy.GetPolicy()
+
+	if status.ResolvedPolicy != "" && status.ResolvedPolicy != policyName {
+		status.ResolvedPolicy = policyName
 	}
 
-	if matched.RequiredApprovals != status.ApprovalsRequired {
-		status.ApprovalsRequired = matched.RequiredApprovals
+	if policySpec.RequiredApprovals != status.ApprovalsRequired {
+		status.ApprovalsRequired = policySpec.RequiredApprovals
 	}
 
 	if status.State == v1alpha1.RequestStatePending {
-		return r.handlePending(ctx, obj, matched, status)
+		return r.handlePending(ctx, obj, &policySpec, status)
 	}
 
 	return ctrl.Result{}, nil

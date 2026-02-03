@@ -177,6 +177,8 @@ spec:
                 type: string
               requestId:
                 type: string
+              resolvedPolicy:
+                type: string
               state:
                 enum:
                 - Pending

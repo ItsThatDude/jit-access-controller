@@ -38,9 +38,11 @@ type AccessRequestValidator struct {
 	client         client.Client
 	namespace      string
 	serviceAccount string
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
 }
 
-func SetupAccessRequestWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
+func SetupAccessRequestWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, policyManager *policy.PolicyManager) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-accessrequest",
 		&admission.Webhook{Handler: &AccessRequestValidator{
@@ -48,6 +50,8 @@ func SetupAccessRequestWebhookWithManager(mgr ctrl.Manager, namespace, serviceAc
 			client:         mgr.GetClient(),
 			namespace:      namespace,
 			serviceAccount: serviceAccount,
+			PolicyManager:  policyManager,
+			PolicyResolver: &policy.PolicyResolver{},
 		}},
 	)
 }
@@ -82,13 +86,10 @@ func (v *AccessRequestValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Denied("either Role or Permissions needs to be set")
 	}
 
-	var policies accessv1alpha1.AccessPolicyList
-	if err := v.client.List(ctx, &policies); err != nil {
-		admission.Errored(http.StatusBadRequest, err)
-	}
+	policies := v.PolicyManager.GetSnapshot()
+	policy := v.PolicyResolver.Resolve(obj, policies)
 
-	permitted, _ := policy.IsRequestValid(obj, policies.Items)
-	if !permitted {
+	if policy == nil {
 		return admission.Denied("access request did not match a policy")
 	}
 

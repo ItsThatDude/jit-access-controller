@@ -34,5 +34,6 @@ type AccessResponseObject interface {
 
 type AccessPolicyObject interface {
 	GetName() string
+	GetScope() v1alpha1.PolicyScope
 	GetPolicy() v1alpha1.SubjectPolicy
 }
