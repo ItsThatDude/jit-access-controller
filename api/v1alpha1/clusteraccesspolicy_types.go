@@ -24,6 +24,14 @@ func (r ClusterAccessPolicy) GetName() string {
 	return r.Name
 }
 
+func (r ClusterAccessPolicy) GetNamespace() string {
+	return ""
+}
+
+func (r ClusterAccessPolicy) GetScope() PolicyScope {
+	return "Cluster"
+}
+
 func (r ClusterAccessPolicy) GetPolicy() SubjectPolicy {
 	return r.Spec.SubjectPolicy
 }

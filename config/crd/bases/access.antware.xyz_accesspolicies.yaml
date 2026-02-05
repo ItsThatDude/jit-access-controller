@@ -151,6 +151,13 @@ spec:
                   can last (e.g. "5s", "10m", "2h45m").
                 pattern: ^(\d+(ns|us|µs|ms|s|m|h))+$
                 type: string
+              notificationConfigRef:
+                description: The notification config ref to use
+                type: string
+              priority:
+                default: 0
+                description: The priority of the policy
+                type: integer
               requesters:
                 description: The permitted users and groups that can request resources
                   under this policy.

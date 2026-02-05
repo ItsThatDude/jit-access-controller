@@ -4,9 +4,16 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 )
 
+// +kubebuilder:validation:Enum=Cluster;Namespace
+type PolicyScope string
+
 // SubjectPolicy defines access rules for a single subject (user/serviceaccount).
 // +kubebuilder:validation:XValidation:rule="self.requiredApprovals == 0 || self.approvers.size() >= 1",message="number of approvers must be greater than zero"
 type SubjectPolicy struct {
+	// The priority of the policy
+	// +kubebuilder:default:=0
+	Priority int `json:"priority,omitempty"`
+
 	// The permitted users and groups that can request resources under this policy.
 	// +required
 	// +kubebuilder:validation:MinItems=1
@@ -30,4 +37,7 @@ type SubjectPolicy struct {
 
 	// The users and groups allowed to approve requests for this subject
 	Approvers []rbacv1.Subject `json:"approvers,omitempty"`
+
+	// The notification config ref to use
+	NotificationConfig string `json:"notificationConfigRef,omitempty"`
 }

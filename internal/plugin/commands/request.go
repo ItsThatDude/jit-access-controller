@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
@@ -21,6 +22,10 @@ func NewRequestCmd() *cobra.Command {
 			cli, err := plugin.GetRuntimeClient()
 			if err != nil {
 				return err
+			}
+
+			if len(permissions) == 0 && role == "" {
+				return fmt.Errorf("A role or adhoc permissions must be specified")
 			}
 
 			ctx := context.Background()

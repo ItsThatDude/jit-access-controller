@@ -39,6 +39,7 @@ import (
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/controller"
 	"github.com/itsthatdude/jit-access-controller/internal/metrics"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	webhookv1alpha1 "github.com/itsthatdude/jit-access-controller/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
@@ -205,28 +206,44 @@ func main() {
 		os.Exit(1)
 	}
 
+	clusterPolicyManager := policy.NewPolicyManager()
+	namespacedPolicyManager := policy.NewPolicyManager()
+
+	if err := (&controller.ClusterAccessPolicyReconciler{
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		PolicyManager: clusterPolicyManager,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessPolicy")
+		os.Exit(1)
+	}
+
+	if err := (&controller.AccessPolicyReconciler{
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		PolicyManager: namespacedPolicyManager,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AccessPolicy")
+		os.Exit(1)
+	}
+
 	if err := (&controller.ClusterAccessRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		PolicyManager:  clusterPolicyManager,
+		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.AccessRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		PolicyManager:  namespacedPolicyManager,
+		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
-		os.Exit(1)
-	}
-
-	if err := (&controller.AccessGrantReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
 		os.Exit(1)
 	}
 
@@ -239,17 +256,26 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := (&controller.AccessGrantReconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
+		os.Exit(1)
+	}
+
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
+		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount)
 		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount)
+		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
 	}
 	// +kubebuilder:scaffold:builder
 

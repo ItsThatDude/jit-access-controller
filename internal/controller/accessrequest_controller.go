@@ -33,14 +33,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/processors"
 )
 
 // AccessRequestReconciler reconciles a AccessRequest object
 type AccessRequestReconciler struct {
 	client.Client
-	Scheme    *runtime.Scheme
-	Processor *processors.RequestProcessor
+	Scheme         *runtime.Scheme
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
+	Processor      *processors.RequestProcessor
 }
 
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accesspolicies,verbs=get;list;watch;create;update;patch;delete
@@ -76,8 +79,10 @@ func (r *AccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *AccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.Processor = &processors.RequestProcessor{
-		Client: r.Client,
-		Scheme: r.Scheme,
+		Client:         r.Client,
+		Scheme:         r.Scheme,
+		PolicyManager:  r.PolicyManager,
+		PolicyResolver: r.PolicyResolver,
 	}
 
 	ctx := context.Background()

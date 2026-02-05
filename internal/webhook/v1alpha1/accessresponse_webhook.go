@@ -24,9 +24,11 @@ type AccessResponseValidator struct {
 	client         client.Client
 	namespace      string
 	serviceAccount string
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
 }
 
-func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string) {
+func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, policyManager *policy.PolicyManager) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-accessresponse",
 		&admission.Webhook{Handler: &AccessResponseValidator{
@@ -34,6 +36,8 @@ func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceA
 			client:         mgr.GetClient(),
 			namespace:      namespace,
 			serviceAccount: serviceAccount,
+			PolicyManager:  policyManager,
+			PolicyResolver: &policy.PolicyResolver{},
 		}},
 	)
 }
@@ -68,16 +72,14 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Denied("The approver can not be the same as the subject of the request.")
 	}
 
-	policies := &accessv1alpha1.AccessPolicyList{}
-	if err := v.client.List(ctx, policies, client.InNamespace(req.Namespace)); err != nil {
-		return admission.Denied(fmt.Sprintf("an error occurred fetching access policies in namespace '%s': %s", req.Namespace, err))
-	}
+	policies := v.PolicyManager.GetSnapshot()
+	policy := v.PolicyResolver.Resolve(request, policies)
 
-	isRequestValid, matched_policy := policy.IsRequestValid(request, policies.Items)
-
-	if !isRequestValid || matched_policy == nil {
+	if policy == nil {
 		return admission.Denied(fmt.Sprintf("the request %s does not match an access policy in namespace '%s'", req.Name, req.Namespace))
 	}
+
+	policySpec := policy.GetPolicy()
 
 	switch req.Operation {
 	case admissionv1.Create:
@@ -87,7 +89,7 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 
 		userNames := []string{}
 		groupNames := []string{}
-		for _, approver := range matched_policy.Approvers {
+		for _, approver := range policySpec.Approvers {
 			switch approver.Kind {
 			case rbacv1.UserKind:
 				userNames = append(userNames, approver.Name)
