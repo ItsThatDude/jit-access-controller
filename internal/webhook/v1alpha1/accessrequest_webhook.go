@@ -87,9 +87,9 @@ func (v *AccessRequestValidator) Handle(ctx context.Context, req admission.Reque
 	}
 
 	policies := v.PolicyManager.GetSnapshot()
-	policy := v.PolicyResolver.Resolve(obj, policies)
+	matched_policy := v.PolicyResolver.Resolve(obj, policies)
 
-	if policy == nil {
+	if matched_policy == nil {
 		return admission.Denied("access request did not match a policy")
 	}
 

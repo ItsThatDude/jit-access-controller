@@ -25,7 +25,7 @@ func NewRequestCmd() *cobra.Command {
 			}
 
 			if len(permissions) == 0 && role == "" {
-				return fmt.Errorf("A role or adhoc permissions must be specified")
+				return fmt.Errorf("a role or adhoc permissions must be specified")
 			}
 
 			ctx := context.Background()

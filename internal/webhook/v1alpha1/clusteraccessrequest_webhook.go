@@ -87,9 +87,9 @@ func (v *ClusterAccessRequestValidator) Handle(ctx context.Context, req admissio
 	}
 
 	policies := v.PolicyManager.GetSnapshot()
-	policy := v.PolicyResolver.Resolve(obj, policies)
+	matched_policy := v.PolicyResolver.Resolve(obj, policies)
 
-	if policy == nil {
+	if matched_policy == nil {
 		return admission.Denied("cluster access request did not match a policy")
 	}
 

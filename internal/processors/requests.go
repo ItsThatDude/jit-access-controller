@@ -115,13 +115,13 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	// Match against policies
 	var policies = r.PolicyManager.GetSnapshot()
 
-	policy := r.PolicyResolver.Resolve(obj, policies)
-	if policy == nil {
+	matched_policy := r.PolicyResolver.Resolve(obj, policies)
+	if matched_policy == nil {
 		return ctrl.Result{}, fmt.Errorf("the request does not match an access policy")
 	}
 
-	policyName := policy.GetName()
-	policySpec := policy.GetPolicy()
+	policyName := matched_policy.GetName()
+	policySpec := matched_policy.GetPolicy()
 
 	if status.ResolvedPolicy != "" && status.ResolvedPolicy != policyName {
 		status.ResolvedPolicy = policyName

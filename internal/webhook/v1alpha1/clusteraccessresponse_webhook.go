@@ -73,13 +73,13 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 	}
 
 	policies := v.PolicyManager.GetSnapshot()
-	policy := v.PolicyResolver.Resolve(request, policies)
+	matched_policy := v.PolicyResolver.Resolve(request, policies)
 
-	if policy == nil {
+	if matched_policy == nil {
 		return admission.Denied(fmt.Sprintf("the request %s does not match an access policy", req.Name))
 	}
 
-	policySpec := policy.GetPolicy()
+	policySpec := matched_policy.GetPolicy()
 
 	switch req.Operation {
 	case admissionv1.Create:
