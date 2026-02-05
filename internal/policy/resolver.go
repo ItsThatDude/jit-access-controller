@@ -16,8 +16,10 @@ func (r *PolicyResolver) Resolve(
 ) common.AccessPolicyObject {
 
 	for i := range policies {
-		if matchesPolicy(policies[i], req) {
-			return policies[i]
+		if req.GetNamespace() == policies[i].GetNamespace() {
+			if matchesPolicy(policies[i], req) {
+				return policies[i]
+			}
 		}
 	}
 
@@ -94,15 +96,6 @@ func roleRefEquals(a, b rbacv1.RoleRef) bool {
 	return normalizeAPIGroup(a.APIGroup) == normalizeAPIGroup(b.APIGroup) &&
 		a.Kind == b.Kind &&
 		a.Name == b.Name
-}
-
-func roleRefSliceContains(slice []rbacv1.RoleRef, r rbacv1.RoleRef) bool {
-	for _, ref := range slice {
-		if roleRefEquals(ref, r) {
-			return true
-		}
-	}
-	return false
 }
 
 func fieldAllows(requested, allowed []string) bool {

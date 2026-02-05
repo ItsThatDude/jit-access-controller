@@ -19,6 +19,8 @@ package controller
 import (
 	"context"
 
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/common"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -40,7 +42,17 @@ type AccessPolicyReconciler struct {
 func (r *AccessPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var list v1alpha1.AccessPolicyList
+	if err := r.List(ctx, &list); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	objs := make([]common.AccessPolicyObject, 0, len(list.Items))
+	for i := range list.Items {
+		objs = append(objs, &list.Items[i])
+	}
+
+	r.PolicyManager.Update(objs)
 
 	return ctrl.Result{}, nil
 }

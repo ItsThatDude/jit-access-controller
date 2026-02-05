@@ -24,6 +24,10 @@ func (r AccessPolicy) GetName() string {
 	return r.Name
 }
 
+func (r AccessPolicy) GetNamespace() string {
+	return r.Namespace
+}
+
 func (r AccessPolicy) GetScope() PolicyScope {
 	return "Namespace"
 }

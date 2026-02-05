@@ -22,7 +22,6 @@ rules:
   - clusteraccesspolicies
   - clusteraccessrequests
   - clusteraccessresponses
-  - notificationconfigs
   verbs:
   - create
   - delete
@@ -42,7 +41,6 @@ rules:
   - clusteraccesspolicies/finalizers
   - clusteraccessrequests/finalizers
   - clusteraccessresponses/finalizers
-  - notificationconfigs/finalizers
   verbs:
   - update
 - apiGroups:
@@ -56,7 +54,6 @@ rules:
   - clusteraccesspolicies/status
   - clusteraccessrequests/status
   - clusteraccessresponses/status
-  - notificationconfigs/status
   verbs:
   - get
   - patch

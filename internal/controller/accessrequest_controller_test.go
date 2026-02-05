@@ -23,6 +23,7 @@ import (
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	common "github.com/itsthatdude/jit-access-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/processors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -60,24 +61,25 @@ var _ = Describe("AccessRequest Controller", func() {
 				},
 			},
 		}
-		Expect(k8sClient.Create(ctx, policyObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.AccessPolicy{})
 
 		reconciler = &AccessRequestReconciler{
-			Client: mgr.GetClient(),
-			Scheme: scheme.Scheme,
+			Client:         mgr.GetClient(),
+			Scheme:         scheme.Scheme,
+			PolicyManager:  policy.NewPolicyManager(),
+			PolicyResolver: &policy.PolicyResolver{},
 		}
 
 		reconciler.Processor = &processors.RequestProcessor{
-			Client: reconciler.Client,
-			Scheme: reconciler.Scheme,
+			Client:         reconciler.Client,
+			Scheme:         reconciler.Scheme,
+			PolicyManager:  reconciler.PolicyManager,
+			PolicyResolver: reconciler.PolicyResolver,
 		}
+
+		reconciler.PolicyManager.Update([]common.AccessPolicyObject{policyObj})
 	})
 
 	AfterEach(func() {
-		// Clean up policy
-		Expect(k8sClient.Delete(ctx, policyObj)).To(Succeed())
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(policyObj), &v1alpha1.AccessPolicy{})
 	})
 
 	It("should create grant for approved AccessRequest", func() {
