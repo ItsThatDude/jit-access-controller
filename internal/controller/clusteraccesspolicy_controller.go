@@ -60,8 +60,7 @@ func (r *ClusterAccessPolicyReconciler) Reconcile(ctx context.Context, req ctrl.
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterAccessPolicyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		// Uncomment the following line adding a pointer to an instance of the controlled resource as an argument
-		// For().
+		For(&v1alpha1.ClusterAccessPolicy{}).
 		Named("clusteraccesspolicy").
 		Complete(r)
 }
