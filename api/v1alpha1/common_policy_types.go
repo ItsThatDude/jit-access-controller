@@ -37,7 +37,4 @@ type SubjectPolicy struct {
 
 	// The users and groups allowed to approve requests for this subject
 	Approvers []rbacv1.Subject `json:"approvers,omitempty"`
-
-	// The notification config ref to use
-	NotificationConfig string `json:"notificationConfigRef,omitempty"`
 }

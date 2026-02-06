@@ -1,9 +1,0 @@
-apiVersion: access.antware.xyz/v1alpha1
-kind: NotificationConfig
-metadata:
-  labels:
-    app.kubernetes.io/name: jit-access
-    app.kubernetes.io/managed-by: kustomize
-  name: notificationconfig-sample
-spec:
-  # TODO(user): Add fields here

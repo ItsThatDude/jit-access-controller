@@ -92,13 +92,4 @@ resources:
   kind: ClusterAccessGrant
   path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
   version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: antware.xyz
-  group: access
-  kind: NotificationConfig
-  path: github.com/itsthatdude/jit-access-controller/api/v1alpha1
-  version: v1alpha1
 version: "3"

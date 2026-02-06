@@ -10,7 +10,6 @@ resources:
 - bases/access.antware.xyz_clusteraccessresponses.yaml
 - bases/access.antware.xyz_accessgrants.yaml
 - bases/access.antware.xyz_clusteraccessgrants.yaml
-- bases/access.antware.xyz_notificationconfigs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches: []
