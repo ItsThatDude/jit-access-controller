@@ -163,7 +163,9 @@ func (r *GrantProcessor) handleApproved(
 			status.Subject, status.Request)
 	}
 
-	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
+	return ctrl.Result{
+		RequeueAfter: time.Until(status.AccessExpiresAt.Time) + time.Second,
+	}, nil
 }
 
 func (r *GrantProcessor) handleExpired(

@@ -14,11 +14,10 @@ func (r *PolicyResolver) Resolve(
 	req common.AccessRequestObject,
 	policies []common.AccessPolicyObject,
 ) common.AccessPolicyObject {
-
-	for i := range policies {
-		if req.GetNamespace() == policies[i].GetNamespace() {
-			if matchesPolicy(policies[i], req) {
-				return policies[i]
+	for _, policy := range policies {
+		if req.GetNamespace() == policy.GetNamespace() {
+			if matchesPolicy(policy, req) {
+				return policy
 			}
 		}
 	}
@@ -32,6 +31,7 @@ func matchesPolicy(
 ) bool {
 	var policySpec = policy.GetPolicy()
 	var reqSpec = req.GetSpec()
+
 	return matchesSubjects(policySpec.Requesters, reqSpec.Subject, reqSpec.Groups) &&
 		matchesDuration(policySpec.MaxDuration, reqSpec.Duration) &&
 		matchesPermissions(policySpec.AllowedPermissions, reqSpec.Permissions) &&
@@ -78,7 +78,7 @@ func matchesDuration(
 		return false
 	}
 
-	if specDuration < maxDuration {
+	if specDuration <= maxDuration {
 		return true
 	}
 
