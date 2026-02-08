@@ -44,6 +44,7 @@ func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceA
 
 func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	obj := &accessv1alpha1.AccessResponse{}
+	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
 
 	if err := v.decoder.Decode(req, obj); err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
@@ -53,10 +54,8 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Allowed("deletion is allowed")
 	}
 
-	if req.Operation == admissionv1.Update {
-		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
-			return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
-		}
+	if req.Operation == admissionv1.Update && isController {
+		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
 	}
 
 	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {

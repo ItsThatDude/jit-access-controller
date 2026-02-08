@@ -67,10 +67,10 @@ func (v *AccessRequestValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Allowed("deletion is allowed")
 	}
 
-	if req.Operation == admissionv1.Update {
-		if req.UserInfo.Username == utils.FormatServiceAccountName(v.serviceAccount, v.namespace) {
-			return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
-		}
+	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
+
+	if req.Operation == admissionv1.Update && isController {
+		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
 	}
 
 	if req.Operation == admissionv1.Create {
