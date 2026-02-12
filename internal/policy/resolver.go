@@ -146,6 +146,9 @@ func matchesPermissions(
 }
 
 func matchesRoles(allowedRoles []rbacv1.RoleRef, requestedRole rbacv1.RoleRef) bool {
+	if requestedRole.Name == "" {
+		return true
+	}
 	for _, ref := range allowedRoles {
 		if roleRefEquals(ref, requestedRole) {
 			return true

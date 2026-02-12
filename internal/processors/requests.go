@@ -123,7 +123,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	policyName := matched_policy.GetName()
 	policySpec := matched_policy.GetPolicy()
 
-	if status.ResolvedPolicy != "" && status.ResolvedPolicy != policyName {
+	if status.ResolvedPolicy == "" {
 		status.ResolvedPolicy = policyName
 	}
 
