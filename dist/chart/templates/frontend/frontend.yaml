@@ -1,0 +1,62 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jit-access-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas:  {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: web
+      labels:
+        {{- include "chart.labels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- if and .Values.frontend.pod .Values.frontend.pod.labels }}
+        {{- range $key, $value := .Values.frontend.pod.labels }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+        {{- end }}
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.frontend.container.image.repository }}:{{ .Values.frontend.container.image.tag }}
+          {{- if .Values.frontend.container.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.frontend.container.imagePullPolicy }}
+          {{- end }}
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SERVICE_ACCOUNT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            {{- if .Values.frontend.container.env }}
+            {{- range $key, $value := .Values.frontend.container.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.frontend.container.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.frontend.container.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.frontend.container.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.frontend.container.securityContext | nindent 12 }}
+      securityContext:
+        {{- toYaml .Values.frontend.securityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.frontend.serviceAccountName }}
+      terminationGracePeriodSeconds: {{ .Values.frontend.terminationGracePeriodSeconds }}
+{{- end }}

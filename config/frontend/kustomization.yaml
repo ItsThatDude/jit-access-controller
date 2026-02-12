@@ -1,0 +1,8 @@
+resources:
+- frontend.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+images:
+- name: frontend
+  newName: itsthatdood/jit-access-frontend
+  newTag: latest
