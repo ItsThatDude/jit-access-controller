@@ -130,3 +130,18 @@ frontend:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
   serviceAccountName: jit-access-controller-manager
+  service:
+    port: 8080
+  ingress:
+    enabled: true
+    annotations: []
+    className: ""
+    tls:
+      - hosts:
+        - x.y.z
+        secretName: ""
+    hosts:
+      - host: x.y.z
+        paths:
+          - path: '/'
+            pathType: Prefix

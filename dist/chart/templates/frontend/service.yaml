@@ -1,0 +1,16 @@
+{{- if .Values.webhook.enable }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: jit-access-frontend-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      protocol: TCP
+      targetPort: {{ .Values.frontend.service.port }}
+  selector:
+    app.kubernetes.io/component: frontend
+{{- end }}
