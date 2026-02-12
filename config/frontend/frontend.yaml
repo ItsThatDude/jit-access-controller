@@ -51,7 +51,9 @@ spec:
       containers:
       - image: frontend:latest
         name: web
-        ports: []
+        ports:
+          - name: web
+            containerPort: 8080
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false

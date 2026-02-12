@@ -106,13 +106,13 @@ frontend:
       periodSeconds: 20
       httpGet:
         path: /healthz
-        port: 8081
+        port: 8080
     readinessProbe:
       initialDelaySeconds: 5
       periodSeconds: 10
       httpGet:
-        path: /readyz
-        port: 8081
+        path: /healthz
+        port: 8080
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:

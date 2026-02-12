@@ -47,6 +47,9 @@ spec:
               value: {{ $value }}
             {{- end }}
             {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
           livenessProbe:
             {{- toYaml .Values.frontend.container.livenessProbe | nindent 12 }}
           readinessProbe:
