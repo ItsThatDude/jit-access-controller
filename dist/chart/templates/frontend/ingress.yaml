@@ -35,7 +35,7 @@ spec:
             {{- end }}
             backend:
               service:
-                name: http
+                name: jit-access-frontend-service
                 port:
                   number: {{ $.Values.frontend.service.port }}
           {{- end }}
