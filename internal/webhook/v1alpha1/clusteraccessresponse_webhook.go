@@ -20,24 +20,26 @@ import (
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessresponses,verbs=create;update,versions=v1alpha1,name=vclusteraccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
 type ClusterAccessResponseValidator struct {
-	decoder        admission.Decoder
-	client         client.Client
-	namespace      string
-	serviceAccount string
-	PolicyManager  *policy.PolicyManager
-	PolicyResolver *policy.PolicyResolver
+	decoder                admission.Decoder
+	client                 client.Client
+	namespace              string
+	serviceAccount         string
+	frontendServiceAccount string
+	PolicyManager          *policy.PolicyManager
+	PolicyResolver         *policy.PolicyResolver
 }
 
-func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, policyManager *policy.PolicyManager) {
+func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, frontendServiceAccount string, policyManager *policy.PolicyManager) {
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-clusteraccessresponse",
 		&admission.Webhook{Handler: &ClusterAccessResponseValidator{
-			decoder:        admission.NewDecoder(mgr.GetScheme()),
-			client:         mgr.GetClient(),
-			namespace:      namespace,
-			serviceAccount: serviceAccount,
-			PolicyManager:  policyManager,
-			PolicyResolver: &policy.PolicyResolver{},
+			decoder:                admission.NewDecoder(mgr.GetScheme()),
+			client:                 mgr.GetClient(),
+			namespace:              namespace,
+			serviceAccount:         serviceAccount,
+			frontendServiceAccount: frontendServiceAccount,
+			PolicyManager:          policyManager,
+			PolicyResolver:         &policy.PolicyResolver{},
 		}},
 	)
 }
@@ -45,6 +47,7 @@ func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, s
 func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	obj := &accessv1alpha1.ClusterAccessResponse{}
 	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
+	isFrontend := utils.IsController(v.namespace, v.frontendServiceAccount, req.UserInfo)
 
 	if err := v.decoder.Decode(req, obj); err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
@@ -100,7 +103,7 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		group_matched := utils.SliceOverlaps(groupNames, req.UserInfo.Groups)
 		user_matched := slices.Contains(userNames, req.UserInfo.Username)
 
-		if !group_matched && !user_matched {
+		if !group_matched && !user_matched && !isFrontend {
 			return admission.Denied(fmt.Sprintf("user %s is not in the list of approvers for the matched policy", req.UserInfo.Username))
 		}
 

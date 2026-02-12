@@ -107,6 +107,7 @@ func main() {
 	}
 
 	serviceAccount, err := getServiceAccountName()
+	frontendServiceAccount := getFrontendServiceAccountName()
 
 	if err != nil {
 		setupLog.Error(err, "unable to get service account name")
@@ -268,14 +269,14 @@ func main() {
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
 		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
-		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, frontendServiceAccount, clusterPolicyManager)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
-		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
 		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
-		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, frontendServiceAccount, namespacedPolicyManager)
 	}
 	// +kubebuilder:scaffold:builder
 
@@ -316,4 +317,14 @@ func getServiceAccountName() (string, error) {
 		return "", fmt.Errorf("%s must be set", serviceAccountEnvVar)
 	}
 	return sa, nil
+}
+
+func getFrontendServiceAccountName() string {
+	var serviceAccountEnvVar = "FRONTEND_SERVICE_ACCOUNT_NAME"
+
+	sa, found := os.LookupEnv(serviceAccountEnvVar)
+	if !found {
+		return ""
+	}
+	return sa
 }

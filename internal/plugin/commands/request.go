@@ -31,6 +31,15 @@ func NewRequestCmd() *cobra.Command {
 			ctx := context.Background()
 			rules := plugin.ParsePermissions(permissions)
 
+			if len(rules) > 0 {
+				log.Printf("Requesting permissions:")
+				for _, rule := range rules {
+					log.Printf("  - %v", rule.APIGroups)
+					log.Printf("    %v", rule.Verbs)
+					log.Printf("    %v", rule.Resources)
+				}
+			}
+
 			if scope == plugin.SCOPE_CLUSTER {
 				req := &v1alpha1.ClusterAccessRequest{
 					ObjectMeta: metav1.ObjectMeta{
