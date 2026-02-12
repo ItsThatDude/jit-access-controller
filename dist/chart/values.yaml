@@ -88,6 +88,12 @@ networkPolicy:
 frontend:
   enabled: true
   replicas: 1
+  oidc:
+    secretRef: "frontend-oidc"
+    authorityKey: "authority"
+    clientIdKey: "clientId"
+    clientSecretKey: "clientSecret"
+    nameClaimKey: "nameClaim"
   container:
     image:
       repository: itsthatdood/jit-access-frontend

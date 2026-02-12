@@ -41,6 +41,26 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
+            - name: Oidc__Authority
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.authorityKey }}
+            - name: Oidc__ClientId
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.clientIdKey }}
+            - name: Oidc__ClientSecret
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.clientSecretKey }}
+            - name: Oidc__NameClaimType
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.nameClaimKey }}
             {{- if .Values.frontend.container.env }}
             {{- range $key, $value := .Values.frontend.container.env }}
             - name: {{ $key }}
