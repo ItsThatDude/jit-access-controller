@@ -86,6 +86,7 @@ networkPolicy:
 
 # [FRONTEND]: Frontend Deployment Configurations
 frontend:
+  enabled: true
   replicas: 1
   container:
     image:
