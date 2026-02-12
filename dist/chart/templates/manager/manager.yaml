@@ -52,6 +52,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
+            {{- if .Values.frontend.enabled }}
+            - name: FRONTEND_SERVICE_ACCOUNT_NAME
+              value: {{ .Values.frontend.serviceAccountName }}
+            {{- end }}
             {{- if .Values.controllerManager.container.env }}
             {{- range $key, $value := .Values.controllerManager.container.env }}
             - name: {{ $key }}
