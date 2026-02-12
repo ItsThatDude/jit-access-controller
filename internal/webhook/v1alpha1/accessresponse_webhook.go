@@ -61,7 +61,7 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
 	}
 
-	if req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
+	if !isFrontend && req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
 		return admission.Denied("The approver must be the user creating the approval.")
 	}
 
