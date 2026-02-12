@@ -129,7 +129,7 @@ frontend:
     seccompProfile:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
-  serviceAccountName: jit-access-controller-manager
+  serviceAccountName: jit-access-frontend
   service:
     port: 8080
   ingress:
