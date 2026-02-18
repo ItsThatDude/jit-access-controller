@@ -15,8 +15,8 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusteraccessresponse
-  - accessresponse
+  - clusteraccessresponses
+  - accessresponses
   verbs:
   - "impersonate-on:user-info:create"
 {{- else }}

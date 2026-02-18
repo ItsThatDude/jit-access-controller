@@ -8,20 +8,20 @@ rules:
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusteraccessresponse
-  - accessresponse
+  - clusteraccessresponses
+  - accessresponses
   verbs:
   - create
 {{- end }}
 - apiGroups:
   - access.antware.xyz
   resources:
-  - clusteraccesspolicy
-  - clusteraccessrequest
-  - clusteraccessresponse
-  - accesspolicy
-  - accessrequest
-  - accessresponse
+  - clusteraccesspolicies
+  - clusteraccessrequests
+  - clusteraccessresponses
+  - accesspolicies
+  - accessrequests
+  - accessresponses
   verbs:
   - get
   - list
