@@ -57,8 +57,8 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		return admission.Allowed("deletion is allowed")
 	}
 
-	if req.Operation == admissionv1.Update && isController {
-		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
+	if isController && req.Operation == admissionv1.Update {
+		return admission.Allowed("jit-access-controller-manager is allowed to update access responses")
 	}
 
 	if !isFrontend && req.Operation == admissionv1.Create && obj.Spec.Approver != req.UserInfo.Username {
@@ -85,10 +85,6 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 
 	switch req.Operation {
 	case admissionv1.Create:
-		if !isFrontend && obj.Spec.Approver != req.UserInfo.Username {
-			return admission.Denied(fmt.Sprintf("cannot specify an approver other than yourself (%s vs %s)", obj.Spec.Approver, req.UserInfo.Username))
-		}
-
 		userNames := []string{}
 		groupNames := []string{}
 		for _, approver := range policySpec.Approvers {

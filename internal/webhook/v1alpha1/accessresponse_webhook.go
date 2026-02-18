@@ -57,7 +57,7 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Allowed("deletion is allowed")
 	}
 
-	if req.Operation == admissionv1.Update && isController {
+	if isController && req.Operation == admissionv1.Update {
 		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
 	}
 
@@ -85,10 +85,6 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 
 	switch req.Operation {
 	case admissionv1.Create:
-		if !isFrontend && obj.Spec.Approver != req.UserInfo.Username {
-			return admission.Denied(fmt.Sprintf("cannot specify an approver other than yourself (%s vs %s)", obj.Spec.Approver, req.UserInfo.Username))
-		}
-
 		userNames := []string{}
 		groupNames := []string{}
 		for _, approver := range policySpec.Approvers {
