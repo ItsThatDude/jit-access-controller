@@ -88,7 +88,7 @@ func NewRequestCmd() *cobra.Command {
 	cmd.Flags().StringVar(&scope, "scope", "namespace", "Scope of the request (namespace|cluster)")
 	cmd.Flags().StringVar(&role, "role", "", "Role to request")
 	cmd.Flags().StringVar(&roleKindStr, "roleKind", common.RoleKindRole, "Role kind (Role|ClusterRole)")
-	cmd.Flags().StringSliceVar(&permissions, "permissions", []string{}, "List of permissions (verbs:resources)")
+	cmd.Flags().StringArrayVar(&permissions, "permissions", []string{}, "List of permissions (verbs:resources)")
 	cmd.Flags().StringVar(&duration, "duration", "1h", "Duration in seconds for the access")
 	cmd.Flags().StringVar(&justification, "justification", "", "Justification for the request")
 
