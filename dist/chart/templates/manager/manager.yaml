@@ -56,6 +56,10 @@ spec:
             - name: FRONTEND_SERVICE_ACCOUNT_NAME
               value: {{ .Values.frontend.serviceAccountName }}
             {{- end }}
+            {{- if .Values.frontend.impersonation.enabled }}
+            - name: FRONTEND_IMPERSONATION
+              value: "true"
+            {{- end }}
             {{- if .Values.controllerManager.container.env }}
             {{- range $key, $value := .Values.controllerManager.container.env }}
             - name: {{ $key }}

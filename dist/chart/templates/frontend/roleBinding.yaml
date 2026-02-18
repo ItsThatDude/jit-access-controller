@@ -4,11 +4,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-  name: jit-access-frontend-rolebinding
+  name: jit-access-frontend
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: jit-access-manager-role
+  name: jit-access-frontend-clusterrole
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.frontend.serviceAccountName }}

@@ -41,6 +41,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
+            {{- if .Values.frontend.impersonation.enabled }}
+            - name: JITAccess__UseImpersonation
+              value: "true"
+            {{- end }}
             - name: Oidc__Authority
               valueFrom:
                 secretKeyRef:

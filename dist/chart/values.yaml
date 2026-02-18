@@ -87,6 +87,9 @@ networkPolicy:
 # [FRONTEND]: Frontend Deployment Configurations
 frontend:
   enabled: true
+  impersonation:
+    enabled: false
+    constrained: true
   replicas: 1
   oidc:
     secretRef: "frontend-oidc"
