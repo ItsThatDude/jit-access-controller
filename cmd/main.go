@@ -271,12 +271,16 @@ func main() {
 		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
 		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
-		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, frontendServiceAccount, clusterPolicyManager)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(
+			mgr, namespace, serviceAccount, frontendServiceAccount, clusterPolicyManager,
+		)
 
 		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
 		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
 		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
-		webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr, namespace, serviceAccount, frontendServiceAccount, namespacedPolicyManager)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(
+			mgr, namespace, serviceAccount, frontendServiceAccount, namespacedPolicyManager,
+		)
 	}
 	// +kubebuilder:scaffold:builder
 
