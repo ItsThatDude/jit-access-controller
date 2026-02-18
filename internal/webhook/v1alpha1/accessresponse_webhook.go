@@ -85,7 +85,7 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 
 	switch req.Operation {
 	case admissionv1.Create:
-		if obj.Spec.Approver != req.UserInfo.Username {
+		if !isFrontend && obj.Spec.Approver != req.UserInfo.Username {
 			return admission.Denied(fmt.Sprintf("cannot specify an approver other than yourself (%s vs %s)", obj.Spec.Approver, req.UserInfo.Username))
 		}
 
