@@ -97,6 +97,14 @@ frontend:
     clientIdKey: "clientId"
     clientSecretKey: "clientSecret"
     nameClaimKey: "nameClaim"
+  dataprotection:
+    storage:
+      enabled: true
+      size: 100Mi
+    encryption:
+      enabled: false
+      secretRef: 'jit-access-dataprotection'
+      key: 'dataprotection.pfx'
   container:
     image:
       repository: itsthatdood/jit-access-frontend
