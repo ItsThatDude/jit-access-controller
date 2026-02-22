@@ -104,7 +104,8 @@ frontend:
     encryption:
       enabled: false
       secretRef: 'jit-access-frontend-dataprotection'
-      key: 'dataprotection.pfx'
+      certificateKey: 'dataprotection.pfx'
+      passphraseKey: 'passphrase'
   container:
     image:
       repository: itsthatdood/jit-access-frontend

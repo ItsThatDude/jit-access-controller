@@ -74,6 +74,8 @@ spec:
             {{- if .Values.frontend.dataprotection.encryption.enabled }}
             - name: DataProtectionOptions__CertificatePath
               value: "/app/certificates/dataprotection.pfx"
+            - name: DataProtectionOptions__CertificatePasswordPath
+              value: "/app/certificates/dataprotection-passphrase"
             {{- end }}
             {{- if .Values.frontend.container.env }}
             {{- range $key, $value := .Values.frontend.container.env }}
@@ -116,8 +118,12 @@ spec:
           secret:
             secretName: {{ .Values.frontend.dataprotection.encryption.secretRef | required "an encryption secret name is required" }}
             items:
-              - key: {{ .Values.frontend.dataprotection.encryption.key | required "the secret filename key is required" }}
+              - key: {{ .Values.frontend.dataprotection.encryption.certificateKey | required "the secret filename key is required" }}
                 path: dataprotection.pfx
+              {{- if .Values.frontend.dataprotection.encryption.passphraseKey }}
+              - key: {{ .Values.frontend.dataprotection.encryption.passphraseKey }}
+                path: dataprotection-passphrase
+              {{- end }}
         {{- end }}
       {{- end }}
       securityContext:
