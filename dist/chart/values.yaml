@@ -103,7 +103,7 @@ frontend:
       size: 100Mi
     encryption:
       enabled: false
-      secretRef: 'jit-access-dataprotection'
+      secretRef: 'jit-access-frontend-dataprotection'
       key: 'dataprotection.pfx'
   container:
     image:
