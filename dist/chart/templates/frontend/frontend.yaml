@@ -92,7 +92,7 @@ spec:
             {{- toYaml .Values.frontend.container.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.frontend.container.securityContext | nindent 12 }}
-          {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryptKeys }}
+          {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
           volumeMounts:
             {{- if .Values.frontend.dataprotection.storage.enabled }}
             - name: dpkeys-volume
@@ -104,7 +104,7 @@ spec:
               readOnly: true
             {{- end }}
           {{- end }}
-      {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryptKeys }}
+      {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
       volumes:
         {{- if .Values.frontend.dataprotection.storage.enabled }}
         - name: dpkeys-volume
