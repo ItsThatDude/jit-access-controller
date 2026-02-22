@@ -68,11 +68,11 @@ spec:
             {{- if .Values.frontend.dataprotection.storage.enabled }}
             - name: DataProtectionOptions__PersistKeysToFilesystem
               value: "true"
-            - name: DataProtectionOptions_FileSystemPath
+            - name: DataProtectionOptions__FileSystemPath
               value: "/app/.dpkeys"
             {{- end }}
             {{- if .Values.frontend.dataprotection.encryption.enabled }}
-            - name: DataProtectionOptions_CertificatePath
+            - name: DataProtectionOptions__CertificatePath
               value: "/app/certificates/dataprotection.pfx"
             {{- end }}
             {{- if .Values.frontend.container.env }}
