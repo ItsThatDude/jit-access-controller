@@ -66,13 +66,13 @@ spec:
                     name: {{ .Values.frontend.oidc.secretRef }}
                     key: {{ .Values.frontend.oidc.nameClaimKey }}
             {{- if .Values.frontend.dataprotection.storage.enabled }}
-            - name: DataProtection__PersistKeysToFilesystem
+            - name: DataProtectionOptions__PersistKeysToFilesystem
               value: "true"
-            - name: DataProtection_FileSystemPath
+            - name: DataProtectionOptions_FileSystemPath
               value: "/app/.dpkeys"
             {{- end }}
             {{- if .Values.frontend.dataprotection.encryption.enabled }}
-            - name: DataProtection_CertificatePath
+            - name: DataProtectionOptions_CertificatePath
               value: "/app/certificates/dataprotection.pfx"
             {{- end }}
             {{- if .Values.frontend.container.env }}
