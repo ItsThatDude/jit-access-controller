@@ -28,8 +28,8 @@ func ParsePermissions(perms []string) []rbacv1.PolicyRule {
 		verbs := strings.Split(parts[0], ",")
 		rawResources := strings.Split(parts[1], ",")
 
-		var resources []string
-		var apiGroups []string
+		resources := make([]string, 0, len(rawResources))
+		apiGroups := make([]string, 0, len(rawResources))
 
 		for _, r := range rawResources {
 			res := r

@@ -166,6 +166,19 @@ spec:
           status:
             description: status defines the observed state of ClusterAccessRequest
             properties:
+              approvals:
+                items:
+                  properties:
+                    approvedAt:
+                      format: date-time
+                      type: string
+                    approver:
+                      type: string
+                  required:
+                  - approvedAt
+                  - approver
+                  type: object
+                type: array
               approvalsReceived:
                 type: integer
               approvalsRequired:

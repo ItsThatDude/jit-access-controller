@@ -23,6 +23,11 @@ const (
 	RequestStateExpired  RequestState = "Expired"
 )
 
+type AccessRequestApproval struct {
+	Approver   string      `json:"approver"`
+	ApprovedAt metav1.Time `json:"approvedAt"`
+}
+
 type AccessRequestBaseSpec struct {
 	// Subject is the username or identity requesting access
 	// +required
@@ -63,6 +68,8 @@ type AccessRequestStatus struct {
 	ApprovalsReceived int          `json:"approvalsReceived,omitempty"`
 	RequestExpiresAt  metav1.Time  `json:"requestExpiresAt,omitempty"`
 	ResolvedPolicy    string       `json:"resolvedPolicy,omitempty"`
+
+	Approvals []AccessRequestApproval `json:"approvals,omitempty"`
 
 	GrantCreated bool `json:"grantCreated,omitempty"`
 }

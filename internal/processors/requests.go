@@ -135,6 +135,12 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 		return r.handlePending(ctx, obj, &policySpec, status)
 	}
 
+	/*
+		if status.State == v1alpha1.RequestStateDenied {
+
+		}
+	*/
+
 	return ctrl.Result{}, nil
 }
 
@@ -194,6 +200,8 @@ func (r *RequestProcessor) handlePending(
 	approved := set.New[string]()
 	denied := set.New[string]()
 
+	approvals := set.New[v1alpha1.AccessRequestApproval]()
+
 	// Fetch responses
 	if obj.GetScope() == v1alpha1.RequestScopeCluster {
 		// Cluster-scoped responses
@@ -207,6 +215,10 @@ func (r *RequestProcessor) handlePending(
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:
 					approved.Insert(resp.Spec.Approver)
+					approvals.Insert(v1alpha1.AccessRequestApproval{
+						Approver:   resp.Spec.Approver,
+						ApprovedAt: resp.CreationTimestamp,
+					})
 				case v1alpha1.ResponseStateDenied:
 					denied.Insert(resp.Spec.Approver)
 				}
@@ -224,6 +236,10 @@ func (r *RequestProcessor) handlePending(
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:
 					approved.Insert(resp.Spec.Approver)
+					approvals.Insert(v1alpha1.AccessRequestApproval{
+						Approver:   resp.Spec.Approver,
+						ApprovedAt: resp.CreationTimestamp,
+					})
 				case v1alpha1.ResponseStateDenied:
 					denied.Insert(resp.Spec.Approver)
 				}
@@ -233,6 +249,7 @@ func (r *RequestProcessor) handlePending(
 
 	if approved.Len() != status.ApprovalsReceived {
 		status.ApprovalsReceived = approved.Len()
+		status.Approvals = approvals.UnsortedList()
 	}
 
 	if denied.Len() > 0 {
