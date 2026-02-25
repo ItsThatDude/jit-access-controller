@@ -85,8 +85,10 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 
 			log.Info("Removing finalizer for request", "name", obj.GetName())
 			if err := RemoveFinalizer(r.Client, ctx, obj, common.JITFinalizer); err != nil {
-				log.Error(err, "an error occurred removing the request finalizer", "name", obj.GetName())
-				return ctrl.Result{}, err
+				if !k8serrors.IsNotFound(err) {
+					log.Error(err, "an error occurred removing the request finalizer", "name", obj.GetName())
+				}
+				return ctrl.Result{}, nil
 			}
 			log.Info("Removed finalizer for request", "name", obj.GetName())
 		}
