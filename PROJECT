@@ -9,8 +9,10 @@ layout:
 plugins:
   autoupdate.kubebuilder.io/v1-alpha: {}
   grafana.kubebuilder.io/v1-alpha: {}
-  helm.kubebuilder.io/v1-alpha: {}
-projectName: jitaccess-controller
+  helm.kubebuilder.io/v2-alpha:
+    manifests: dist/install.yaml
+    output: dist
+projectName: jit-access-controller
 repo: github.com/itsthatdude/jit-access-controller
 resources:
 - api:

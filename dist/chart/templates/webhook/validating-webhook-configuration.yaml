@@ -1,0 +1,91 @@
+{{- if .Values.webhook.enable }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+    annotations:
+        {{- if .Values.certManager.enable }}
+        cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "jit-access-controller.resourceName" (dict "suffix" "serving-cert" "context" $) }}
+        {{- end }}
+    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "validating-webhook-configuration" "context" $) }}
+webhooks:
+    - admissionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+            name: {{ include "jit-access-controller.resourceName" (dict "suffix" "webhook-service" "context" $) }}
+            namespace: {{ .Release.Namespace }}
+            path: /validate-access-antware-xyz-v1alpha1-accessrequest
+      failurePolicy: Fail
+      name: vaccessrequest-v1alpha1.kb.io
+      rules:
+        - apiGroups:
+            - access.antware.xyz
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - accessrequests
+      sideEffects: None
+    - admissionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+            name: {{ include "jit-access-controller.resourceName" (dict "suffix" "webhook-service" "context" $) }}
+            namespace: {{ .Release.Namespace }}
+            path: /validate-access-antware-xyz-v1alpha1-accessresponse
+      failurePolicy: Fail
+      name: vaccessresponse-v1alpha1.kb.io
+      rules:
+        - apiGroups:
+            - access.antware.xyz
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - accessresponses
+      sideEffects: None
+    - admissionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+            name: {{ include "jit-access-controller.resourceName" (dict "suffix" "webhook-service" "context" $) }}
+            namespace: {{ .Release.Namespace }}
+            path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
+      failurePolicy: Fail
+      name: vclusteraccessrequest-v1alpha1.kb.io
+      rules:
+        - apiGroups:
+            - access.antware.xyz
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - clusteraccessrequests
+      sideEffects: None
+    - admissionReviewVersions:
+        - v1
+      clientConfig:
+        service:
+            name: {{ include "jit-access-controller.resourceName" (dict "suffix" "webhook-service" "context" $) }}
+            namespace: {{ .Release.Namespace }}
+            path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
+      failurePolicy: Fail
+      name: vclusteraccessresponse-v1alpha1.kb.io
+      rules:
+        - apiGroups:
+            - access.antware.xyz
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - clusteraccessresponses
+      sideEffects: None
+{{- end }}

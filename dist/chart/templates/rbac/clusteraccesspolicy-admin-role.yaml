@@ -1,0 +1,24 @@
+{{- if .Values.rbacHelpers.enable }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+    labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccesspolicy-admin-role" "context" $) }}
+rules:
+    - apiGroups:
+        - access.antware.xyz
+      resources:
+        - clusteraccesspolicies
+      verbs:
+        - '*'
+    - apiGroups:
+        - access.antware.xyz
+      resources:
+        - clusteraccesspolicies/status
+      verbs:
+        - get
+{{- end }}

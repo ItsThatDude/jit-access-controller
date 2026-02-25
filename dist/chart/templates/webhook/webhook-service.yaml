@@ -1,22 +1,22 @@
-{{- if .Values.metrics.enable }}
+{{- if .Values.webhook.enable }}
 apiVersion: v1
 kind: Service
 metadata:
     labels:
+        app.kubernetes.io/component: controller
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        control-plane: controller-manager
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "metrics-service" "context" $) }}
+    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "webhook-service" "context" $) }}
     namespace: {{ .Release.Namespace }}
 spec:
     ports:
-        - name: https
-          port: {{ .Values.metrics.port }}
+        - port: 443
           protocol: TCP
-          targetPort: {{ .Values.metrics.port }}
+          targetPort: {{ .Values.webhook.port }}
     selector:
+        app.kubernetes.io/component: controller
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
         control-plane: controller-manager
 {{- end }}
