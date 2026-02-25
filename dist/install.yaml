@@ -1764,13 +1764,6 @@ metadata:
   name: jit-access-manager-role
 rules:
 - apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
   - access.antware.xyz
   resources:
   - accessgrants
@@ -1817,6 +1810,13 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:

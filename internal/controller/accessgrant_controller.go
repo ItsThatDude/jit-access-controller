@@ -43,7 +43,7 @@ type AccessGrantReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
 
 func (r *AccessGrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
