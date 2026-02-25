@@ -67,7 +67,7 @@ type AccessGrant struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// spec defines the desired state of AccessGrant
 	// +required
@@ -75,7 +75,7 @@ type AccessGrant struct {
 
 	// status defines the observed state of AccessGrant
 	// +optional
-	Status AccessGrantStatus `json:"status,omitempty,omitzero"`
+	Status AccessGrantStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,7 +83,7 @@ type AccessGrant struct {
 // AccessGrantList contains a list of AccessGrant
 type AccessGrantList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []AccessGrant `json:"items"`
 }
 

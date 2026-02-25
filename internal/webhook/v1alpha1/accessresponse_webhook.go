@@ -18,12 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
@@ -35,7 +32,7 @@ var accessresponselog = logf.Log.WithName("accessresponse-resource")
 
 // SetupAccessResponseWebhookWithManager registers the webhook for AccessResponse in the manager.
 func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.AccessResponse{}).
+	return ctrl.NewWebhookManagedBy(mgr, &accessv1alpha1.AccessResponse{}).
 		WithValidator(&AccessResponseCustomValidator{}).
 		Complete()
 }
@@ -43,8 +40,7 @@ func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager) error {
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
-// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
+// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-accessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=accessresponses,verbs=create;update,versions=v1alpha1,name=vaccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // AccessResponseCustomValidator struct is responsible for validating the AccessResponse resource
@@ -56,15 +52,9 @@ type AccessResponseCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &AccessResponseCustomValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := obj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object but got %T", obj)
-	}
-	accessresponselog.Info("Validation for AccessResponse upon creation", "name", accessresponse.GetName())
+func (v *AccessResponseCustomValidator) ValidateCreate(_ context.Context, obj *accessv1alpha1.AccessResponse) (admission.Warnings, error) {
+	accessresponselog.Info("Validation for AccessResponse upon creation", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
@@ -72,12 +62,8 @@ func (v *AccessResponseCustomValidator) ValidateCreate(_ context.Context, obj ru
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := newObj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object for the newObj but got %T", newObj)
-	}
-	accessresponselog.Info("Validation for AccessResponse upon update", "name", accessresponse.GetName())
+func (v *AccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj *accessv1alpha1.AccessResponse) (admission.Warnings, error) {
+	accessresponselog.Info("Validation for AccessResponse upon update", "name", newObj.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
@@ -85,12 +71,8 @@ func (v *AccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AccessResponse.
-func (v *AccessResponseCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessresponse, ok := obj.(*accessv1alpha1.AccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessResponse object but got %T", obj)
-	}
-	accessresponselog.Info("Validation for AccessResponse upon deletion", "name", accessresponse.GetName())
+func (v *AccessResponseCustomValidator) ValidateDelete(_ context.Context, obj *accessv1alpha1.AccessResponse) (admission.Warnings, error) {
+	accessresponselog.Info("Validation for AccessResponse upon deletion", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

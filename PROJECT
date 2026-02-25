@@ -2,13 +2,12 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-cliVersion: 4.9.0
+cliVersion: 4.12.0
 domain: antware.xyz
 layout:
 - go.kubebuilder.io/v4
 plugins:
   grafana.kubebuilder.io/v1-alpha: {}
-  helm.kubebuilder.io/v1-alpha: {}
 projectName: jitaccess-controller
 repo: github.com/itsthatdude/jit-access-controller
 resources:

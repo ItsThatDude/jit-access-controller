@@ -67,7 +67,7 @@ type ClusterAccessResponse struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// spec defines the desired state of ClusterAccessResponse
 	// +required
@@ -75,7 +75,7 @@ type ClusterAccessResponse struct {
 
 	// status defines the observed state of ClusterAccessResponse
 	// +optional
-	Status ClusterAccessResponseStatus `json:"status,omitempty,omitzero"`
+	Status ClusterAccessResponseStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -83,7 +83,7 @@ type ClusterAccessResponse struct {
 // ClusterAccessResponseList contains a list of ClusterAccessResponse
 type ClusterAccessResponseList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []ClusterAccessResponse `json:"items"`
 }
 

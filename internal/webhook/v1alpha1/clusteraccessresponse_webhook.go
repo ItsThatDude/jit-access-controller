@@ -18,12 +18,9 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
@@ -35,7 +32,7 @@ var clusteraccessresponselog = logf.Log.WithName("clusteraccessresponse-resource
 
 // SetupClusterAccessResponseWebhookWithManager registers the webhook for ClusterAccessResponse in the manager.
 func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.ClusterAccessResponse{}).
+	return ctrl.NewWebhookManagedBy(mgr, &accessv1alpha1.ClusterAccessResponse{}).
 		WithValidator(&ClusterAccessResponseCustomValidator{}).
 		Complete()
 }
@@ -43,8 +40,7 @@ func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager) error {
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
-// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
+// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-clusteraccessresponse,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=clusteraccessresponses,verbs=create;update,versions=v1alpha1,name=vclusteraccessresponse-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // ClusterAccessResponseCustomValidator struct is responsible for validating the ClusterAccessResponse resource
@@ -56,15 +52,9 @@ type ClusterAccessResponseCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &ClusterAccessResponseCustomValidator{}
-
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessResponse.
-func (v *ClusterAccessResponseCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clusteraccessresponse, ok := obj.(*accessv1alpha1.ClusterAccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterAccessResponse object but got %T", obj)
-	}
-	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon creation", "name", clusteraccessresponse.GetName())
+func (v *ClusterAccessResponseCustomValidator) ValidateCreate(_ context.Context, obj *accessv1alpha1.ClusterAccessResponse) (admission.Warnings, error) {
+	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon creation", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
@@ -72,12 +62,8 @@ func (v *ClusterAccessResponseCustomValidator) ValidateCreate(_ context.Context,
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessResponse.
-func (v *ClusterAccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	clusteraccessresponse, ok := newObj.(*accessv1alpha1.ClusterAccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterAccessResponse object for the newObj but got %T", newObj)
-	}
-	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon update", "name", clusteraccessresponse.GetName())
+func (v *ClusterAccessResponseCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj *accessv1alpha1.ClusterAccessResponse) (admission.Warnings, error) {
+	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon update", "name", newObj.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
@@ -85,12 +71,8 @@ func (v *ClusterAccessResponseCustomValidator) ValidateUpdate(_ context.Context,
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type ClusterAccessResponse.
-func (v *ClusterAccessResponseCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clusteraccessresponse, ok := obj.(*accessv1alpha1.ClusterAccessResponse)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClusterAccessResponse object but got %T", obj)
-	}
-	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon deletion", "name", clusteraccessresponse.GetName())
+func (v *ClusterAccessResponseCustomValidator) ValidateDelete(_ context.Context, obj *accessv1alpha1.ClusterAccessResponse) (admission.Warnings, error) {
+	clusteraccessresponselog.Info("Validation for ClusterAccessResponse upon deletion", "name", obj.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 
