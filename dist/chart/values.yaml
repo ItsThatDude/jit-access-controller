@@ -3,9 +3,9 @@ controllerManager:
   replicas: 1
   container:
     image:
-      repository: itsthatdood/jit-access-controller
+      repository: controller
       tag: latest
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     args:
       - "--leader-elect"
       - "--metrics-bind-address=:8443"
@@ -17,7 +17,6 @@ controllerManager:
       requests:
         cpu: 10m
         memory: 64Mi
-    env: []
     livenessProbe:
       initialDelaySeconds: 15
       periodSeconds: 20
@@ -40,7 +39,7 @@ controllerManager:
     seccompProfile:
       type: RuntimeDefault
   terminationGracePeriodSeconds: 10
-  serviceAccountName: jit-access-controller-manager
+  serviceAccountName: jitaccess-controller-controller-manager
 
 # [RBAC]: To enable RBAC (Permissions) configurations
 rbac:
@@ -74,7 +73,7 @@ webhook:
 
 # [PROMETHEUS]: To enable a ServiceMonitor to export metrics to Prometheus set true
 prometheus:
-  enable: true
+  enable: false
 
 # [CERT-MANAGER]: To enable cert-manager injection to webhooks set true
 certmanager:
@@ -83,77 +82,3 @@ certmanager:
 # [NETWORK POLICIES]: To enable NetworkPolicies set true
 networkPolicy:
   enable: false
-
-# [FRONTEND]: Frontend Deployment Configurations
-frontend:
-  enabled: true
-  impersonation:
-    enabled: false
-    constrained: true
-  replicas: 1
-  oidc:
-    secretRef: "frontend-oidc"
-    authorityKey: "authority"
-    clientIdKey: "clientId"
-    clientSecretKey: "clientSecret"
-    nameClaimKey: "nameClaim"
-  dataprotection:
-    storage:
-      enabled: true
-      size: 100Mi
-    encryption:
-      enabled: false
-      secretRef: 'jit-access-frontend-dataprotection'
-      certificateKey: 'dataprotection.pfx'
-      passphraseKey: 'passphrase'
-  container:
-    image:
-      repository: itsthatdood/jit-access-frontend
-      tag: latest
-    imagePullPolicy: Always
-    resources:
-      limits:
-        cpu: 500m
-        memory: 128Mi
-      requests:
-        cpu: 10m
-        memory: 64Mi
-    env: []
-    livenessProbe:
-      initialDelaySeconds: 15
-      periodSeconds: 20
-      httpGet:
-        path: /healthz
-        port: 8080
-    readinessProbe:
-      initialDelaySeconds: 5
-      periodSeconds: 10
-      httpGet:
-        path: /healthz
-        port: 8080
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop:
-          - "ALL"
-  securityContext:
-    runAsNonRoot: true
-    seccompProfile:
-      type: RuntimeDefault
-  terminationGracePeriodSeconds: 10
-  serviceAccountName: jit-access-frontend
-  service:
-    port: 8080
-  ingress:
-    enabled: true
-    annotations: []
-    className: ""
-    tls:
-      - hosts:
-        - x.y.z
-        secretName: ""
-    hosts:
-      - host: x.y.z
-        paths:
-          - path: '/'
-            pathType: Prefix

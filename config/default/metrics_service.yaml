@@ -3,9 +3,9 @@ kind: Service
 metadata:
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: jit-access
+    app.kubernetes.io/name: jitaccess-controller
     app.kubernetes.io/managed-by: kustomize
-  name: metrics-service
+  name: controller-manager-metrics-service
   namespace: system
 spec:
   ports:
@@ -15,4 +15,4 @@ spec:
     targetPort: 8443
   selector:
     control-plane: controller-manager
-    app.kubernetes.io/name: jit-access
+    app.kubernetes.io/name: jitaccess-controller

@@ -1,5 +1,5 @@
 /*
-Copyright 2025.
+Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,16 +28,16 @@ var _ = Describe("ClusterAccessRequest Webhook", func() {
 	var (
 		obj       *accessv1alpha1.ClusterAccessRequest
 		oldObj    *accessv1alpha1.ClusterAccessRequest
-		validator ClusterAccessRequestValidator
-		defaulter ClusterAccessRequestMutator
+		validator ClusterAccessRequestCustomValidator
+		defaulter ClusterAccessRequestCustomDefaulter
 	)
 
 	BeforeEach(func() {
 		obj = &accessv1alpha1.ClusterAccessRequest{}
 		oldObj = &accessv1alpha1.ClusterAccessRequest{}
-		validator = ClusterAccessRequestValidator{}
+		validator = ClusterAccessRequestCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
-		defaulter = ClusterAccessRequestMutator{}
+		defaulter = ClusterAccessRequestCustomDefaulter{}
 		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
 		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
 		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")

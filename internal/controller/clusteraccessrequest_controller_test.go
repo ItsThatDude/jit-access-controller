@@ -1,5 +1,5 @@
 /*
-Copyright 2025.
+Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,172 +18,67 @@ package controller
 
 import (
 	"context"
-	"fmt"
-	"time"
 
-	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
-	common "github.com/itsthatdude/jit-access-controller/internal/common"
-	"github.com/itsthatdude/jit-access-controller/internal/policy"
-	"github.com/itsthatdude/jit-access-controller/internal/processors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
+
+	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 )
 
 var _ = Describe("ClusterAccessRequest Controller", func() {
-	var (
-		ctx        context.Context
-		reconciler *ClusterAccessRequestReconciler
-		policyObj  *v1alpha1.ClusterAccessPolicy
-	)
+	Context("When reconciling a resource", func() {
+		const resourceName = "test-resource"
 
-	BeforeEach(func() {
-		ctx = context.Background()
+		ctx := context.Background()
 
-		// Create policy object with unique name per run
-		policyName := fmt.Sprintf("test-policy-%d", time.Now().UnixNano())
-		policyObj = &v1alpha1.ClusterAccessPolicy{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: policyName,
-			},
-			Spec: v1alpha1.ClusterAccessPolicySpec{
-				SubjectPolicy: v1alpha1.SubjectPolicy{
-					Requesters:        []rbacv1.Subject{{Kind: rbacv1.UserKind, Name: "user1"}},
-					RequiredApprovals: 1,
-					AllowedRoles:      []rbacv1.RoleRef{{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}},
-					Approvers:         []rbacv1.Subject{{Kind: rbacv1.UserKind, Name: "admin"}},
-					MaxDuration:       "60m",
-				},
-			},
+		typeNamespacedName := types.NamespacedName{
+			Name:      resourceName,
+			Namespace: "default", // TODO(user):Modify as needed
 		}
+		clusteraccessrequest := &accessv1alpha1.ClusterAccessRequest{}
 
-		reconciler = &ClusterAccessRequestReconciler{
-			Client:         mgr.GetClient(),
-			Scheme:         scheme.Scheme,
-			PolicyManager:  policy.NewPolicyManager(),
-			PolicyResolver: &policy.PolicyResolver{},
-		}
-
-		reconciler.Processor = &processors.RequestProcessor{
-			Client:         reconciler.Client,
-			Scheme:         reconciler.Scheme,
-			PolicyManager:  reconciler.PolicyManager,
-			PolicyResolver: reconciler.PolicyResolver,
-		}
-
-		reconciler.PolicyManager.Update([]common.AccessPolicyObject{policyObj})
-	})
-
-	AfterEach(func() {
-	})
-
-	It("should fail to reconcile ClusterAccessRequest", func() {
-		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
-
-		requestObj := &v1alpha1.ClusterAccessRequest{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: requestName,
-			},
-			Spec: v1alpha1.ClusterAccessRequestSpec{
-				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-					Subject: "user1",
-					Role:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "no-policy"},
-					// nolint:goconst
-					Duration:      "10m",
-					Justification: "test",
-				},
-			},
-		}
-
-		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), requestObj)
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).ShouldNot(Succeed())
-	})
-
-	It("should create grant for approved ClusterAccessRequest", func() {
-		requestName := fmt.Sprintf("test-approve-request-%d", time.Now().UnixNano())
-
-		requestObj := &v1alpha1.ClusterAccessRequest{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: requestName,
-			},
-			Spec: v1alpha1.ClusterAccessRequestSpec{
-				AccessRequestBaseSpec: v1alpha1.AccessRequestBaseSpec{
-					Subject: "user1",
-					Role:    rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"},
-					// nolint:goconst
-					Duration:      "10m",
-					Justification: "test",
-				},
-			},
-		}
-
-		Expect(k8sClient.Create(ctx, requestObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), requestObj)
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
-
-		type requestStatus struct {
-			ID         string
-			State      v1alpha1.RequestState
-			Finalizers []string
-		}
-
-		Eventually(func() (requestStatus, error) {
-			err := k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
-			if err != nil {
-				return requestStatus{}, err
+		BeforeEach(func() {
+			By("creating the custom resource for the Kind ClusterAccessRequest")
+			err := k8sClient.Get(ctx, typeNamespacedName, clusteraccessrequest)
+			if err != nil && errors.IsNotFound(err) {
+				resource := &accessv1alpha1.ClusterAccessRequest{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: "default",
+					},
+					// TODO(user): Specify other spec details if needed.
+				}
+				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
-			return requestStatus{
-				ID:         requestObj.Status.RequestId,
-				State:      requestObj.Status.State,
-				Finalizers: requestObj.Finalizers,
-			}, nil
-		}, 5*time.Second, 100*time.Millisecond).Should(SatisfyAll(
-			WithTransform(func(rs requestStatus) string { return rs.ID }, Not(BeEmpty())),
-			WithTransform(func(rs requestStatus) v1alpha1.RequestState { return rs.State }, Equal(v1alpha1.RequestStatePending)),
-			WithTransform(func(rs requestStatus) []string { return rs.Finalizers }, ContainElement(common.JITFinalizer)),
-		))
+		})
 
-		responseName := fmt.Sprintf("test-approve-response-%d", time.Now().UnixNano())
-		responseObj := &v1alpha1.ClusterAccessResponse{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: responseName,
-			},
-			Spec: v1alpha1.AccessResponseSpec{
-				RequestRef: requestName,
-				Approver:   "admin",
-				Response:   v1alpha1.ResponseStateApproved,
-			},
-		}
+		AfterEach(func() {
+			// TODO(user): Cleanup logic after each test, like removing the resource instance.
+			resource := &accessv1alpha1.ClusterAccessRequest{}
+			err := k8sClient.Get(ctx, typeNamespacedName, resource)
+			Expect(err).NotTo(HaveOccurred())
 
-		// Create the response and wait for it to be created
-		Expect(k8sClient.Create(ctx, responseObj)).To(Succeed())
-		waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(responseObj), &v1alpha1.ClusterAccessResponse{})
+			By("Cleanup the specific resource instance ClusterAccessRequest")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+		})
+		It("should successfully reconcile the resource", func() {
+			By("Reconciling the created resource")
+			controllerReconciler := &ClusterAccessRequestReconciler{
+				Client: k8sClient,
+				Scheme: k8sClient.Scheme(),
+			}
 
-		// Reconcile the request again, to process the response
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
-
-		// Wait for the GrantCreated status to be set
-		Eventually(func() bool {
-			_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
-			return requestObj.Status.GrantCreated
-		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
-
-		// Wait for the Grant to be created
-		waitForCreated(ctx, k8sClient, client.ObjectKey{Name: requestName}, &v1alpha1.ClusterAccessGrant{})
-
-		// Delete the object (simulate user deletion)
-		Expect(k8sClient.Delete(ctx, requestObj)).To(Succeed())
-		waitForDeletionTimestamp(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterAccessRequest{})
-
-		// Reconcile to handle finalizer cleanup
-		reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(requestObj)).Should(Succeed())
-
-		// Wait until fully deleted
-		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.ClusterAccessRequest{})
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: typeNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
+			// Example: If you expect a certain status condition after reconciliation, verify it here.
+		})
 	})
 })

@@ -1,5 +1,5 @@
 /*
-Copyright 2025.
+Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,17 +20,42 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *ClusterAccessGrant) GetStatus() *AccessGrantStatus {
-	return &r.Status
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// ClusterAccessGrantSpec defines the desired state of ClusterAccessGrant
+type ClusterAccessGrantSpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+	// The following markers will use OpenAPI v3 schema to validate the value
+	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+
+	// foo is an example field of ClusterAccessGrant. Edit clusteraccessgrant_types.go to remove/update
+	// +optional
+	Foo *string `json:"foo,omitempty"`
 }
-func (r *ClusterAccessGrant) SetStatus(status *AccessGrantStatus) {
-	r.Status = *status
-}
-func (r *ClusterAccessGrant) GetScope() RequestScope {
-	return RequestScopeCluster
-}
-func (r *ClusterAccessGrant) GetName() string {
-	return r.Name
+
+// ClusterAccessGrantStatus defines the observed state of ClusterAccessGrant.
+type ClusterAccessGrantStatus struct {
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
+	// For Kubernetes API conventions, see:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// conditions represent the current state of the ClusterAccessGrant resource.
+	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
+	//
+	// Standard condition types include:
+	// - "Available": the resource is fully functional
+	// - "Progressing": the resource is being created or updated
+	// - "Degraded": the resource failed to reach or maintain its desired state
+	//
+	// The status of each condition is one of True, False, or Unknown.
+	// +listType=map
+	// +listMapKey=type
+	// +optional
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -38,9 +63,6 @@ func (r *ClusterAccessGrant) GetName() string {
 // +kubebuilder:resource:scope=Cluster
 
 // ClusterAccessGrant is the Schema for the clusteraccessgrants API
-// +kubebuilder:printcolumn:name="Subject",type=string,JSONPath=`.status.subject`
-// +kubebuilder:printcolumn:name="Access-Expires-At",type=string,JSONPath=`.status.accessExpiresAt`
-// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type ClusterAccessGrant struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -48,9 +70,13 @@ type ClusterAccessGrant struct {
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
 
+	// spec defines the desired state of ClusterAccessGrant
+	// +required
+	Spec ClusterAccessGrantSpec `json:"spec"`
+
 	// status defines the observed state of ClusterAccessGrant
 	// +optional
-	Status AccessGrantStatus `json:"status,omitempty,omitzero"`
+	Status ClusterAccessGrantStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true
