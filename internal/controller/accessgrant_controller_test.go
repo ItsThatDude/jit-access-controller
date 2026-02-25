@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,67 +18,113 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	common "github.com/itsthatdude/jit-access-controller/internal/common"
+	"github.com/itsthatdude/jit-access-controller/internal/processors"
 )
 
 var _ = Describe("AccessGrant Controller", func() {
+	var (
+		reconciler *AccessGrantReconciler
+	)
 	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
 		ctx := context.Background()
 
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
-		}
-		accessgrant := &accessv1alpha1.AccessGrant{}
-
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind AccessGrant")
-			err := k8sClient.Get(ctx, typeNamespacedName, accessgrant)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &accessv1alpha1.AccessGrant{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: "default",
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+			reconciler = &AccessGrantReconciler{
+				Client:   mgr.GetClient(),
+				Scheme:   scheme.Scheme,
+				Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+			}
+
+			reconciler.Processor = &processors.GrantProcessor{
+				Client:   reconciler.Client,
+				Scheme:   reconciler.Scheme,
+				Recorder: reconciler.Recorder,
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &accessv1alpha1.AccessGrant{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
 
-			By("Cleanup the specific resource instance AccessGrant")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &AccessGrantReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
+
+		It("should create a Role Binding for approved AccessGrant", func() {
+			grantName := fmt.Sprintf("test-grant-%d", time.Now().UnixNano())
+
+			grantObj := &v1alpha1.AccessGrant{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      grantName,
+					Namespace: "default",
+				},
 			}
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+			Expect(k8sClient.Create(ctx, grantObj)).To(Succeed())
+			waitForCreated(ctx, k8sClient, client.ObjectKeyFromObject(grantObj), grantObj)
+
+			grantObj.Status.ApprovedBy = []string{"admin"}
+			grantObj.Status.RequestId = grantName
+			grantObj.Status.Role = rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: common.RoleKindCluster, Name: "edit"}
+			grantObj.Status.Subject = "user1"
+			// nolint:goconst
+			grantObj.Status.Duration = "10m"
+
+			Expect(k8sClient.Status().Update(ctx, grantObj)).To(Succeed())
+
+			// Wait for the RequestId status to be set
+			Eventually(func() bool {
+				_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grantObj)
+				return grantObj.Status.RequestId != ""
+			}, 10*time.Second, 1*time.Second).Should(BeTrue())
+
+			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+
+			type grantStatus struct {
+				ID         string
+				Finalizers []string
+			}
+
+			Eventually(func() (grantStatus, error) {
+				err := k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grantObj)
+				if err != nil {
+					return grantStatus{}, err
+				}
+				return grantStatus{
+					ID:         grantObj.Status.RequestId,
+					Finalizers: grantObj.Finalizers,
+				}, nil
+			}, 5*time.Second, 500*time.Millisecond).Should(SatisfyAll(
+				WithTransform(func(rs grantStatus) string { return rs.ID }, Not(BeEmpty())),
+			))
+
+			roleBindingName := fmt.Sprintf("jit-access-%s", grantObj.Status.RequestId)
+
+			// Wait for the RoleBindingCreated status to be set
+			Eventually(func() bool {
+				_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(grantObj), grantObj)
+				return grantObj.Status.RoleBindingCreated
+			}, 10*time.Second, 1*time.Second).Should(BeTrue())
+
+			// See if the RoleBinding was actually created
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, client.ObjectKey{Name: roleBindingName, Namespace: grantObj.Namespace}, &rbacv1.RoleBinding{})
+				return err == nil
+			}, 5*time.Second, 500*time.Millisecond).Should(BeTrue())
+
+			// Delete the object (simulate user deletion)
+			Expect(k8sClient.Delete(ctx, grantObj)).To(Succeed())
+
+			// Reconcile to run the cleanup logic
+			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
 		})
 	})
 })

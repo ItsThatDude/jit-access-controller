@@ -7,9 +7,9 @@ domain: antware.xyz
 layout:
 - go.kubebuilder.io/v4
 plugins:
-  grafana.kubebuilder.io/v1-alpha: {}
+  autoupdate.kubebuilder.io/v1-alpha: {}
   helm.kubebuilder.io/v1-alpha: {}
-projectName: jitaccess-controller
+projectName: jit-access
 repo: github.com/itsthatdude/jit-access-controller
 resources:
 - api:

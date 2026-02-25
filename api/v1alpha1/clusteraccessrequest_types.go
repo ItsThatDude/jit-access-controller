@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,49 +20,43 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *ClusterAccessRequest) GetSpec() *AccessRequestBaseSpec {
+	return &r.Spec.AccessRequestBaseSpec
+}
+func (r *ClusterAccessRequest) GetStatus() *AccessRequestStatus {
+	return &r.Status
+}
+func (r *ClusterAccessRequest) SetStatus(status *AccessRequestStatus) {
+	r.Status = *status
+}
+func (r *ClusterAccessRequest) GetScope() RequestScope {
+	return RequestScopeCluster
+}
+func (r *ClusterAccessRequest) GetNamespace() string {
+	return ""
+}
+func (r *ClusterAccessRequest) GetName() string {
+	return r.Name
+}
+func (r *ClusterAccessRequest) GetSubject() string {
+	return r.Spec.Subject
+}
 
 // ClusterAccessRequestSpec defines the desired state of ClusterAccessRequest
 type ClusterAccessRequestSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of ClusterAccessRequest. Edit clusteraccessrequest_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
-}
-
-// ClusterAccessRequestStatus defines the observed state of ClusterAccessRequest.
-type ClusterAccessRequestStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
-
-	// conditions represent the current state of the ClusterAccessRequest resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
-	// +listType=map
-	// +listMapKey=type
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	AccessRequestBaseSpec `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
+// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // ClusterAccessRequest is the Schema for the clusteraccessrequests API
+// +kubebuilder:printcolumn:name="Approvals-Required",type=integer,JSONPath=`.status.approvalsRequired`
+// +kubebuilder:printcolumn:name="Request-Expires-At",type=string,JSONPath=`.status.requestExpiresAt`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type ClusterAccessRequest struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -76,7 +70,7 @@ type ClusterAccessRequest struct {
 
 	// status defines the observed state of ClusterAccessRequest
 	// +optional
-	Status ClusterAccessRequestStatus `json:"status,omitempty,omitzero"`
+	Status AccessRequestStatus `json:"status,omitempty,omitzero"`
 }
 
 // +kubebuilder:object:root=true

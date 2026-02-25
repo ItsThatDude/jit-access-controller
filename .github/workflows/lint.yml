@@ -2,7 +2,25 @@ name: Lint
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - api/**
+      - cmd/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
   pull_request:
+    branches:
+      - main
+    paths:
+      - api/**
+      - cmd/**
+      - internal/**
+      - go.mod
+      - go.sum
+      - Dockerfile
 
 jobs:
   lint:
@@ -20,4 +38,4 @@ jobs:
       - name: Run linter
         uses: golangci/golangci-lint-action@v8
         with:
-          version: v2.4.0
+          version: v2.10.1

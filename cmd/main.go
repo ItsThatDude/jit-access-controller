@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -37,9 +38,13 @@ import (
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/controller"
+	"github.com/itsthatdude/jit-access-controller/internal/metrics"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	webhookv1alpha1 "github.com/itsthatdude/jit-access-controller/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
+
+var Version string
 
 var (
 	scheme   = runtime.NewScheme()
@@ -87,6 +92,27 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	if Version == "" {
+		Version = "development"
+	}
+
+	setupLog.Info("Controller is starting", "version", Version)
+
+	namespace, err := getSystemNamespace()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get system namespace from environment variable")
+		os.Exit(1)
+	}
+
+	serviceAccount, err := getServiceAccountName()
+	frontendServiceAccount := getFrontendServiceAccountName()
+
+	if err != nil {
+		setupLog.Error(err, "unable to get service account name")
+		os.Exit(1)
+	}
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -155,13 +181,15 @@ func main() {
 		metricsServerOptions.KeyName = metricsCertKey
 	}
 
+	metrics.RegisterMetrics(Version)
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsServerOptions,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "456ab665.antware.xyz",
+		LeaderElectionID:       "1e3b8634.antware.xyz",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -179,75 +207,80 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.AccessRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
-		os.Exit(1)
-	}
-	if err := (&controller.AccessPolicyReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessPolicy")
-		os.Exit(1)
-	}
+	clusterPolicyManager := policy.NewPolicyManager()
+	namespacedPolicyManager := policy.NewPolicyManager()
+
 	if err := (&controller.ClusterAccessPolicyReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		PolicyManager: clusterPolicyManager,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessPolicy")
 		os.Exit(1)
 	}
+
+	if err := (&controller.AccessPolicyReconciler{
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		PolicyManager: namespacedPolicyManager,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AccessPolicy")
+		os.Exit(1)
+	}
+
 	if err := (&controller.ClusterAccessRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		PolicyManager:  clusterPolicyManager,
+		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
-	if err := (&controller.AccessGrantReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+
+	if err := (&controller.AccessRequestReconciler{
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		PolicyManager:  namespacedPolicyManager,
+		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
+		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
+
 	if err := (&controller.ClusterAccessGrantReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
 		os.Exit(1)
 	}
-	// nolint:goconst
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AccessRequest")
-			os.Exit(1)
-		}
+
+	if err := (&controller.AccessGrantReconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
+		os.Exit(1)
 	}
+
 	// nolint:goconst
 	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterAccessRequest")
-			os.Exit(1)
-		}
-	}
-	// nolint:goconst
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupAccessResponseWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "AccessResponse")
-			os.Exit(1)
-		}
-	}
-	// nolint:goconst
-	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
-		if err := webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ClusterAccessResponse")
-			os.Exit(1)
-		}
+		webhookv1alpha1.SetupClusterAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupClusterAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
+		webhookv1alpha1.SetupClusterAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, clusterPolicyManager)
+		webhookv1alpha1.SetupClusterAccessResponseWebhookWithManager(
+			mgr, namespace, serviceAccount, frontendServiceAccount, clusterPolicyManager,
+		)
+
+		webhookv1alpha1.SetupAccessRequestMutatingWebhookWithManager(mgr)
+		webhookv1alpha1.SetupAccessResponseMutatingWebhookWithManager(mgr, namespace, frontendServiceAccount)
+		webhookv1alpha1.SetupAccessRequestWebhookWithManager(mgr, namespace, serviceAccount, namespacedPolicyManager)
+		webhookv1alpha1.SetupAccessResponseWebhookWithManager(
+			mgr, namespace, serviceAccount, frontendServiceAccount, namespacedPolicyManager,
+		)
 	}
 	// +kubebuilder:scaffold:builder
 
@@ -265,4 +298,37 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func getSystemNamespace() (string, error) {
+	// systemNamespaceEnvVar is the constant for env variable SYSTEM_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	var systemNamespaceEnvVar = "SYSTEM_NAMESPACE"
+
+	ns, found := os.LookupEnv(systemNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", systemNamespaceEnvVar)
+	}
+	return ns, nil
+}
+
+func getServiceAccountName() (string, error) {
+	var serviceAccountEnvVar = "SERVICE_ACCOUNT_NAME"
+
+	sa, found := os.LookupEnv(serviceAccountEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", serviceAccountEnvVar)
+	}
+	return sa, nil
+}
+
+func getFrontendServiceAccountName() string {
+	var serviceAccountEnvVar = "FRONTEND_SERVICE_ACCOUNT_NAME"
+
+	sa, found := os.LookupEnv(serviceAccountEnvVar)
+	if !found {
+		return ""
+	}
+	return sa
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,109 +18,80 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
+	"net/http"
+	"reflect"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	admissionv1 "k8s.io/api/admission/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
+	"github.com/itsthatdude/jit-access-controller/internal/utils"
 )
 
-// nolint:unused
-// log is for logging in this package.
-var accessrequestlog = logf.Log.WithName("accessrequest-resource")
-
-// SetupAccessRequestWebhookWithManager registers the webhook for AccessRequest in the manager.
-func SetupAccessRequestWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&accessv1alpha1.AccessRequest{}).
-		WithValidator(&AccessRequestCustomValidator{}).
-		WithDefaulter(&AccessRequestCustomDefaulter{}).
-		Complete()
-}
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// +kubebuilder:webhook:path=/mutate-access-antware-xyz-v1alpha1-accessrequest,mutating=true,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=accessrequests,verbs=create;update,versions=v1alpha1,name=maccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
-
-// AccessRequestCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind AccessRequest when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type AccessRequestCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
-
-var _ webhook.CustomDefaulter = &AccessRequestCustomDefaulter{}
-
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind AccessRequest.
-func (d *AccessRequestCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	accessrequest, ok := obj.(*accessv1alpha1.AccessRequest)
-
-	if !ok {
-		return fmt.Errorf("expected an AccessRequest object but got %T", obj)
-	}
-	accessrequestlog.Info("Defaulting for AccessRequest", "name", accessrequest.GetName())
-
-	// TODO(user): fill in your defaulting logic.
-
-	return nil
-}
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
-// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
 // +kubebuilder:webhook:path=/validate-access-antware-xyz-v1alpha1-accessrequest,mutating=false,failurePolicy=fail,sideEffects=None,groups=access.antware.xyz,resources=accessrequests,verbs=create;update,versions=v1alpha1,name=vaccessrequest-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// AccessRequestCustomValidator struct is responsible for validating the AccessRequest resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type AccessRequestCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
+type AccessRequestValidator struct {
+	decoder        admission.Decoder
+	client         client.Client
+	namespace      string
+	serviceAccount string
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
 }
 
-var _ webhook.CustomValidator = &AccessRequestCustomValidator{}
-
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AccessRequest.
-func (v *AccessRequestCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessrequest, ok := obj.(*accessv1alpha1.AccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessRequest object but got %T", obj)
-	}
-	accessrequestlog.Info("Validation for AccessRequest upon creation", "name", accessrequest.GetName())
-
-	// TODO(user): fill in your validation logic upon object creation.
-
-	return nil, nil
+func SetupAccessRequestWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, policyManager *policy.PolicyManager) {
+	mgr.GetWebhookServer().Register(
+		"/validate-access-antware-xyz-v1alpha1-accessrequest",
+		&admission.Webhook{Handler: &AccessRequestValidator{
+			decoder:        admission.NewDecoder(mgr.GetScheme()),
+			client:         mgr.GetClient(),
+			namespace:      namespace,
+			serviceAccount: serviceAccount,
+			PolicyManager:  policyManager,
+			PolicyResolver: &policy.PolicyResolver{},
+		}},
+	)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AccessRequest.
-func (v *AccessRequestCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	accessrequest, ok := newObj.(*accessv1alpha1.AccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessRequest object for the newObj but got %T", newObj)
+func (v *AccessRequestValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	obj := &accessv1alpha1.AccessRequest{}
+
+	if err := v.decoder.Decode(req, obj); err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
 	}
-	accessrequestlog.Info("Validation for AccessRequest upon update", "name", accessrequest.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
-
-	return nil, nil
-}
-
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AccessRequest.
-func (v *AccessRequestCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	accessrequest, ok := obj.(*accessv1alpha1.AccessRequest)
-	if !ok {
-		return nil, fmt.Errorf("expected a AccessRequest object but got %T", obj)
+	if req.Operation == admissionv1.Delete {
+		return admission.Allowed("deletion is allowed")
 	}
-	accessrequestlog.Info("Validation for AccessRequest upon deletion", "name", accessrequest.GetName())
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
 
-	return nil, nil
+	if req.Operation == admissionv1.Update && isController {
+		return admission.Allowed("jit-access-controller-manager is allowed to update access requests")
+	}
+
+	if req.Operation == admissionv1.Create {
+		if obj.Spec.Subject != req.UserInfo.Username {
+			return admission.Denied("The subject must be the same as the user creating the request.")
+		}
+		if !reflect.DeepEqual(obj.Spec.Groups, req.UserInfo.Groups) {
+			return admission.Denied("The subject's groups must be the same as the user creating the request.")
+		}
+	}
+
+	if obj.Spec.Role.Name == "" && len(obj.Spec.Permissions) == 0 {
+		return admission.Denied("either Role or Permissions needs to be set")
+	}
+
+	policies := v.PolicyManager.GetSnapshot()
+	matched_policy := v.PolicyResolver.Resolve(obj, policies)
+
+	if matched_policy == nil {
+		return admission.Denied("access request did not match a policy")
+	}
+
+	return admission.Allowed("valid")
 }

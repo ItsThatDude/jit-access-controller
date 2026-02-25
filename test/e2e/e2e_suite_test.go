@@ -2,7 +2,7 @@
 // +build e2e
 
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,9 +40,12 @@ var (
 	// isCertManagerAlreadyInstalled will be set true when CertManager CRDs be found on the cluster
 	isCertManagerAlreadyInstalled = false
 
+	skipPrometheusInstall        = os.Getenv("PROMETHEUS_INSTALL_SKIP") == "true"
+	isPrometheusAlreadyInstalled = false
+
 	// projectImage is the name of the image which will be build and loaded
 	// with the code source changes to be tested.
-	projectImage = "example.com/jitaccess-controller:v0.0.1"
+	projectImage = "itsthatdood/jit-access-controller:v0.0.1"
 )
 
 // TestE2E runs the end-to-end (e2e) test suite for the project. These tests execute in an isolated,
@@ -51,7 +54,7 @@ var (
 // CertManager.
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jitaccess-controller integration test suite\n")
+	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jit-access integration test suite\n")
 	RunSpecs(t, "e2e suite")
 }
 
@@ -81,6 +84,17 @@ var _ = BeforeSuite(func() {
 			_, _ = fmt.Fprintf(GinkgoWriter, "WARNING: CertManager is already installed. Skipping installation...\n")
 		}
 	}
+
+	if !skipPrometheusInstall {
+		By("checking if prometheus is installed already")
+		isPrometheusAlreadyInstalled = utils.IsPrometheusCRDsInstalled()
+		if !isPrometheusAlreadyInstalled {
+			_, _ = fmt.Fprintf(GinkgoWriter, "Installing Prometheus...\n")
+			Expect(utils.InstallPrometheusOperator()).To(Succeed(), "Failed to install Prometheus")
+		} else {
+			_, _ = fmt.Fprintf(GinkgoWriter, "WARNING: Prometheus is already installed. Skipping installation...\n")
+		}
+	}
 })
 
 var _ = AfterSuite(func() {
@@ -88,5 +102,9 @@ var _ = AfterSuite(func() {
 	if !skipCertManagerInstall && !isCertManagerAlreadyInstalled {
 		_, _ = fmt.Fprintf(GinkgoWriter, "Uninstalling CertManager...\n")
 		utils.UninstallCertManager()
+	}
+	if !skipPrometheusInstall && !isPrometheusAlreadyInstalled {
+		_, _ = fmt.Fprintf(GinkgoWriter, "Uninstalling Prometheus...\n")
+		utils.UninstallPrometheusOperator()
 	}
 })
