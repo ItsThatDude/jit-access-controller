@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -109,18 +109,6 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupAccessRequestWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = SetupClusterAccessRequestWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = SetupAccessResponseWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = SetupClusterAccessResponseWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
 	// +kubebuilder:scaffold:webhook
 
 	go func() {
@@ -172,3 +160,13 @@ func getFirstFoundEnvTestBinaryDir() string {
 	}
 	return ""
 }
+
+/*
+func waitForCreated(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) AsyncAssertion {
+	return Eventually(func() error { return c.Get(ctx, key, obj) }, 5*time.Second, 500*time.Millisecond)
+}
+
+func waitForDeleted(ctx context.Context, c client.Client, key client.ObjectKey, obj client.Object) AsyncAssertion {
+	return Eventually(func() bool { return errors.IsNotFound(c.Get(ctx, key, obj)) }, 5*time.Second, 500*time.Millisecond)
+}
+*/

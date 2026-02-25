@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,48 +20,42 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+func (r *AccessRequest) GetSpec() *AccessRequestBaseSpec {
+	return &r.Spec.AccessRequestBaseSpec
+}
+func (r *AccessRequest) GetStatus() *AccessRequestStatus {
+	return &r.Status
+}
+func (r *AccessRequest) SetStatus(status *AccessRequestStatus) {
+	r.Status = *status
+}
+func (r *AccessRequest) GetScope() RequestScope {
+	return RequestScopeNamespace
+}
+func (r *AccessRequest) GetNamespace() string {
+	return r.Namespace
+}
+func (r *AccessRequest) GetName() string {
+	return r.Name
+}
+func (r *AccessRequest) GetSubject() string {
+	return r.Spec.Subject
+}
 
 // AccessRequestSpec defines the desired state of AccessRequest
 type AccessRequestSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
-	// foo is an example field of AccessRequest. Edit accessrequest_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
-}
-
-// AccessRequestStatus defines the observed state of AccessRequest.
-type AccessRequestStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
-
-	// conditions represent the current state of the AccessRequest resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
-	// +listType=map
-	// +listMapKey=type
-	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	AccessRequestBaseSpec `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:selectablefield:JSONPath=".status.state"
 
 // AccessRequest is the Schema for the accessrequests API
+// +kubebuilder:printcolumn:name="Approvals-Required",type=integer,JSONPath=`.status.approvalsRequired`
+// +kubebuilder:printcolumn:name="Request-Expires-At",type=string,JSONPath=`.status.requestExpiresAt`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
 type AccessRequest struct {
 	metav1.TypeMeta `json:",inline"`
 

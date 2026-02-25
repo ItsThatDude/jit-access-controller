@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,46 +18,128 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
+	"github.com/itsthatdude/jit-access-controller/internal/policy"
+	"github.com/itsthatdude/jit-access-controller/internal/processors"
 )
 
 // ClusterAccessRequestReconciler reconciles a ClusterAccessRequest object
 type ClusterAccessRequestReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme         *runtime.Scheme
+	PolicyManager  *policy.PolicyManager
+	PolicyResolver *policy.PolicyResolver
+	Processor      *processors.RequestProcessor
 }
+
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccesspolicies/finalizers,verbs=update
 
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessrequests/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the ClusterAccessRequest object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.1/pkg/reconcile
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=access.antware.xyz,resources=clusteraccessresponses/finalizers,verbs=update
+
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=get;list;watch;create;delete
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterroles,verbs=get;list;watch;create;delete;bind;escalate
+
 func (r *ClusterAccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var obj v1alpha1.ClusterAccessRequest
+	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &obj)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
 
-	return ctrl.Result{}, nil
+	return r.Processor.ReconcileRequest(ctx, &obj)
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterAccessRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Processor = &processors.RequestProcessor{
+		Client:         r.Client,
+		Scheme:         r.Scheme,
+		PolicyManager:  r.PolicyManager,
+		PolicyResolver: r.PolicyResolver,
+	}
+
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
+
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessRequest{}, "status.requestId",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessRequest); ok {
+				if myObj.Status.RequestId == "" {
+					return nil
+				}
+				return []string{myObj.Status.RequestId}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestId: %w", err)
+	}
+
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
+				if myObj.Spec.RequestRef == "" {
+					return nil
+				}
+				return []string{myObj.Spec.RequestRef}
+			}
+			return nil
+		}); err != nil {
+		return fmt.Errorf("failed to add index for requestRef: %w", err)
+	}
+
+	eventFilter := predicate.Funcs{
+		CreateFunc: func(e event.CreateEvent) bool {
+			return true
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			return false
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
+		},
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&accessv1alpha1.ClusterAccessRequest{}).
-		Named("clusteraccessrequest").
+		For(&v1alpha1.ClusterAccessRequest{}).
+		Watches(
+			&v1alpha1.ClusterAccessResponse{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, obj client.Object) []reconcile.Request {
+				resp := obj.(*v1alpha1.ClusterAccessResponse)
+				return []reconcile.Request{{
+					NamespacedName: types.NamespacedName{
+						Name: resp.Spec.RequestRef,
+					},
+				}}
+			}),
+			builder.WithPredicates(eventFilter),
+		).
+		Named("clusterrequest-controller").
 		Complete(r)
 }

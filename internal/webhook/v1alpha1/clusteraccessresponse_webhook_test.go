@@ -1,5 +1,5 @@
 /*
-Copyright 2026.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,13 +28,13 @@ var _ = Describe("ClusterAccessResponse Webhook", func() {
 	var (
 		obj       *accessv1alpha1.ClusterAccessResponse
 		oldObj    *accessv1alpha1.ClusterAccessResponse
-		validator ClusterAccessResponseCustomValidator
+		validator ClusterAccessResponseValidator
 	)
 
 	BeforeEach(func() {
 		obj = &accessv1alpha1.ClusterAccessResponse{}
 		oldObj = &accessv1alpha1.ClusterAccessResponse{}
-		validator = ClusterAccessResponseCustomValidator{}
+		validator = ClusterAccessResponseValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
 		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")

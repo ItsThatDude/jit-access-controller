@@ -1,0 +1,187 @@
+{{- if .Values.webhook.enable }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: jit-access-mutating-webhook-configuration
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- if .Values.certmanager.enable }}
+    cert-manager.io/inject-ca-from: "{{ $.Release.Namespace }}/serving-cert"
+    {{- end }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+webhooks:
+  - name: maccessrequest-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-access-antware-xyz-v1alpha1-accessrequest
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - accessrequests
+  - name: maccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-access-antware-xyz-v1alpha1-accessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - accessresponses
+  - name: mclusteraccessrequest-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-access-antware-xyz-v1alpha1-clusteraccessrequest
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - clusteraccessrequests
+  - name: mclusteraccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /mutate-access-antware-xyz-v1alpha1-clusteraccessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - clusteraccessresponses
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: jit-access-validating-webhook-configuration
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- if .Values.certmanager.enable }}
+    cert-manager.io/inject-ca-from: "{{ $.Release.Namespace }}/serving-cert"
+    {{- end }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+webhooks:
+  - name: vaccessrequest-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-accessrequest
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - accessrequests
+  - name: vaccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-accessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - accessresponses
+  - name: vclusteraccessrequest-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-clusteraccessrequest
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - clusteraccessrequests
+  - name: vclusteraccessresponse-v1alpha1.kb.io
+    clientConfig:
+      service:
+        name: jit-access-webhook-service
+        namespace: {{ .Release.Namespace }}
+        path: /validate-access-antware-xyz-v1alpha1-clusteraccessresponse
+    failurePolicy: Fail
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+        apiGroups:
+          - access.antware.xyz
+        apiVersions:
+          - v1alpha1
+        resources:
+          - clusteraccessresponses
+{{- end }}

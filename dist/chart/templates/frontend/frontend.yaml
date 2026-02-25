@@ -1,0 +1,133 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jit-access-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: web
+      labels:
+        {{- include "chart.labels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- if and .Values.frontend.pod .Values.frontend.pod.labels }}
+        {{- range $key, $value := .Values.frontend.pod.labels }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+        {{- end }}
+    spec:
+      containers:
+        - name: web
+          image: {{ .Values.frontend.container.image.repository }}:{{ .Values.frontend.container.image.tag }}
+          {{- if .Values.frontend.container.imagePullPolicy }}
+          imagePullPolicy: {{ .Values.frontend.container.imagePullPolicy }}
+          {{- end }}
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SERVICE_ACCOUNT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            {{- if .Values.frontend.impersonation.enabled }}
+            - name: JITAccess__UseImpersonation
+              value: "true"
+            {{- end }}
+            - name: Oidc__Authority
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.authorityKey }}
+            - name: Oidc__ClientId
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.clientIdKey }}
+            - name: Oidc__ClientSecret
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.clientSecretKey }}
+            - name: Oidc__NameClaimType
+              valueFrom:
+                secretKeyRef:
+                    name: {{ .Values.frontend.oidc.secretRef }}
+                    key: {{ .Values.frontend.oidc.nameClaimKey }}
+            {{- if .Values.frontend.dataprotection.storage.enabled }}
+            - name: DataProtectionOptions__PersistKeysToFilesystem
+              value: "true"
+            - name: DataProtectionOptions__FileSystemPath
+              value: "/app/.dpkeys"
+            {{- end }}
+            {{- if .Values.frontend.dataprotection.encryption.enabled }}
+            - name: DataProtectionOptions__CertificatePath
+              value: "/app/certificates/dataprotection.pfx"
+            - name: DataProtectionOptions__CertificatePasswordPath
+              value: "/app/certificates/dataprotection-passphrase"
+            {{- end }}
+            {{- if .Values.frontend.container.env }}
+            {{- range $key, $value := .Values.frontend.container.env }}
+            - name: {{ $key }}
+              value: {{ $value }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.service.port }}
+          livenessProbe:
+            {{- toYaml .Values.frontend.container.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.frontend.container.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.frontend.container.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.frontend.container.securityContext | nindent 12 }}
+          {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
+          volumeMounts:
+            {{- if .Values.frontend.dataprotection.storage.enabled }}
+            - name: dpkeys-volume
+              mountPath: /app/.dpkeys
+            {{- end }}
+            {{- if .Values.frontend.dataprotection.encryption.enabled }}
+            - name: dpkeys-certificate
+              mountPath: /app/certificates
+              readOnly: true
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
+      volumes:
+        {{- if .Values.frontend.dataprotection.storage.enabled }}
+        - name: dpkeys-volume
+          persistentVolumeClaim:
+            claimName: jit-access-frontend-dpkeys
+        {{- end }}
+        {{- if .Values.frontend.dataprotection.encryption.enabled }}
+        - name: dpkeys-certificate
+          secret:
+            secretName: {{ .Values.frontend.dataprotection.encryption.secretRef | required "an encryption secret name is required" }}
+            items:
+              - key: {{ .Values.frontend.dataprotection.encryption.certificateKey | required "the secret filename key is required" }}
+                path: dataprotection.pfx
+              {{- if .Values.frontend.dataprotection.encryption.passphraseKey }}
+              - key: {{ .Values.frontend.dataprotection.encryption.passphraseKey }}
+                path: dataprotection-passphrase
+              {{- end }}
+        {{- end }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.frontend.securityContext | nindent 8 }}
+      serviceAccountName: {{ .Values.frontend.serviceAccountName }}
+      terminationGracePeriodSeconds: {{ .Values.frontend.terminationGracePeriodSeconds }}
+{{- end }}

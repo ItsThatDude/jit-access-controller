@@ -2,8 +2,10 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessResponse
 metadata:
   labels:
-    app.kubernetes.io/name: jitaccess-controller
+    app.kubernetes.io/name: jit-access
     app.kubernetes.io/managed-by: kustomize
   name: clusteraccessresponse-sample
 spec:
-  # TODO(user): Add fields here
+  requestRef: clusteraccessrequest-sample
+  approver: admin
+  response: Approved
