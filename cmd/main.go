@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -209,6 +210,20 @@ func main() {
 
 	clusterPolicyManager := policy.NewPolicyManager()
 	namespacedPolicyManager := policy.NewPolicyManager()
+
+	// preload existing policies into the caches before any controllers or webhooks
+	// start reconciling.  This gives components a consistent initial view and
+	// avoids races when a request arrives before we've seen the first informer
+	// event.
+	ctx := context.Background()
+	if err := policy.LoadClusterPolicies(ctx, mgr.GetClient(), clusterPolicyManager); err != nil {
+		setupLog.Error(err, "failed to load existing cluster policies")
+		os.Exit(1)
+	}
+	if err := policy.LoadNamespacedPolicies(ctx, mgr.GetClient(), namespacedPolicyManager); err != nil {
+		setupLog.Error(err, "failed to load existing namespaced policies")
+		os.Exit(1)
+	}
 
 	if err := (&controller.ClusterAccessPolicyReconciler{
 		Client:        mgr.GetClient(),
