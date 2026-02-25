@@ -31,6 +31,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -215,12 +216,21 @@ func main() {
 	// start reconciling.  This gives components a consistent initial view and
 	// avoids races when a request arrives before we've seen the first informer
 	// event.
+
+	cfg := ctrl.GetConfigOrDie()
+	cli, err := client.New(cfg, client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "failed to create api client")
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
-	if err := policy.LoadClusterPolicies(ctx, mgr.GetClient(), clusterPolicyManager); err != nil {
+
+	if err := policy.LoadClusterPolicies(ctx, cli, clusterPolicyManager); err != nil {
 		setupLog.Error(err, "failed to load existing cluster policies")
 		os.Exit(1)
 	}
-	if err := policy.LoadNamespacedPolicies(ctx, mgr.GetClient(), namespacedPolicyManager); err != nil {
+	if err := policy.LoadNamespacedPolicies(ctx, cli, namespacedPolicyManager); err != nil {
 		setupLog.Error(err, "failed to load existing namespaced policies")
 		os.Exit(1)
 	}

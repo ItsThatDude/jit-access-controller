@@ -33,9 +33,11 @@ import (
 
 var (
 	// managerImage is the manager image to be built and loaded for testing.
-	managerImage = "example.com/jitaccess-controller:v0.0.1"
+	managerImage = "example.com/jit-access-controller:v0.0.1"
 	// shouldCleanupCertManager tracks whether CertManager was installed by this suite.
 	shouldCleanupCertManager = false
+	// shouldCleanupPrometheus tracks whether Prometheus was installed by this suite.
+	shouldCleanupPrometheus = false
 )
 
 // TestE2E runs the e2e test suite to validate the solution in an isolated environment.
@@ -44,7 +46,7 @@ var (
 // To skip CertManager installation, set: CERT_MANAGER_INSTALL_SKIP=true
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jitaccess-controller e2e test suite\n")
+	_, _ = fmt.Fprintf(GinkgoWriter, "Starting jit-access-controller e2e test suite\n")
 	RunSpecs(t, "e2e suite")
 }
 
@@ -61,9 +63,23 @@ var _ = BeforeSuite(func() {
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the manager image into Kind")
 
 	setupCertManager()
+	By("checking if Prometheus is already installed")
+	if !utils.IsPrometheusCRDsInstalled() {
+		// Mark for cleanup before installation to handle interruptions and partial installs.
+		shouldCleanupPrometheus = true
+
+		By("installing Prometheus Operator")
+		Expect(utils.InstallPrometheusOperator()).To(Succeed(), "Failed to install Prometheus Operator")
+	}
 })
 
 var _ = AfterSuite(func() {
+	// Teardown Prometheus if it was installed by this suite
+	if shouldCleanupPrometheus {
+		By("uninstalling Prometheus Operator")
+		utils.UninstallPrometheusOperator()
+	}
+
 	teardownCertManager()
 })
 

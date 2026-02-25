@@ -215,7 +215,7 @@ var _ = Describe("Manager", Ordered, func() {
 			By("waiting for the webhook service endpoints to be ready")
 			verifyWebhookEndpointsReady := func(g Gomega) {
 				cmd := exec.Command("kubectl", "get", "endpointslices.discovery.k8s.io", "-n", namespace,
-					"-l", "kubernetes.io/service-name=jitaccess-controller-webhook-service",
+					"-l", "kubernetes.io/service-name=jit-access-webhook-service",
 					"-o", "jsonpath={range .items[*]}{range .endpoints[*]}{.addresses[*]}{end}{end}")
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred(), "Webhook endpoints should exist")
@@ -226,7 +226,7 @@ var _ = Describe("Manager", Ordered, func() {
 			By("verifying the mutating webhook server is ready")
 			verifyMutatingWebhookReady := func(g Gomega) {
 				cmd := exec.Command("kubectl", "get", "mutatingwebhookconfigurations.admissionregistration.k8s.io",
-					"jitaccess-controller-mutating-webhook-configuration",
+					"jit-access-mutating-webhook-configuration",
 					"-o", "jsonpath={.webhooks[0].clientConfig.caBundle}")
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred(), "MutatingWebhookConfiguration should exist")
@@ -237,7 +237,7 @@ var _ = Describe("Manager", Ordered, func() {
 			By("verifying the validating webhook server is ready")
 			verifyValidatingWebhookReady := func(g Gomega) {
 				cmd := exec.Command("kubectl", "get", "validatingwebhookconfigurations.admissionregistration.k8s.io",
-					"jitaccess-controller-validating-webhook-configuration",
+					"jit-access-validating-webhook-configuration",
 					"-o", "jsonpath={.webhooks[0].clientConfig.caBundle}")
 				output, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred(), "ValidatingWebhookConfiguration should exist")

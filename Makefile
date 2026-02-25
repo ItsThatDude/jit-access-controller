@@ -295,7 +295,7 @@ HELM ?= helm
 ## Namespace to deploy the Helm release
 HELM_NAMESPACE ?= jit-access-system
 ## Name of the Helm release
-HELM_RELEASE ?= jitaccess-controller
+HELM_RELEASE ?= jit-access-controller
 ## Path to the Helm chart directory
 HELM_CHART_DIR ?= dist/chart
 ## Additional arguments to pass to helm commands

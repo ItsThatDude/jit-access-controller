@@ -1,4 +1,4 @@
-# jitaccess-controller - AI Agent Guide
+# jit-access-controller - AI Agent Guide
 
 ## Project Structure
 
