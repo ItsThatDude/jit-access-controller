@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"slices"
 
 	authenticationv1 "k8s.io/api/authentication/v1"
 )
@@ -20,11 +21,5 @@ func IsController(systemNamespace string, serviceAccount string, user authentica
 		return false
 	}
 
-	for _, g := range user.Groups {
-		if g == groupName {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(user.Groups, groupName)
 }

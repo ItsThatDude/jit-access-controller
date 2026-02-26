@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -30,6 +31,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -121,7 +123,7 @@ func main() {
 	// - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
 	// - https://github.com/advisories/GHSA-4374-p667-p6c8
 	disableHTTP2 := func(c *tls.Config) {
-		setupLog.Info("disabling http/2")
+		setupLog.Info("Disabling HTTP/2")
 		c.NextProtos = []string{"http/1.1"}
 	}
 
@@ -148,7 +150,7 @@ func main() {
 
 	// Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
 	// More info:
-	// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/metrics/server
+	// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.1/pkg/metrics/server
 	// - https://book.kubebuilder.io/reference/metrics.html
 	metricsServerOptions := metricsserver.Options{
 		BindAddress:   metricsAddr,
@@ -160,7 +162,7 @@ func main() {
 		// FilterProvider is used to protect the metrics endpoint with authn/authz.
 		// These configurations ensure that only authorized users and service accounts
 		// can access the metrics endpoint. The RBAC are configured in 'config/rbac/kustomization.yaml'. More info:
-		// https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/metrics/filters#WithAuthenticationAndAuthorization
+		// https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.1/pkg/metrics/filters#WithAuthenticationAndAuthorization
 		metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
 	}
 
@@ -203,19 +205,42 @@ func main() {
 		// LeaderElectionReleaseOnCancel: true,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		setupLog.Error(err, "Failed to start manager")
 		os.Exit(1)
 	}
 
 	clusterPolicyManager := policy.NewPolicyManager()
 	namespacedPolicyManager := policy.NewPolicyManager()
 
+	// preload existing policies into the caches before any controllers or webhooks
+	// start reconciling.  This gives components a consistent initial view and
+	// avoids races when a request arrives before we've seen the first informer
+	// event.
+
+	cfg := ctrl.GetConfigOrDie()
+	cli, err := client.New(cfg, client.Options{Scheme: scheme})
+	if err != nil {
+		setupLog.Error(err, "failed to create api client")
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+
+	if err := policy.LoadClusterPolicies(ctx, cli, clusterPolicyManager); err != nil {
+		setupLog.Error(err, "failed to load existing cluster policies")
+		os.Exit(1)
+	}
+	if err := policy.LoadNamespacedPolicies(ctx, cli, namespacedPolicyManager); err != nil {
+		setupLog.Error(err, "failed to load existing namespaced policies")
+		os.Exit(1)
+	}
+
 	if err := (&controller.ClusterAccessPolicyReconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		PolicyManager: clusterPolicyManager,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessPolicy")
+		setupLog.Error(err, "Failed to create controller", "controller", "ClusterAccessPolicy")
 		os.Exit(1)
 	}
 
@@ -224,7 +249,7 @@ func main() {
 		Scheme:        mgr.GetScheme(),
 		PolicyManager: namespacedPolicyManager,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessPolicy")
+		setupLog.Error(err, "Failed to create controller", "controller", "AccessPolicy")
 		os.Exit(1)
 	}
 
@@ -234,7 +259,7 @@ func main() {
 		PolicyManager:  clusterPolicyManager,
 		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessRequest")
+		setupLog.Error(err, "Failed to create controller", "controller", "ClusterAccessRequest")
 		os.Exit(1)
 	}
 
@@ -244,25 +269,25 @@ func main() {
 		PolicyManager:  namespacedPolicyManager,
 		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessRequest")
+		setupLog.Error(err, "Failed to create controller", "controller", "AccessRequest")
 		os.Exit(1)
 	}
 
 	if err := (&controller.ClusterAccessGrantReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+		Recorder: mgr.GetEventRecorder("accessgrant-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ClusterAccessGrant")
+		setupLog.Error(err, "Failed to create controller", "controller", "ClusterAccessGrant")
 		os.Exit(1)
 	}
 
 	if err := (&controller.AccessGrantReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+		Recorder: mgr.GetEventRecorder("accessgrant-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "AccessGrant")
+		setupLog.Error(err, "Failed to create controller", "controller", "AccessGrant")
 		os.Exit(1)
 	}
 
@@ -285,17 +310,17 @@ func main() {
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up health check")
+		setupLog.Error(err, "Failed to set up health check")
 		os.Exit(1)
 	}
 	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
-		setupLog.Error(err, "unable to set up ready check")
+		setupLog.Error(err, "Failed to set up ready check")
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
+	setupLog.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		setupLog.Error(err, "Failed to run manager")
 		os.Exit(1)
 	}
 }

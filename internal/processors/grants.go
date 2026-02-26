@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -25,7 +26,7 @@ import (
 type GrantProcessor struct {
 	client.Client
 	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
+	Recorder events.EventRecorder
 }
 
 func (r *GrantProcessor) ReconcileGrant(ctx context.Context, obj common.AccessGrantObject) (ctrl.Result, error) {
@@ -105,11 +106,11 @@ func (r *GrantProcessor) handleApproved(
 		roleBindingName := fmt.Sprintf("jit-access-%s", status.RequestId)
 
 		if err := r.createRoleBinding(ctx, obj, status.Role, roleBindingName); err != nil && !k8serrors.IsAlreadyExists(err) {
-			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
+			log.Error(err, "an error occurred creating the role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
 			return ctrl.Result{}, err
 		}
 		status.RoleBindingCreated = true
-		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, status.Role)
+		log.Info("Granted Role for request", "name", obj.GetName(), "subject", status.Subject, "role", status.Role)
 	}
 
 	// Adhoc permissions
@@ -118,11 +119,11 @@ func (r *GrantProcessor) handleApproved(
 
 		if !status.AdhocRoleCreated {
 			if err := r.createRole(ctx, obj, adhocName, status.Permissions); err != nil && !k8serrors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+				log.Error(err, "an error occurred creating the adhoc role for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 				return ctrl.Result{}, err
 			}
 			status.AdhocRoleCreated = true
-			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+			log.Info("Created Adhoc Role for request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 		}
 
 		if !status.AdhocRoleBindingCreated {
@@ -133,11 +134,11 @@ func (r *GrantProcessor) handleApproved(
 			}
 
 			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName); err != nil && !k8serrors.IsAlreadyExists(err) {
-				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 				return ctrl.Result{}, err
 			}
 			status.AdhocRoleBindingCreated = true
-			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, common.RoleKindRole, adhocName)
+			log.Info("Created Adhoc Role Binding for request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 		}
 	}
 
@@ -158,7 +159,7 @@ func (r *GrantProcessor) handleApproved(
 	if status.AccessExpiresAt.IsZero() {
 		status.AccessExpiresAt = metav1.NewTime(time.Now().Add(duration))
 
-		r.Recorder.Eventf(obj, "Normal", "AccessGranted",
+		r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "AccessGranted",
 			"Just-in-time access granted to %s for request %s",
 			status.Subject, status.Request)
 	}
@@ -202,7 +203,7 @@ func (r *GrantProcessor) handleExpired(
 	}
 
 	// Record an event about the revocation of access
-	r.Recorder.Eventf(obj, "Normal", "AccessRevoked",
+	r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "AccessRevoked",
 		"Just-in-time access revoked from %s for request %s",
 		status.Subject, status.Request)
 

@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"slices"
 	"time"
 
 	common "github.com/itsthatdude/jit-access-controller/internal/common"
@@ -53,10 +54,8 @@ func matchesSubjects(
 		}
 
 		if sub.Kind == rbacv1.GroupKind {
-			for _, group := range groups {
-				if group == sub.Name {
-					return true
-				}
+			if slices.Contains(groups, sub.Name) {
+				return true
 			}
 		}
 	}
@@ -106,12 +105,7 @@ func fieldAllows(requested, allowed []string) bool {
 }
 
 func hasWildcard(slice []string) bool {
-	for _, s := range slice {
-		if s == "*" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, "*")
 }
 
 func policyRuleIsSubsetWithWildcard(requested, allowed rbacv1.PolicyRule) bool {

@@ -46,11 +46,11 @@ type ClusterAccessGrant struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// status defines the observed state of ClusterAccessGrant
 	// +optional
-	Status AccessGrantStatus `json:"status,omitempty,omitzero"`
+	Status AccessGrantStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -58,7 +58,7 @@ type ClusterAccessGrant struct {
 // ClusterAccessGrantList contains a list of ClusterAccessGrant
 type ClusterAccessGrantList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []ClusterAccessGrant `json:"items"`
 }
 

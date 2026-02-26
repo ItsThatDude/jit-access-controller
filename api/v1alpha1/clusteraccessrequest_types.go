@@ -62,7 +62,7 @@ type ClusterAccessRequest struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// spec defines the desired state of ClusterAccessRequest
 	// +required
@@ -70,7 +70,7 @@ type ClusterAccessRequest struct {
 
 	// status defines the observed state of ClusterAccessRequest
 	// +optional
-	Status AccessRequestStatus `json:"status,omitempty,omitzero"`
+	Status AccessRequestStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -78,7 +78,7 @@ type ClusterAccessRequest struct {
 // ClusterAccessRequestList contains a list of ClusterAccessRequest
 type ClusterAccessRequestList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []ClusterAccessRequest `json:"items"`
 }
 

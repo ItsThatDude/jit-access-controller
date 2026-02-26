@@ -168,7 +168,7 @@ func (r *RequestProcessor) handleApproved(
 	}
 
 	if err := r.createGrant(ctx, obj, status, approvers); err != nil && !k8serrors.IsAlreadyExists(err) {
-		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, common.RoleKindRole, spec.Role)
+		log.Error(err, "an error occurred creating the access grant for the request", "name", obj.GetName(), "subject", spec.Subject, "role", spec.Role)
 		return ctrl.Result{}, err
 	}
 

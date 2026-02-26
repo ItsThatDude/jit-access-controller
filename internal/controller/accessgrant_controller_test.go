@@ -44,7 +44,7 @@ var _ = Describe("AccessGrant Controller", func() {
 			reconciler = &AccessGrantReconciler{
 				Client:   mgr.GetClient(),
 				Scheme:   scheme.Scheme,
-				Recorder: mgr.GetEventRecorderFor("accessgrant-controller"),
+				Recorder: mgr.GetEventRecorder("accessgrant-controller"),
 			}
 
 			reconciler.Processor = &processors.GrantProcessor{

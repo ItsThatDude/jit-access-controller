@@ -22,7 +22,7 @@ import (
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -35,7 +35,7 @@ import (
 type AccessGrantReconciler struct {
 	client.Client
 	Scheme    *runtime.Scheme
-	Recorder  record.EventRecorder
+	Recorder  events.EventRecorder
 	Processor *processors.GrantProcessor
 }
 
@@ -43,7 +43,7 @@ type AccessGrantReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessgrants/finalizers,verbs=update
 
-// +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
 
 func (r *AccessGrantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)

@@ -3,6 +3,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: jit-access-frontend-clusterrole
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
 {{- if not .Values.frontend.impersonation.enabled }}
 - apiGroups:

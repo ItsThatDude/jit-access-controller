@@ -61,7 +61,7 @@ type AccessRequest struct {
 
 	// metadata is a standard object metadata
 	// +optional
-	metav1.ObjectMeta `json:"metadata,omitempty,omitzero"`
+	metav1.ObjectMeta `json:"metadata,omitzero"`
 
 	// spec defines the desired state of AccessRequest
 	// +required
@@ -69,7 +69,7 @@ type AccessRequest struct {
 
 	// status defines the observed state of AccessRequest
 	// +optional
-	Status AccessRequestStatus `json:"status,omitempty,omitzero"`
+	Status AccessRequestStatus `json:"status,omitzero"`
 }
 
 // +kubebuilder:object:root=true
@@ -77,7 +77,7 @@ type AccessRequest struct {
 // AccessRequestList contains a list of AccessRequest
 type AccessRequestList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
+	metav1.ListMeta `json:"metadata,omitzero"`
 	Items           []AccessRequest `json:"items"`
 }
 

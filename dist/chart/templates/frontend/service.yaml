@@ -5,12 +5,16 @@ metadata:
   name: jit-access-frontend-service
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   ports:
-    - port: {{ .Values.frontend.service.port }}
+    - port: {{ .Values.frontend.port }}
       protocol: TCP
-      targetPort: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.port }}
   selector:
     app.kubernetes.io/component: frontend
 {{- end }}

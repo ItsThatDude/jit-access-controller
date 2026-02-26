@@ -30,8 +30,7 @@ See the Getting Started guide for more information
 ## Development
 
 ### Prerequisites
-
-- go version v1.24.0+
+- go version v1.24.6+
 - docker version 17.03+.
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
@@ -124,7 +123,7 @@ Following the options to release and provide this solution to the users.
 #### Build the chart using the optional helm plugin
 
 ```sh
-kubebuilder edit --plugins=helm/v1-alpha
+kubebuilder edit --plugins=helm/v2-alpha
 ```
 
 #### See that a chart was generated under 'dist/chart', and users can obtain this solution from there

@@ -1,25 +1,31 @@
-{{- if .Values.frontend.enabled }}
+{{- if .Values.frontend.enable }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jit-access-frontend
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "frontend" "context" $) }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:
     matchLabels:
-      {{- include "chart.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: frontend
+      app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: web
       labels:
-        {{- include "chart.labels" . | nindent 8 }}
         app.kubernetes.io/component: frontend
+        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
         {{- if and .Values.frontend.pod .Values.frontend.pod.labels }}
         {{- range $key, $value := .Values.frontend.pod.labels }}
         {{ $key }}: {{ $value }}
@@ -85,7 +91,7 @@ spec:
             {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.frontend.service.port }}
+              containerPort: {{ .Values.frontend.port }}
           livenessProbe:
             {{- toYaml .Values.frontend.container.livenessProbe | nindent 12 }}
           readinessProbe:

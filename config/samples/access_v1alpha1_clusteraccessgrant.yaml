@@ -2,7 +2,7 @@ apiVersion: access.antware.xyz/v1alpha1
 kind: ClusterAccessGrant
 metadata:
   labels:
-    app.kubernetes.io/name: jitaccess-controller
+    app.kubernetes.io/name: jit-access-controller
     app.kubernetes.io/managed-by: kustomize
   name: clusteraccessgrant-sample
 spec:
