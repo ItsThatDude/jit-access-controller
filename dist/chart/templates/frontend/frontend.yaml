@@ -47,7 +47,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.serviceAccountName
-            {{- if .Values.frontend.impersonation.enabled }}
+            {{- if .Values.frontend.impersonation.enable }}
             - name: JITAccess__UseImpersonation
               value: "true"
             {{- end }}
@@ -71,13 +71,13 @@ spec:
                 secretKeyRef:
                     name: {{ .Values.frontend.oidc.secretRef }}
                     key: {{ .Values.frontend.oidc.nameClaimKey }}
-            {{- if .Values.frontend.dataprotection.storage.enabled }}
+            {{- if .Values.frontend.dataprotection.storage.enable }}
             - name: DataProtectionOptions__PersistKeysToFilesystem
               value: "true"
             - name: DataProtectionOptions__FileSystemPath
               value: "/app/.dpkeys"
             {{- end }}
-            {{- if .Values.frontend.dataprotection.encryption.enabled }}
+            {{- if .Values.frontend.dataprotection.encryption.enable }}
             - name: DataProtectionOptions__CertificatePath
               value: "/app/certificates/dataprotection.pfx"
             - name: DataProtectionOptions__CertificatePasswordPath
@@ -100,26 +100,26 @@ spec:
             {{- toYaml .Values.frontend.container.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.frontend.container.securityContext | nindent 12 }}
-          {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
+          {{- if or .Values.frontend.dataprotection.storage.enable .Values.frontend.dataprotection.encryption.enable }}
           volumeMounts:
-            {{- if .Values.frontend.dataprotection.storage.enabled }}
+            {{- if .Values.frontend.dataprotection.storage.enable }}
             - name: dpkeys-volume
               mountPath: /app/.dpkeys
             {{- end }}
-            {{- if .Values.frontend.dataprotection.encryption.enabled }}
+            {{- if .Values.frontend.dataprotection.encryption.enable }}
             - name: dpkeys-certificate
               mountPath: /app/certificates
               readOnly: true
             {{- end }}
           {{- end }}
-      {{- if or .Values.frontend.dataprotection.storage.enabled .Values.frontend.dataprotection.encryption.enabled }}
+      {{- if or .Values.frontend.dataprotection.storage.enable .Values.frontend.dataprotection.encryption.enable }}
       volumes:
-        {{- if .Values.frontend.dataprotection.storage.enabled }}
+        {{- if .Values.frontend.dataprotection.storage.enable }}
         - name: dpkeys-volume
           persistentVolumeClaim:
             claimName: jit-access-frontend-dpkeys
         {{- end }}
-        {{- if .Values.frontend.dataprotection.encryption.enabled }}
+        {{- if .Values.frontend.dataprotection.encryption.enable }}
         - name: dpkeys-certificate
           secret:
             secretName: {{ .Values.frontend.dataprotection.encryption.secretRef | required "an encryption secret name is required" }}

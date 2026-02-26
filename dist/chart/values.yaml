@@ -126,7 +126,7 @@ frontend:
   port: 8080
 
   impersonation:
-    enabled: false
+    enable: false
     constrained: false
 
   oidc:
@@ -138,10 +138,10 @@ frontend:
 
   dataprotection:
     storage:
-      enabled: true
+      enable: true
       size: 100Mi
     encryption:
-      enabled: false
+      enable: false
       secretRef: 'jit-access-frontend-dataprotection'
       certificateKey: 'dataprotection.pfx'
       passphraseKey: 'passphrase'
@@ -186,7 +186,7 @@ frontend:
   serviceAccountName: jit-access-frontend
 
   ingress:
-    enabled: true
+    enable: true
     annotations: []
     className: ""
     tls:

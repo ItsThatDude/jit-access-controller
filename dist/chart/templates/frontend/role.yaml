@@ -1,4 +1,4 @@
-{{- if .Values.frontend.enabled }}
+{{- if .Values.frontend.enable }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -10,7 +10,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 rules:
-{{- if not .Values.frontend.impersonation.enabled }}
+{{- if not .Values.frontend.impersonation.enable }}
 - apiGroups:
   - access.antware.xyz
   resources:
