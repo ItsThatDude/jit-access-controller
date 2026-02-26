@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/test.yml
+      - .github/workflows/test-e2e.yml
       - api/**
       - cmd/**
       - internal/**
@@ -17,7 +17,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/test.yml
+      - .github/workflows/test-e2e.yml
       - api/**
       - cmd/**
       - internal/**
