@@ -4,7 +4,11 @@ kind: Ingress
 metadata:
   name: jit-access-frontend
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
   {{- with .Values.frontend.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -37,7 +41,7 @@ spec:
               service:
                 name: jit-access-frontend-service
                 port:
-                  number: {{ $.Values.frontend.service.port }}
+                  number: {{ $.Values.frontend.port }}
           {{- end }}
     {{- end }}
 {{- end }}

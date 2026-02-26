@@ -4,6 +4,12 @@ kind: PersistentVolumeClaim
 metadata:
   name: jit-access-frontend-dpkeys
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   accessModes:
     - ReadWriteMany
