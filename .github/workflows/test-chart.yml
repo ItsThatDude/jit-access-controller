@@ -86,7 +86,7 @@ jobs:
 
       - name: Install Helm chart for project
         run: |
-          helm install my-release ./dist/chart --create-namespace --namespace jit-access-system
+          helm install my-release ./dist/chart --create-namespace --namespace jit-access-system --set prometheus.enable=true
 
       - name: Check Helm release status
         run: |
@@ -94,8 +94,8 @@ jobs:
 
       - name: Wait for controller to be ready
         run: |
-          kubectl wait --namespace jit-access-system --for=condition=available --timeout=300s deployment/jit-access-controller-manager
+          kubectl wait --namespace jit-access-system --for=condition=available --timeout=300s deployment/my-release-jit-access-controller-manager
 
       - name: Check Presence of ServiceMonitor
         run: |
-          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/jit-access-controller-manager-metrics-monitor
+          kubectl wait --namespace jit-access-system --for=jsonpath='{.kind}'=ServiceMonitor servicemonitor/my-release-jit-access-controller-manager-metrics-monitor
