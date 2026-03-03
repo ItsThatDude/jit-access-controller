@@ -7,20 +7,24 @@ metadata:
     app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "accesspolicy-viewer-role" "context" $) }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccessresponse-editor-role" "context" $) }}
 rules:
 - apiGroups:
   - access.antware.xyz
   resources:
-  - accesspolicies
+  - clusteraccessresponses
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - access.antware.xyz
   resources:
-  - accesspolicies/status
+  - clusteraccessresponses/status
   verbs:
   - get
 {{- end }}

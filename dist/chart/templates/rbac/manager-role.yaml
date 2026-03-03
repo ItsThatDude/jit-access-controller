@@ -1,8 +1,51 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-role" "context" $) }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-role" "context" $) }}
 rules:
+<<<<<<< HEAD
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants
+  - accesspolicies
+  - accessrequests
+  - clusteraccessgrants
+  - clusteraccesspolicies
+  - clusteraccessrequests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/finalizers
+  - accesspolicies/finalizers
+  - accessrequests/finalizers
+  - clusteraccessgrants/finalizers
+  - clusteraccesspolicies/finalizers
+  - clusteraccessrequests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/status
+  - accesspolicies/status
+  - accessrequests/status
+  - clusteraccessgrants/status
+  - clusteraccesspolicies/status
+  - clusteraccessrequests/status
+  verbs:
+  - get
+  - patch
+  - update
+=======
     - apiGroups:
         - access.antware.xyz
       resources:
@@ -81,3 +124,4 @@ rules:
         - get
         - list
         - watch
+>>>>>>> tmp-original-03-03-26-01-44
