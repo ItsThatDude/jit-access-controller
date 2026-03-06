@@ -159,7 +159,7 @@ func (r *GrantProcessor) handleApproved(
 	if status.AccessExpiresAt.IsZero() {
 		status.AccessExpiresAt = metav1.NewTime(time.Now().Add(duration))
 
-		r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "AccessGranted",
+		r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "Granted", "AccessGranted",
 			"Just-in-time access granted to %s for request %s",
 			status.Subject, status.Request)
 	}
@@ -203,7 +203,7 @@ func (r *GrantProcessor) handleExpired(
 	}
 
 	// Record an event about the revocation of access
-	r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "AccessRevoked",
+	r.Recorder.Eventf(obj, nil, corev1.EventTypeNormal, "Revoked", "AccessRevoked",
 		"Just-in-time access revoked from %s for request %s",
 		status.Subject, status.Request)
 
