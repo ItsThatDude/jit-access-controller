@@ -213,6 +213,9 @@ func (r *RequestProcessor) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
+			if err := controllerutil.SetControllerReference(obj, &resp, r.Scheme); err != nil {
+				log.Error(err, "an error occurred setting the controller reference for the response", "name", resp.GetName())
+			}
 			if matchedPolicy.AllowSelfApproval || resp.Spec.Approver != spec.Subject {
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:
@@ -234,6 +237,9 @@ func (r *RequestProcessor) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
+			if err := controllerutil.SetControllerReference(obj, &resp, r.Scheme); err != nil {
+				log.Error(err, "an error occurred setting the controller reference for the response", "name", resp.GetName())
+			}
 			if matchedPolicy.AllowSelfApproval || resp.Spec.Approver != spec.Subject {
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:

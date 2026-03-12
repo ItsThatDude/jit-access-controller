@@ -6,14 +6,17 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,6 +33,30 @@ type AccessResponseValidator struct {
 }
 
 func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, frontendServiceAccount string, policyManager *policy.PolicyManager) {
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
+	log := logf.FromContext(ctx)
+
+	if err := indexer.IndexField(ctx, &v1alpha1.AccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.AccessResponse); ok {
+				return []string{myObj.Spec.RequestRef}
+			}
+			return nil
+		}); err != nil {
+		log.Error(err, "failed to add index for requestRef")
+	}
+
+	if err := indexer.IndexField(ctx, &v1alpha1.AccessResponse{}, "spec.approver",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.AccessResponse); ok {
+				return []string{myObj.Spec.Approver}
+			}
+			return nil
+		}); err != nil {
+		log.Error(err, "failed to add index for approver")
+	}
+
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-accessresponse",
 		&admission.Webhook{Handler: &AccessResponseValidator{
@@ -68,6 +95,19 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 	request := &accessv1alpha1.AccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: obj.Spec.RequestRef}, request); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced AccessRequest: %s", err))
+	}
+
+	existingResponses := accessv1alpha1.AccessResponseList{}
+	fieldSelector := fields.AndSelectors(
+		fields.OneTermEqualSelector("spec.requestRef", obj.Spec.RequestRef),
+		fields.OneTermEqualSelector("spec.approver", obj.Spec.Approver),
+	)
+	if err := v.client.List(ctx, &existingResponses, &client.ListOptions{Namespace: req.Namespace, FieldSelector: fieldSelector}); err != nil {
+		return admission.Denied(fmt.Sprintf("an error occurred fetching existing AccessResponses for AccessRequest: %s", err))
+	}
+
+	if len(existingResponses.Items) > 0 {
+		return admission.Denied(fmt.Sprintf("you have submitted a response already for request %s", obj.Spec.RequestRef))
 	}
 
 	policies := v.PolicyManager.GetSnapshot()

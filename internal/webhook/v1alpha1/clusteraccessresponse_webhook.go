@@ -6,14 +6,17 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -30,6 +33,30 @@ type ClusterAccessResponseValidator struct {
 }
 
 func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceAccount string, frontendServiceAccount string, policyManager *policy.PolicyManager) {
+	ctx := context.Background()
+	indexer := mgr.GetFieldIndexer()
+	log := logf.FromContext(ctx)
+
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.requestRef",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
+				return []string{myObj.Spec.RequestRef}
+			}
+			return nil
+		}); err != nil {
+		log.Error(err, "failed to add index for requestRef")
+	}
+
+	if err := indexer.IndexField(ctx, &v1alpha1.ClusterAccessResponse{}, "spec.approver",
+		func(obj client.Object) []string {
+			if myObj, ok := obj.(*v1alpha1.ClusterAccessResponse); ok {
+				return []string{myObj.Spec.Approver}
+			}
+			return nil
+		}); err != nil {
+		log.Error(err, "failed to add index for approver")
+	}
+
 	mgr.GetWebhookServer().Register(
 		"/validate-access-antware-xyz-v1alpha1-clusteraccessresponse",
 		&admission.Webhook{Handler: &ClusterAccessResponseValidator{
@@ -68,6 +95,19 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 	request := &accessv1alpha1.ClusterAccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Name: obj.Spec.RequestRef}, request); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterAccessRequest: %s", err))
+	}
+
+	existingResponses := accessv1alpha1.ClusterAccessResponseList{}
+	fieldSelector := fields.AndSelectors(
+		fields.OneTermEqualSelector("spec.requestRef", obj.Spec.RequestRef),
+		fields.OneTermEqualSelector("spec.approver", obj.Spec.Approver),
+	)
+	if err := v.client.List(ctx, &existingResponses, &client.ListOptions{FieldSelector: fieldSelector}); err != nil {
+		return admission.Denied(fmt.Sprintf("an error occurred fetching existing ClusterAccessResponses for ClusterAccessRequest: %s", err))
+	}
+
+	if len(existingResponses.Items) > 0 {
+		return admission.Denied(fmt.Sprintf("you have submitted a response already for request %s", obj.Spec.RequestRef))
 	}
 
 	policies := v.PolicyManager.GetSnapshot()
