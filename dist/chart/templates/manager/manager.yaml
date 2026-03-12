@@ -59,8 +59,14 @@ spec:
                   command:
                     - /manager
                   env:
+                    {{- if or .Values.manager.env .Values.frontend.enable }}
                     {{- if .Values.manager.env }}
                     {{- toYaml .Values.manager.env | nindent 20 }}
+                    {{- end }}
+                    {{- if .Values.frontend.enable }}
+                    - name: FRONTEND_SERVICE_ACCOUNT_NAME
+                      value: {{ .Values.frontend.serviceAccountName | quote }}
+                    {{- end }}
                     {{- else }}
                     []
                     {{- end }}
