@@ -43,6 +43,7 @@ func (m *AccessResponseMutator) Handle(ctx context.Context, req admission.Reques
 	if !isFrontend {
 		if req.Operation == admissionv1.Create {
 			obj.Spec.Approver = req.UserInfo.Username
+			obj.Spec.Groups = req.UserInfo.Groups
 		}
 	}
 
