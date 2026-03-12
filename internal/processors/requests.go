@@ -213,7 +213,7 @@ func (r *RequestProcessor) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
-			if resp.Spec.Approver != spec.Subject {
+			if matchedPolicy.AllowSelfApproval || resp.Spec.Approver != spec.Subject {
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:
 					approved.Insert(resp.Spec.Approver)
@@ -234,7 +234,7 @@ func (r *RequestProcessor) handlePending(
 			return ctrl.Result{}, err
 		}
 		for _, resp := range responses.Items {
-			if resp.Spec.Approver != spec.Subject {
+			if matchedPolicy.AllowSelfApproval || resp.Spec.Approver != spec.Subject {
 				switch resp.Spec.Response {
 				case v1alpha1.ResponseStateApproved:
 					approved.Insert(resp.Spec.Approver)

@@ -37,4 +37,8 @@ type SubjectPolicy struct {
 
 	// The users and groups allowed to approve requests for this subject
 	Approvers []rbacv1.Subject `json:"approvers,omitempty"`
+
+	// Allow the requester to approve their own requests
+	// +kubebuilder:default:=false
+	AllowSelfApproval bool `json:"allowSelfApproval,omitempty"`
 }

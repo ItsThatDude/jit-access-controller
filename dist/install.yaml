@@ -200,6 +200,10 @@ spec:
           spec:
             description: spec defines the desired state of AccessPolicy
             properties:
+              allowSelfApproval:
+                default: false
+                description: Allow the requester to approve their own requests
+                type: boolean
               allowedPermissions:
                 description: AllowedPermissions is a list of adhoc permissions the
                   subject is allowed to request.
@@ -862,6 +866,10 @@ spec:
           spec:
             description: spec defines the desired state of ClusterAccessPolicy
             properties:
+              allowSelfApproval:
+                default: false
+                description: Allow the requester to approve their own requests
+                type: boolean
               allowedPermissions:
                 description: AllowedPermissions is a list of adhoc permissions the
                   subject is allowed to request.

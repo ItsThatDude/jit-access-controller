@@ -70,10 +70,6 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterAccessRequest: %s", err))
 	}
 
-	if request.Spec.Subject == obj.Spec.Approver {
-		return admission.Denied("The approver can not be the same as the subject of the request.")
-	}
-
 	policies := v.PolicyManager.GetSnapshot()
 	matched_policy := v.PolicyResolver.Resolve(request, policies)
 
@@ -82,6 +78,10 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 	}
 
 	policySpec := matched_policy.GetPolicy()
+
+	if !policySpec.AllowSelfApproval && request.Spec.Subject == obj.Spec.Approver {
+		return admission.Denied("The approver can not be the same as the subject of the request.")
+	}
 
 	switch req.Operation {
 	case admissionv1.Create:
