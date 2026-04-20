@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -170,7 +171,7 @@ var _ = Describe("ClusterAccessRequest Controller", func() {
 		// Wait for the GrantCreated status to be set
 		Eventually(func() bool {
 			_ = k8sClient.Get(ctx, client.ObjectKeyFromObject(requestObj), requestObj)
-			return requestObj.Status.GrantCreated
+			return meta.IsStatusConditionTrue(requestObj.Status.Conditions, "GrantCreated")
 		}, 5*time.Second, 100*time.Millisecond).Should(BeTrue())
 
 		// Wait for the Grant to be created
