@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
-	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -72,7 +71,7 @@ func SetupClusterAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, s
 }
 
 func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	obj := &accessv1alpha1.ClusterAccessResponse{}
+	obj := &v1alpha1.ClusterAccessResponse{}
 	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
 	isFrontend := utils.IsController(v.namespace, v.frontendServiceAccount, req.UserInfo)
 
@@ -92,12 +91,12 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		return admission.Denied("The approver must be the same as the user creating the approval.")
 	}
 
-	request := &accessv1alpha1.ClusterAccessRequest{}
+	request := &v1alpha1.ClusterAccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Name: obj.Spec.RequestRef}, request); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced ClusterAccessRequest: %s", err))
 	}
 
-	existingResponses := accessv1alpha1.ClusterAccessResponseList{}
+	existingResponses := v1alpha1.ClusterAccessResponseList{}
 	fieldSelector := fields.AndSelectors(
 		fields.OneTermEqualSelector("spec.requestRef", obj.Spec.RequestRef),
 		fields.OneTermEqualSelector("spec.approver", obj.Spec.Approver),
@@ -144,7 +143,7 @@ func (v *ClusterAccessResponseValidator) Handle(ctx context.Context, req admissi
 		}
 
 	case admissionv1.Update:
-		oldObj := &accessv1alpha1.ClusterAccessResponse{}
+		oldObj := &v1alpha1.ClusterAccessResponse{}
 		if err := v.decoder.DecodeRaw(req.OldObject, oldObj); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}

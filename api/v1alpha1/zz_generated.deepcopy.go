@@ -22,6 +22,7 @@ package v1alpha1
 
 import (
 	"k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -328,6 +329,13 @@ func (in *AccessRequestStatus) DeepCopyInto(out *AccessRequestStatus) {
 	if in.Approvals != nil {
 		in, out := &in.Approvals, &out.Approvals
 		*out = make([]AccessRequestApproval, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.Conditions != nil {
+		in, out := &in.Conditions, &out.Conditions
+		*out = make([]metav1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}

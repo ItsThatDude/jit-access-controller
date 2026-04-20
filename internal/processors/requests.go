@@ -15,6 +15,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	set "k8s.io/apimachinery/pkg/util/sets"
@@ -55,6 +56,13 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	if status.RequestId == "" {
 		status.RequestId = utils.GenerateRandomId()
 		status.State = v1alpha1.RequestStatePending
+
+		meta.SetStatusCondition(&status.Conditions, metav1.Condition{
+			Type:    "GrantCreated",
+			Status:  metav1.ConditionFalse,
+			Reason:  "RequestPending",
+			Message: "The request is pending approval",
+		})
 
 		metrics.RequestsCreated.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject()).Inc()
 	}
@@ -110,7 +118,7 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	}
 
 	if status.State == v1alpha1.RequestStateExpired {
-		err := r.handleExpired(ctx, obj)
+		err := r.expireRequest(ctx, obj)
 		return ctrl.Result{}, err
 	}
 
@@ -134,19 +142,13 @@ func (r *RequestProcessor) ReconcileRequest(ctx context.Context, obj common.Acce
 	}
 
 	if status.State == v1alpha1.RequestStatePending {
-		return r.handlePending(ctx, obj, &policySpec, status)
+		return r.handlePendingRequest(ctx, obj, &policySpec, status)
 	}
-
-	/*
-		if status.State == v1alpha1.RequestStateDenied {
-
-		}
-	*/
 
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestProcessor) handleApproved(
+func (r *RequestProcessor) approveRequest(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 	status *v1alpha1.AccessRequestStatus,
@@ -172,7 +174,12 @@ func (r *RequestProcessor) handleApproved(
 		return ctrl.Result{}, err
 	}
 
-	status.GrantCreated = true
+	meta.SetStatusCondition(&status.Conditions, metav1.Condition{
+		Type:    "GrantCreated",
+		Status:  metav1.ConditionTrue,
+		Reason:  "RequestApproved",
+		Message: "The request was approved and access has been granted",
+	})
 
 	metrics.RequestsApproved.WithLabelValues(string(obj.GetScope()), obj.GetNamespace(), obj.GetSubject()).Inc()
 
@@ -190,7 +197,7 @@ func (r *RequestProcessor) handleApproved(
 	return ctrl.Result{RequeueAfter: duration + time.Second}, nil
 }
 
-func (r *RequestProcessor) handlePending(
+func (r *RequestProcessor) handlePendingRequest(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 	matchedPolicy *v1alpha1.SubjectPolicy,
@@ -267,7 +274,7 @@ func (r *RequestProcessor) handlePending(
 	}
 
 	if status.State == v1alpha1.RequestStateApproved {
-		return r.handleApproved(ctx, obj, status, approved.UnsortedList())
+		return r.approveRequest(ctx, obj, status, approved.UnsortedList())
 	}
 
 	r.updateRequestStatusMetric(obj, status.State)
@@ -279,7 +286,7 @@ func (r *RequestProcessor) handlePending(
 	return ctrl.Result{}, nil
 }
 
-func (r *RequestProcessor) handleExpired(
+func (r *RequestProcessor) expireRequest(
 	ctx context.Context,
 	obj common.AccessRequestObject,
 ) error {
