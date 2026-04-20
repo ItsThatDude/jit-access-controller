@@ -13,6 +13,9 @@ on:
     paths:
       - .github/workflows/test-chart.yml
       - dist/chart/**
+    types:
+      - opened
+      - edited
 
 jobs:
   test-e2e:

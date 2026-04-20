@@ -22,6 +22,9 @@ on:
       - go.mod
       - go.sum
       - Dockerfile
+    types:
+      - opened
+      - edited
 
 jobs:
   lint:

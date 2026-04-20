@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - docs/**
+    types:
+      - opened
+      - edited
   workflow_dispatch: {}
 
 defaults:

@@ -25,6 +25,9 @@ on:
       - go.mod
       - go.sum
       - Dockerfile
+    types:
+      - opened
+      - edited
   workflow_dispatch: {}
 
 jobs:
