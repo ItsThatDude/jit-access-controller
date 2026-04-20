@@ -71,5 +71,5 @@ type AccessRequestStatus struct {
 
 	Approvals []AccessRequestApproval `json:"approvals,omitempty"`
 
-	GrantCreated bool `json:"grantCreated,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
