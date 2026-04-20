@@ -10,7 +10,6 @@ metadata:
   name: {{ include "jit-access-controller.resourceName" (dict "suffix" "metrics-certs" "context" $) }}
   namespace: {{ .Release.Namespace }}
 spec:
-<<<<<<< HEAD
   dnsNames:
   - {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager-metrics-service" "context" $) }}.{{ include "jit-access-controller.namespaceName" $ }}.svc
   - {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager-metrics-service" "context" $) }}.{{ include "jit-access-controller.namespaceName" $ }}.svc.cluster.local
@@ -18,13 +17,4 @@ spec:
     kind: Issuer
     name: {{ include "jit-access-controller.resourceName" (dict "suffix" "selfsigned-issuer" "context" $) }}
   secretName: metrics-server-cert
-=======
-    dnsNames:
-        - jit-access-metrics-service.{{ .Release.Namespace }}.svc
-        - jit-access-metrics-service.{{ .Release.Namespace }}.svc.cluster.local
-    issuerRef:
-        kind: Issuer
-        name: {{ include "jit-access-controller.resourceName" (dict "suffix" "selfsigned-issuer" "context" $) }}
-    secretName: metrics-server-cert
->>>>>>> tmp-original-07-04-26-01-54
 {{- end }}

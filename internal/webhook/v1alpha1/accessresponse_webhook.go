@@ -7,7 +7,6 @@ import (
 	"slices"
 
 	"github.com/itsthatdude/jit-access-controller/api/v1alpha1"
-	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
 	"github.com/itsthatdude/jit-access-controller/internal/policy"
 	"github.com/itsthatdude/jit-access-controller/internal/utils"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -72,7 +71,7 @@ func SetupAccessResponseWebhookWithManager(mgr ctrl.Manager, namespace, serviceA
 }
 
 func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	obj := &accessv1alpha1.AccessResponse{}
+	obj := &v1alpha1.AccessResponse{}
 	isController := utils.IsController(v.namespace, v.serviceAccount, req.UserInfo)
 	isFrontend := utils.IsController(v.namespace, v.frontendServiceAccount, req.UserInfo)
 
@@ -92,12 +91,12 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		return admission.Denied("The approver must be the user creating the approval.")
 	}
 
-	request := &accessv1alpha1.AccessRequest{}
+	request := &v1alpha1.AccessRequest{}
 	if err := v.client.Get(ctx, types.NamespacedName{Namespace: req.Namespace, Name: obj.Spec.RequestRef}, request); err != nil {
 		return admission.Denied(fmt.Sprintf("an error occurred fetching the referenced AccessRequest: %s", err))
 	}
 
-	existingResponses := accessv1alpha1.AccessResponseList{}
+	existingResponses := v1alpha1.AccessResponseList{}
 	fieldSelector := fields.AndSelectors(
 		fields.OneTermEqualSelector("spec.requestRef", obj.Spec.RequestRef),
 		fields.OneTermEqualSelector("spec.approver", obj.Spec.Approver),
@@ -144,7 +143,7 @@ func (v *AccessResponseValidator) Handle(ctx context.Context, req admission.Requ
 		}
 
 	case admissionv1.Update:
-		oldObj := &accessv1alpha1.AccessResponse{}
+		oldObj := &v1alpha1.AccessResponse{}
 		if err := v.decoder.DecodeRaw(req.OldObject, oldObj); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}

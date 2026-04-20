@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-<<<<<<< HEAD
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
@@ -21,17 +20,11 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-=======
-    labels:
-        app.kubernetes.io/component: controller
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
->>>>>>> tmp-original-07-04-26-01-54
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         control-plane: controller-manager
-<<<<<<< HEAD
     spec:
       {{- with .Values.manager.tolerations }}
       tolerations: {{ toYaml . | nindent 10 }}
@@ -59,6 +52,18 @@ spec:
         {{- end }}
         command:
         - /manager
+        env:
+          {{- if or .Values.manager.env .Values.frontend.enable }}
+          {{- if .Values.manager.env }}
+          {{- toYaml .Values.manager.env | nindent 20 }}
+          {{- end }}
+          {{- if .Values.frontend.enable }}
+          - name: FRONTEND_SERVICE_ACCOUNT_NAME
+            value: {{ .Values.frontend.serviceAccountName | quote }}
+          {{- end }}
+          {{- else }}
+          []
+          {{- end }}
         image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}"
         imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
         livenessProbe:
@@ -110,136 +115,3 @@ spec:
         secret:
           secretName: webhook-server-cert
       {{- end }}
-=======
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
-    namespace: {{ .Release.Namespace }}
-spec:
-    replicas: 1
-    selector:
-        matchLabels:
-            app.kubernetes.io/component: controller
-            app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-            control-plane: controller-manager
-    template:
-        metadata:
-            annotations:
-                kubectl.kubernetes.io/default-container: manager
-            labels:
-                app.kubernetes.io/component: controller
-                app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-                helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-                app.kubernetes.io/instance: {{ .Release.Name }}
-                app.kubernetes.io/managed-by: {{ .Release.Service }}
-                control-plane: controller-manager
-        spec:
-            {{- with .Values.manager.tolerations }}
-            tolerations: {{ toYaml . | nindent 16 }}
-            {{- end }}
-            {{- with .Values.manager.affinity }}
-            affinity: {{ toYaml . | nindent 16 }}
-            {{- end }}
-            {{- with .Values.manager.nodeSelector }}
-            nodeSelector: {{ toYaml . | nindent 16 }}
-            {{- end }}
-            containers:
-                - args:
-                    {{- if .Values.metrics.enable }}
-                    - --metrics-bind-address=:{{ .Values.metrics.port }}
-                    {{- else }}
-                    # Bind to :0 to disable the controller-runtime managed metrics server
-                    - --metrics-bind-address=0
-                    {{- end }}
-                    - --health-probe-bind-address=:8081
-                    {{- range .Values.manager.args }}
-                    - {{ . }}
-                    {{- end }}
-                    {{- if and .Values.certManager.enable .Values.metrics.enable }}
-                    - --metrics-cert-path=/tmp/k8s-metrics-server/metrics-certs
-                    {{- end }}
-                    {{- if .Values.certManager.enable }}
-                    - --webhook-cert-path=/tmp/k8s-webhook-server/serving-certs
-                    {{- end }}
-                  command:
-                    - /manager
-                  env:
-                    {{- if or .Values.manager.env .Values.frontend.enable }}
-                    {{- if .Values.manager.env }}
-                    {{- toYaml .Values.manager.env | nindent 20 }}
-                    {{- end }}
-                    {{- if .Values.frontend.enable }}
-                    - name: FRONTEND_SERVICE_ACCOUNT_NAME
-                      value: {{ .Values.frontend.serviceAccountName | quote }}
-                    {{- end }}
-                    {{- else }}
-                    []
-                    {{- end }}
-                  image: "{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}"
-                  imagePullPolicy: {{ .Values.manager.image.pullPolicy }}
-                  livenessProbe:
-                    httpGet:
-                        path: /healthz
-                        port: 8081
-                    initialDelaySeconds: 15
-                    periodSeconds: 20
-                  name: manager
-                  ports:
-                    - containerPort: {{ .Values.webhook.port }}
-                      name: webhook-server
-                      protocol: TCP
-                  readinessProbe:
-                    httpGet:
-                        path: /readyz
-                        port: 8081
-                    initialDelaySeconds: 5
-                    periodSeconds: 10
-                  resources:
-                    {{- if .Values.manager.resources }}
-                    {{- toYaml .Values.manager.resources | nindent 20 }}
-                    {{- else }}
-                    {}
-                    {{- end }}
-                  securityContext:
-                    {{- if .Values.manager.securityContext }}
-                    {{- toYaml .Values.manager.securityContext | nindent 20 }}
-                    {{- else }}
-                    {}
-                    {{- end }}
-                  volumeMounts:
-                    {{- if and .Values.certManager.enable .Values.metrics.enable }}
-                    - mountPath: /tmp/k8s-metrics-server/metrics-certs
-                      name: metrics-certs
-                      readOnly: true
-                    {{- end }}
-                    {{- if .Values.certManager.enable }}
-                    - mountPath: /tmp/k8s-webhook-server/serving-certs
-                      name: webhook-certs
-                      readOnly: true
-                    {{- end }}
-            securityContext:
-              {{- if .Values.manager.podSecurityContext }}
-              {{- toYaml .Values.manager.podSecurityContext | nindent 14 }}
-              {{- else }}
-              {}
-              {{- end }}
-            serviceAccountName: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
-            terminationGracePeriodSeconds: 10
-            volumes:
-                {{- if and .Values.certManager.enable .Values.metrics.enable }}
-                - name: metrics-certs
-                  secret:
-                    items:
-                        - key: ca.crt
-                          path: ca.crt
-                        - key: tls.crt
-                          path: tls.crt
-                        - key: tls.key
-                          path: tls.key
-                    optional: false
-                    secretName: metrics-server-cert
-                {{- end }}
-                {{- if .Values.certManager.enable }}
-                - name: webhook-certs
-                  secret:
-                    secretName: webhook-server-cert
-                {{- end }}
->>>>>>> tmp-original-07-04-26-01-54
