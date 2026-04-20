@@ -5,6 +5,8 @@ on:
     workflows: ["Test Chart"]
     types:
       - completed
+    branches:
+      - main
 
 jobs:
   sync:
