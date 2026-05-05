@@ -1,6 +1,33 @@
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: RoleBinding
+{{- else }}
 kind: ClusterRoleBinding
+{{- end }}
 metadata:
+<<<<<<< HEAD
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-rolebinding" "context" $) }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  {{- if .Values.rbac.namespaced }}
+  kind: Role
+  {{- else }}
+  kind: ClusterRole
+  {{- end }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-role" "context" $) }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "jit-access-controller.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+=======
     labels:
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
@@ -15,3 +42,4 @@ subjects:
     - kind: ServiceAccount
       name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
       namespace: {{ .Release.Namespace }}
+>>>>>>> tmp-original-05-05-26-02-12

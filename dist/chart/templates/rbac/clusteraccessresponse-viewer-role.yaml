@@ -1,13 +1,29 @@
-{{- if .Values.rbacHelpers.enable }}
+{{- if .Values.rbac.helpers.enable }}
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: Role
+{{- else }}
 kind: ClusterRole
+{{- end }}
 metadata:
+<<<<<<< HEAD
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccessresponse-viewer-role" "context" $) }}
+=======
     labels:
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccessresponse-viewer-role" "context" $) }}
+>>>>>>> tmp-original-05-05-26-02-12
 rules:
     - apiGroups:
         - access.antware.xyz

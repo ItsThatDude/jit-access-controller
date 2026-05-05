@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+package controller
+
+import (
+	. "github.com/onsi/ginkgo/v2"
+=======
 /*
 Copyright 2025.
 
@@ -31,6 +37,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+>>>>>>> tmp-original-05-05-26-02-12
 )
 
 var _ = Describe("ClusterAccessGrant Controller", func() {
@@ -38,6 +45,13 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 		reconciler *ClusterAccessGrantReconciler
 	)
 	Context("When reconciling a resource", func() {
+<<<<<<< HEAD
+
+		It("should successfully reconcile the resource", func() {
+
+			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
+			// Example: If you expect a certain status condition after reconciliation, verify it here.
+=======
 		ctx := context.Background()
 
 		BeforeEach(func() {
@@ -124,6 +138,7 @@ var _ = Describe("ClusterAccessGrant Controller", func() {
 
 			// Reconcile to run the cleanup logic
 			reconcileOnce(ctx, reconciler, client.ObjectKeyFromObject(grantObj)).Should(Succeed())
+>>>>>>> tmp-original-05-05-26-02-12
 		})
 	})
 })

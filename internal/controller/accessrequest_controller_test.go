@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+package controller
+
+import (
+	. "github.com/onsi/ginkgo/v2"
+)
+
+var _ = Describe("AccessRequest Controller", func() {
+	Context("When reconciling a resource", func() {
+
+		It("should successfully reconcile the resource", func() {
+
+			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
+			// Example: If you expect a certain status condition after reconciliation, verify it here.
+		})
+=======
 /*
 Copyright 2025.
 
@@ -166,5 +182,6 @@ var _ = Describe("AccessRequest Controller", func() {
 
 		// Wait until fully deleted
 		waitForDeleted(ctx, k8sClient, client.ObjectKeyFromObject(requestObj), &v1alpha1.AccessRequest{})
+>>>>>>> tmp-original-05-05-26-02-12
 	})
 })

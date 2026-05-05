@@ -1,4 +1,4 @@
-{{- if .Values.metrics.enable }}
+{{- if and .Values.metrics.enable .Values.metrics.secure }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -8,7 +8,13 @@ roleRef:
     kind: ClusterRole
     name: {{ include "jit-access-controller.resourceName" (dict "suffix" "metrics-auth-role" "context" $) }}
 subjects:
+<<<<<<< HEAD
+- kind: ServiceAccount
+  name: {{ include "jit-access-controller.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+=======
     - kind: ServiceAccount
       name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
       namespace: {{ .Release.Namespace }}
+>>>>>>> tmp-original-05-05-26-02-12
 {{- end }}

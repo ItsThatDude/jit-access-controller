@@ -1,6 +1,26 @@
+{{- if ne .Values.serviceAccount.enable false }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+<<<<<<< HEAD
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- with .Values.serviceAccount.labels }}
+    {{- with omit . "app.kubernetes.io/managed-by" "app.kubernetes.io/name" "helm.sh/chart" "app.kubernetes.io/instance" }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- end }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  name: {{ include "jit-access-controller.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+=======
     labels:
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
@@ -8,3 +28,4 @@ metadata:
         app.kubernetes.io/instance: {{ .Release.Name }}
     name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
     namespace: {{ .Release.Namespace }}
+>>>>>>> tmp-original-05-05-26-02-12
