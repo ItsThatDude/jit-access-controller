@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 /*
 Copyright 2025.
 
@@ -14,10 +16,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+>>>>>>> tmp-original-16-06-26-03-31
 package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func (r *ClusterAccessResponse) GetResponse() ResponseState {
@@ -59,5 +63,8 @@ type ClusterAccessResponseList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&ClusterAccessResponse{}, &ClusterAccessResponseList{})
+	SchemeBuilder.Register(func(s *runtime.Scheme) error {
+		s.AddKnownTypes(SchemeGroupVersion, &ClusterAccessResponse{}, &ClusterAccessResponseList{})
+		return nil
+	})
 }

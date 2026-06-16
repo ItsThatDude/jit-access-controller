@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 /*
 Copyright 2025.
 
@@ -14,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+>>>>>>> tmp-original-16-06-26-03-31
 package controller
 
 import (
@@ -54,6 +57,17 @@ type AccessRequestReconciler struct {
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessrequests/finalizers,verbs=update
 
+<<<<<<< HEAD
+// Reconcile is part of the main kubernetes reconciliation loop which aims to
+// move the current state of the cluster closer to the desired state.
+// TODO(user): Modify the Reconcile function to compare the state specified by
+// the AccessRequest object against the actual cluster state, and then
+// perform operations to make the cluster state reflect the state specified by
+// the user.
+//
+// For more details, check Reconcile and its Result here:
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.24.1/pkg/reconcile
+=======
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=access.antware.xyz,resources=accessresponses/finalizers,verbs=update
@@ -61,6 +75,7 @@ type AccessRequestReconciler struct {
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=get;list;watch;create;delete
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles,verbs=get;list;watch;create;delete;bind;escalate
 
+>>>>>>> tmp-original-16-06-26-03-31
 func (r *AccessRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 

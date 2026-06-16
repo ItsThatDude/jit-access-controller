@@ -1,12 +1,20 @@
-{{- if .Values.webhook.enable }}
+{{- if .Values.webhook.enabled }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
+<<<<<<< HEAD
+  annotations:
+    {{- if .Values.certManager.enabled }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "jit-access-controller.resourceName" (dict "suffix" "serving-cert" "context" $) }}
+    {{- end }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "mutating-webhook-configuration" "context" $) }}
+=======
     annotations:
         {{- if .Values.certManager.enable }}
         cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "jit-access-controller.resourceName" (dict "suffix" "serving-cert" "context" $) }}
         {{- end }}
     name: {{ include "jit-access-controller.resourceName" (dict "suffix" "mutating-webhook-configuration" "context" $) }}
+>>>>>>> tmp-original-16-06-26-03-31
 webhooks:
     - admissionReviewVersions:
         - v1

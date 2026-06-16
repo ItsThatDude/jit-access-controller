@@ -12,7 +12,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: accessgrants.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -164,7 +164,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: accesspolicies.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -383,7 +383,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: accessrequests.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -647,7 +647,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: accessresponses.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -730,7 +730,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: clusteraccessgrants.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -883,7 +883,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: clusteraccesspolicies.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -1103,7 +1103,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: clusteraccessrequests.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -1368,7 +1368,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
   name: clusteraccessresponses.access.antware.xyz
 spec:
   group: access.antware.xyz
@@ -2123,6 +2123,9 @@ spec:
           periodSeconds: 20
         name: manager
         ports:
+        - containerPort: 8081
+          name: health
+          protocol: TCP
         - containerPort: 9443
           name: webhook-server
           protocol: TCP
