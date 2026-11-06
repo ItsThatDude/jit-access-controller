@@ -1,26 +1,33 @@
-{{- if .Values.rbacHelpers.enable }}
+{{- if .Values.rbac.helpers.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.namespaced }}
+kind: Role
+{{- else }}
 kind: ClusterRole
+{{- end }}
 metadata:
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccessgrant-viewer-role" "context" $) }}
+{{- if .Values.rbac.namespaced }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccessgrant-viewer-role" "context" $) }}
 rules:
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - clusteraccessgrants
-      verbs:
-        - get
-        - list
-        - watch
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - clusteraccessgrants/status
-      verbs:
-        - get
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessgrants
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccessgrants/status
+  verbs:
+  - get
 {{- end }}
