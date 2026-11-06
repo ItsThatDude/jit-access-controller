@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: jit-access-frontend-clusterrole
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "frontend" "context" $) }}
   labels:
     app.kubernetes.io/component: frontend
     app.kubernetes.io/managed-by: {{ .Release.Service }}

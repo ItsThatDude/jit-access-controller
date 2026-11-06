@@ -203,7 +203,7 @@ networkPolicy:
 ## Frontend configuration
 ##
 frontend:
-  enable: true
+  enable: false
     
   replicas: 1
 

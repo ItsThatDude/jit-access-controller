@@ -8,11 +8,11 @@ metadata:
     app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-  name: jit-access-frontend
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "frontend" "context" $) }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: jit-access-frontend-clusterrole
+  name: {{ include "jit-access-controller.resourceName" (dict "suffix" "frontend" "context" $) }}
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.frontend.serviceAccountName }}
