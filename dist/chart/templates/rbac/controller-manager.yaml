@@ -2,7 +2,6 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-<<<<<<< HEAD
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
@@ -20,12 +19,3 @@ metadata:
   name: {{ include "jit-access-controller.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
-=======
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager" "context" $) }}
-    namespace: {{ .Release.Namespace }}
->>>>>>> tmp-original-16-06-26-03-31

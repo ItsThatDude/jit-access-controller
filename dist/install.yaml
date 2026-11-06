@@ -138,7 +138,6 @@ spec:
                     description: Name is the name of resource being referenced
                     type: string
                 required:
-                - apiGroup
                 - kind
                 - name
                 type: object
@@ -272,7 +271,6 @@ spec:
                       description: Name is the name of resource being referenced
                       type: string
                   required:
-                  - apiGroup
                   - kind
                   - name
                   type: object
@@ -523,7 +521,6 @@ spec:
                     description: Name is the name of resource being referenced
                     type: string
                 required:
-                - apiGroup
                 - kind
                 - name
                 type: object
@@ -857,7 +854,6 @@ spec:
                     description: Name is the name of resource being referenced
                     type: string
                 required:
-                - apiGroup
                 - kind
                 - name
                 type: object
@@ -992,7 +988,6 @@ spec:
                       description: Name is the name of resource being referenced
                       type: string
                   required:
-                  - apiGroup
                   - kind
                   - name
                   type: object
@@ -1244,7 +1239,6 @@ spec:
                     description: Name is the name of resource being referenced
                     type: string
                 required:
-                - apiGroup
                 - kind
                 - name
                 type: object
@@ -2114,7 +2108,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.serviceAccountName
-        image: itsthatdood/jit-access-controller:latest
+        image: controller:latest
         livenessProbe:
           httpGet:
             path: /healthz

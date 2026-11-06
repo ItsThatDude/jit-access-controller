@@ -5,90 +5,86 @@ kind: Role
 kind: ClusterRole
 {{- end }}
 metadata:
-<<<<<<< HEAD
 {{- if .Values.rbac.namespaced }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
   name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-role" "context" $) }}
-=======
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "manager-role" "context" $) }}
->>>>>>> tmp-original-16-06-26-03-31
 rules:
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - accessgrants
-        - accesspolicies
-        - accessrequests
-        - accessresponses
-        - clusteraccessgrants
-        - clusteraccesspolicies
-        - clusteraccessrequests
-        - clusteraccessresponses
-      verbs:
-        - create
-        - delete
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - accessgrants/finalizers
-        - accesspolicies/finalizers
-        - accessrequests/finalizers
-        - accessresponses/finalizers
-        - clusteraccessgrants/finalizers
-        - clusteraccesspolicies/finalizers
-        - clusteraccessrequests/finalizers
-        - clusteraccessresponses/finalizers
-      verbs:
-        - update
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - accessgrants/status
-        - accesspolicies/status
-        - accessrequests/status
-        - accessresponses/status
-        - clusteraccessgrants/status
-        - clusteraccesspolicies/status
-        - clusteraccessrequests/status
-        - clusteraccessresponses/status
-      verbs:
-        - get
-        - patch
-        - update
-    - apiGroups:
-        - events.k8s.io
-      resources:
-        - events
-      verbs:
-        - create
-        - patch
-    - apiGroups:
-        - rbac.authorization.k8s.io
-      resources:
-        - clusterrolebindings
-        - rolebindings
-      verbs:
-        - create
-        - delete
-        - get
-        - list
-        - watch
-    - apiGroups:
-        - rbac.authorization.k8s.io
-      resources:
-        - clusterroles
-        - roles
-      verbs:
-        - bind
-        - create
-        - delete
-        - escalate
-        - get
-        - list
-        - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants
+  - accesspolicies
+  - accessrequests
+  - accessresponses
+  - clusteraccessgrants
+  - clusteraccesspolicies
+  - clusteraccessrequests
+  - clusteraccessresponses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/finalizers
+  - accesspolicies/finalizers
+  - accessrequests/finalizers
+  - accessresponses/finalizers
+  - clusteraccessgrants/finalizers
+  - clusteraccesspolicies/finalizers
+  - clusteraccessrequests/finalizers
+  - clusteraccessresponses/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessgrants/status
+  - accesspolicies/status
+  - accessrequests/status
+  - accessresponses/status
+  - clusteraccessgrants/status
+  - clusteraccesspolicies/status
+  - clusteraccessrequests/status
+  - clusteraccessresponses/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  - roles
+  verbs:
+  - bind
+  - create
+  - delete
+  - escalate
+  - get
+  - list
+  - watch

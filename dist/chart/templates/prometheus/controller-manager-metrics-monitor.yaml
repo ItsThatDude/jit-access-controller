@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {{- if .Values.prometheus.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -21,52 +20,11 @@ spec:
     scheme: {{ if .Values.metrics.secure }}https{{ else }}http{{ end }}
     {{- if .Values.metrics.secure }}
     tlsConfig:
-      serverName: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager-metrics-service" "context" $) }}.{{ .Release.Namespace }}.svc
-      {{- if .Values.certManager.enabled }}
-      ca:
-        secret:
-          name: metrics-server-cert
-          key: ca.crt
-      cert:
-        secret:
-          name: metrics-server-cert
-          key: tls.crt
-      keySecret:
-        name: metrics-server-cert
-        key: tls.key
-      {{- else }}
       insecureSkipVerify: true
-      {{- end }}
+      serverName: {{ include "jit-access-controller.resourceName" (dict "suffix" "metrics-service" "context" $) }}.jit-access-system
     {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
       control-plane: controller-manager
-=======
-{{- if .Values.prometheus.enable }}
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-        control-plane: controller-manager
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "controller-manager-metrics-monitor" "context" $) }}
-    namespace: {{ .Release.Namespace }}
-spec:
-    endpoints:
-        - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-          path: /metrics
-          port: https
-          scheme: https
-          tlsConfig:
-            insecureSkipVerify: true
-            serverName: {{ include "jit-access-controller.resourceName" (dict "suffix" "metrics-service" "context" $) }}.jit-access-system
-    selector:
-        matchLabels:
-            app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-            control-plane: controller-manager
->>>>>>> tmp-original-16-06-26-03-31
 {{- end }}

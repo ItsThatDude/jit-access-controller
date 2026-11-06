@@ -6,7 +6,6 @@ kind: Role
 kind: ClusterRole
 {{- end }}
 metadata:
-<<<<<<< HEAD
 {{- if .Values.rbac.namespaced }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
@@ -16,27 +15,19 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
   name: {{ include "jit-access-controller.resourceName" (dict "suffix" "accessrequest-viewer-role" "context" $) }}
-=======
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "accessrequest-viewer-role" "context" $) }}
->>>>>>> tmp-original-16-06-26-03-31
 rules:
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - accessrequests
-      verbs:
-        - get
-        - list
-        - watch
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - accessrequests/status
-      verbs:
-        - get
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - accessrequests/status
+  verbs:
+  - get
 {{- end }}

@@ -6,7 +6,6 @@ kind: Role
 kind: ClusterRole
 {{- end }}
 metadata:
-<<<<<<< HEAD
 {{- if .Values.rbac.namespaced }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
@@ -16,31 +15,23 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ .Release.Name }}
   name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccesspolicy-editor-role" "context" $) }}
-=======
-    labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/name: {{ include "jit-access-controller.name" . }}
-        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
-    name: {{ include "jit-access-controller.resourceName" (dict "suffix" "clusteraccesspolicy-editor-role" "context" $) }}
->>>>>>> tmp-original-16-06-26-03-31
 rules:
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - clusteraccesspolicies
-      verbs:
-        - create
-        - delete
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiGroups:
-        - access.antware.xyz
-      resources:
-        - clusteraccesspolicies/status
-      verbs:
-        - get
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - access.antware.xyz
+  resources:
+  - clusteraccesspolicies/status
+  verbs:
+  - get
 {{- end }}
