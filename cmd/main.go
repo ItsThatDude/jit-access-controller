@@ -1,22 +1,3 @@
-<<<<<<< HEAD
-=======
-/*
-Copyright 2025.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
->>>>>>> tmp-original-16-06-26-03-31
 package main
 
 import (
@@ -212,20 +193,6 @@ func main() {
 		os.Exit(1)
 	}
 
-<<<<<<< HEAD
-	if err := (&controller.AccessRequestReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "accessrequest")
-		os.Exit(1)
-	}
-	if err := (&controller.AccessPolicyReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "accesspolicy")
-=======
 	clusterPolicyManager := policy.NewPolicyManager()
 	namespacedPolicyManager := policy.NewPolicyManager()
 
@@ -245,7 +212,6 @@ func main() {
 
 	if err := policy.LoadClusterPolicies(ctx, cli, clusterPolicyManager); err != nil {
 		setupLog.Error(err, "failed to load existing cluster policies")
->>>>>>> tmp-original-16-06-26-03-31
 		os.Exit(1)
 	}
 	if err := policy.LoadNamespacedPolicies(ctx, cli, namespacedPolicyManager); err != nil {
@@ -267,7 +233,7 @@ func main() {
 		Scheme:        mgr.GetScheme(),
 		PolicyManager: namespacedPolicyManager,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "AccessPolicy")
+		setupLog.Error(err, "Failed to create controller", "controller", "accesspolicy")
 		os.Exit(1)
 	}
 
@@ -287,11 +253,7 @@ func main() {
 		PolicyManager:  namespacedPolicyManager,
 		PolicyResolver: &policy.PolicyResolver{},
 	}).SetupWithManager(mgr); err != nil {
-<<<<<<< HEAD
-		setupLog.Error(err, "Failed to create controller", "controller", "accessgrant")
-=======
-		setupLog.Error(err, "Failed to create controller", "controller", "AccessRequest")
->>>>>>> tmp-original-16-06-26-03-31
+		setupLog.Error(err, "Failed to create controller", "controller", "accessrequest")
 		os.Exit(1)
 	}
 
@@ -309,7 +271,7 @@ func main() {
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorder("accessgrant-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "AccessGrant")
+		setupLog.Error(err, "Failed to create controller", "controller", "accessgrant")
 		os.Exit(1)
 	}
 

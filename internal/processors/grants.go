@@ -133,7 +133,7 @@ func (r *GrantProcessor) handleApproved(
 				roleKind = common.RoleKindCluster
 			}
 
-			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: "rbac.authorization.k8s.io", Kind: roleKind, Name: adhocName}, adhocName); err != nil && !k8serrors.IsAlreadyExists(err) {
+			if err := r.createRoleBinding(ctx, obj, rbacv1.RoleRef{APIGroup: rbacv1.GroupName, Kind: roleKind, Name: adhocName}, adhocName); err != nil && !k8serrors.IsAlreadyExists(err) {
 				log.Error(err, "an error occurred creating the adhoc role binding for the request", "name", obj.GetName(), "subject", status.Subject, "role", adhocName)
 				return ctrl.Result{}, err
 			}
@@ -353,7 +353,7 @@ func (r *GrantProcessor) createRoleBinding(
 	labels := common.CommonLabels()
 
 	isClusterScoped := scope == accessv1alpha1.RequestScopeCluster
-	subject := rbacv1.Subject{Kind: "User", Name: status.Subject, APIGroup: "rbac.authorization.k8s.io"}
+	subject := rbacv1.Subject{Kind: "User", Name: status.Subject, APIGroup: rbacv1.GroupName}
 
 	var roleBinding client.Object
 

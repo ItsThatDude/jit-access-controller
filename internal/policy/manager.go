@@ -2,7 +2,7 @@ package policy
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"sync"
 
 	accessv1alpha1 "github.com/itsthatdude/jit-access-controller/api/v1alpha1"
@@ -27,18 +27,27 @@ func (m *PolicyManager) Update(
 	copy(snapshot, policies)
 
 	// Sort by priority DESC, name ASC (deterministic)
-	sort.Slice(snapshot, func(i, j int) bool {
-		var name = snapshot[i].GetName()
-		var policy = snapshot[i].GetPolicy()
+	slices.SortFunc(snapshot, func(a, b common.AccessPolicyObject) int {
+		aPolicy := a.GetPolicy()
+		bPolicy := b.GetPolicy()
 
-		var lastName = snapshot[j].GetName()
-		var lastPolicy = snapshot[j].GetPolicy()
-
-		if policy.Priority != lastPolicy.Priority {
-			return policy.Priority > lastPolicy.Priority
+		if aPolicy.Priority != bPolicy.Priority {
+			switch {
+			case aPolicy.Priority > bPolicy.Priority:
+				return -1
+			case aPolicy.Priority < bPolicy.Priority:
+				return 1
+			}
 		}
 
-		return name < lastName
+		switch {
+		case a.GetName() < b.GetName():
+			return -1
+		case a.GetName() > b.GetName():
+			return 1
+		default:
+			return 0
+		}
 	})
 
 	m.mu.Lock()

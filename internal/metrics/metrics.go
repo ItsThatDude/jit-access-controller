@@ -7,6 +7,9 @@ import (
 )
 
 const metricNamespace string = "jitaccess"
+const metricLabelScope string = "scope"
+const metricLabelTargetNamespace string = "target_namespace"
+const metricLabelSubject string = "subject"
 
 var (
 	BuildInfo prometheus.Gauge
@@ -17,7 +20,7 @@ var (
 			Name:      "requests_created",
 			Help:      "Number of access requests created",
 		},
-		[]string{"scope", "target_namespace", "subject"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, metricLabelSubject},
 	)
 
 	RequestsApproved = prometheus.NewCounterVec(
@@ -26,7 +29,7 @@ var (
 			Name:      "requests_approved",
 			Help:      "Number of access requests approved",
 		},
-		[]string{"scope", "target_namespace", "subject"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, metricLabelSubject},
 	)
 
 	RequestStatus = prometheus.NewGaugeVec(
@@ -35,7 +38,7 @@ var (
 			Name:      "request_status",
 			Help:      "Status of access requests (0: pending, 1: approved, 2: denied)",
 		},
-		[]string{"scope", "target_namespace", "request", "subject"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, "request", metricLabelSubject},
 	)
 
 	RolesGranted = prometheus.NewCounterVec(
@@ -44,7 +47,7 @@ var (
 			Name:      "roles_granted",
 			Help:      "Number of roles granted",
 		},
-		[]string{"scope", "target_namespace", "subject", "roleKind", "role"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, metricLabelSubject, "roleKind", "role"},
 	)
 
 	PermissionsGranted = prometheus.NewCounterVec(
@@ -53,7 +56,7 @@ var (
 			Name:      "permissions_granted",
 			Help:      "Number of permissions granted",
 		},
-		[]string{"scope", "target_namespace", "subject", "apiGroup", "resource", "verb", "resourceName"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, metricLabelSubject, "apiGroup", "resource", "verb", "resourceName"},
 	)
 
 	GrantDuration = prometheus.NewGaugeVec(
@@ -62,7 +65,7 @@ var (
 			Name:      "grant_duration_seconds",
 			Help:      "Duration of grants in seconds",
 		},
-		[]string{"scope", "target_namespace", "grant", "subject"},
+		[]string{metricLabelScope, metricLabelTargetNamespace, "grant", metricLabelSubject},
 	)
 )
 

@@ -1,11 +1,7 @@
 # Image URL to use all building/pushing image targets
-<<<<<<< HEAD
 IMG ?= controller:latest
 # YEAR defines the year value used for substituting the YEAR placeholder in the boilerplate header.
 YEAR ?= $(shell date +%Y)
-=======
-IMG_NAME ?= itsthatdood/jit-access-controller
->>>>>>> tmp-original-16-06-26-03-31
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

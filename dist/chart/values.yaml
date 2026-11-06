@@ -16,15 +16,10 @@ manager:
   replicas: 1
 
   image:
-<<<<<<< HEAD
     repository: controller
     ## Image tag (defaults to Chart.appVersion if not set)
     ##
     # tag: ""
-=======
-    repository: itsthatdood/jit-access-controller
-    tag: latest
->>>>>>> tmp-original-16-06-26-03-31
     pullPolicy: IfNotPresent
 
   ## Arguments
@@ -32,8 +27,6 @@ manager:
   args:
     - --leader-elect
 
-<<<<<<< HEAD
-=======
   ## Environment variables
   ##
   env:
@@ -51,7 +44,6 @@ manager:
   ##
   envOverrides: {}
 
->>>>>>> tmp-original-16-06-26-03-31
   ## Image pull secrets
   ##
   # imagePullSecrets:

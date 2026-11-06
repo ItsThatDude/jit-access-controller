@@ -144,7 +144,6 @@ spec:
                     description: Name is the name of resource being referenced
                     type: string
                 required:
-                - apiGroup
                 - kind
                 - name
                 type: object

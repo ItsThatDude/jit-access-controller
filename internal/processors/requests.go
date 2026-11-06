@@ -25,6 +25,8 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const requestRef = "spec.requestRef"
+
 type RequestProcessor struct {
 	client.Client
 	Scheme         *runtime.Scheme
@@ -215,7 +217,7 @@ func (r *RequestProcessor) handlePendingRequest(
 	if obj.GetScope() == v1alpha1.RequestScopeCluster {
 		// Cluster-scoped responses
 		responses := &v1alpha1.ClusterAccessResponseList{}
-		if err := r.List(ctx, responses, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+		if err := r.List(ctx, responses, client.MatchingFields{requestRef: obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
@@ -239,7 +241,7 @@ func (r *RequestProcessor) handlePendingRequest(
 	} else {
 		// Namespaced responses
 		responses := &v1alpha1.AccessResponseList{}
-		if err := r.List(ctx, responses, client.InNamespace(obj.GetNamespace()), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+		if err := r.List(ctx, responses, client.InNamespace(obj.GetNamespace()), client.MatchingFields{requestRef: obj.GetName()}); err != nil {
 			log.Error(err, "an error occurred fetching responses for the request", "name", obj.GetName())
 			return ctrl.Result{}, err
 		}
@@ -323,7 +325,7 @@ func (r *RequestProcessor) cleanupResponses(ctx context.Context, obj common.Acce
 	var responses []client.Object
 	if scope == v1alpha1.RequestScopeCluster {
 		responseList := &v1alpha1.ClusterAccessResponseList{}
-		if err := r.List(ctx, responseList, client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+		if err := r.List(ctx, responseList, client.MatchingFields{requestRef: obj.GetName()}); err != nil {
 			errs = append(errs, fmt.Errorf("failed to list ClusterAccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
@@ -332,7 +334,7 @@ func (r *RequestProcessor) cleanupResponses(ctx context.Context, obj common.Acce
 		}
 	} else {
 		responseList := &v1alpha1.AccessResponseList{}
-		if err := r.List(ctx, responseList, client.InNamespace(ns), client.MatchingFields{"spec.requestRef": obj.GetName()}); err != nil {
+		if err := r.List(ctx, responseList, client.InNamespace(ns), client.MatchingFields{requestRef: obj.GetName()}); err != nil {
 			errs = append(errs, fmt.Errorf("failed to list AccessResponses: %w", err))
 		} else {
 			for i := range responseList.Items {
